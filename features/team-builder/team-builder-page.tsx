@@ -1,14 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   Calculator,
+  ExternalLink,
+  ImageOff,
   Layers3,
+  Search,
   ShieldPlus,
   Swords,
   Target,
   Users,
+  X,
 } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
@@ -26,6 +31,7 @@ import {
   classes,
   companionBonuses,
   companionEnhancements,
+  companionEnhancementSnapshots,
   companions,
   createInitialTeamMembers,
   getDefaultPowerLoadoutForClass,
@@ -63,6 +69,25 @@ const raceOptions = [
   "Aasimar",
   "Menzoberranzan Renegade",
 ] as const;
+
+type PickerKind = "artifact" | "companion" | "mount" | "enhancement";
+
+type BadgeVariant = React.ComponentProps<typeof Badge>["variant"];
+
+interface PickerState {
+  kind: PickerKind;
+  memberId: string;
+}
+
+interface PickerItem {
+  id: string;
+  name: string;
+  description: string;
+  subtitle?: string;
+  imageUrl?: string;
+  sourceUrl?: string;
+  badges?: Array<{ label: string; variant: BadgeVariant }>;
+}
 
 const seededEntityEffectMap: Record<string, string[]> = {
   "comp-tutor": ["effect-tutor-ca", "effect-tutor-coverage"],
@@ -112,9 +137,12 @@ export function TeamBuilderPage() {
   const [includePersonal, setIncludePersonal] = useState(true);
   const [includeTeam, setIncludeTeam] = useState(true);
   const [includeBoss, setIncludeBoss] = useState(true);
+  const [pickerState, setPickerState] = useState<PickerState | null>(null);
+  const [pickerQuery, setPickerQuery] = useState("");
 
   const boss = bossPresets.find((item) => item.id === bossId) ?? bossPresets[0];
   const selectedMember = teamMembers.find((member) => member.id === selectedMemberId) ?? teamMembers[0];
+  const pickerMember = teamMembers.find((member) => member.id === pickerState?.memberId);
   const teamState = useMemo(() => summarizeTeam(teamMembers, boss), [boss, teamMembers]);
   const carry = teamState.carry;
   const bossDebuffSourceCount = useMemo(
@@ -141,6 +169,16 @@ export function TeamBuilderPage() {
       }),
     [caAssumption, critAssumption, includeBoss, includePersonal, includeTeam, mountBaseHitOverride, teamState],
   );
+  const pickerItems = useMemo(() => {
+    if (!pickerState) {
+      return [];
+    }
+
+    return getPickerItems(pickerState.kind).filter((item) => {
+      const haystack = `${item.name} ${item.subtitle ?? ""} ${item.description}`.toLowerCase();
+      return haystack.includes(pickerQuery.toLowerCase());
+    });
+  }, [pickerQuery, pickerState]);
 
   function updateTeamMode(nextMode: TeamMode) {
     setMode(nextMode);
@@ -148,6 +186,8 @@ export function TeamBuilderPage() {
     setTeamMembers(nextMembers);
     setSelectedMemberId(nextMembers[0]?.id ?? "");
     setEditorTab("Identity");
+    setPickerState(null);
+    setPickerQuery("");
   }
 
   function updateMember(memberId: string, patch: Partial<TeamMember>) {
@@ -176,6 +216,41 @@ export function TeamBuilderPage() {
     setTeamMembers((members) =>
       members.map((member) => ({ ...member, is_carry: member.id === memberId })),
     );
+  }
+
+  function openPicker(memberId: string, kind: PickerKind) {
+    setSelectedMemberId(memberId);
+    setPickerState({ memberId, kind });
+    setPickerQuery("");
+  }
+
+  function closePicker() {
+    setPickerState(null);
+    setPickerQuery("");
+  }
+
+  function applyPickerSelection(itemId: string) {
+    if (!pickerState) {
+      return;
+    }
+
+    if (pickerState.kind === "artifact") {
+      updateMember(pickerState.memberId, { artifact_id: itemId });
+    }
+
+    if (pickerState.kind === "companion") {
+      updateMember(pickerState.memberId, { companion_id: itemId });
+    }
+
+    if (pickerState.kind === "mount") {
+      updateMember(pickerState.memberId, { mount_combat_power_id: itemId });
+    }
+
+    if (pickerState.kind === "enhancement") {
+      updateMember(pickerState.memberId, { enhancement_id: itemId });
+    }
+
+    closePicker();
   }
 
   const leftPanelCards = {
@@ -389,6 +464,7 @@ export function TeamBuilderPage() {
                 members={teamMembers.filter((member) => member.group === "A")}
                 selectedMemberId={selectedMemberId}
                 onSelect={setSelectedMemberId}
+                onOpenPicker={openPicker}
               />
               {mode === "trial" ? (
                 <GroupSection
@@ -396,6 +472,7 @@ export function TeamBuilderPage() {
                   members={teamMembers.filter((member) => member.group === "B")}
                   selectedMemberId={selectedMemberId}
                   onSelect={setSelectedMemberId}
+                  onOpenPicker={openPicker}
                 />
               ) : null}
             </CardContent>
@@ -435,7 +512,16 @@ export function TeamBuilderPage() {
                   ))}
                 </div>
               </CardHeader>
-              <CardContent>{renderEditorTab(editorTab, selectedMember, updateMember, updateCarry, handleClassChange)}</CardContent>
+              <CardContent>
+                {renderEditorTab(
+                  editorTab,
+                  selectedMember,
+                  updateMember,
+                  updateCarry,
+                  handleClassChange,
+                  openPicker,
+                )}
+              </CardContent>
             </Card>
           ) : null}
         </div>
@@ -642,6 +728,17 @@ export function TeamBuilderPage() {
           </Card>
         </div>
       </div>
+      {pickerState && pickerMember ? (
+        <SelectionOverlay
+          member={pickerMember}
+          kind={pickerState.kind}
+          query={pickerQuery}
+          items={pickerItems}
+          onQueryChange={setPickerQuery}
+          onClose={closePicker}
+          onSelect={applyPickerSelection}
+        />
+      ) : null}
     </div>
   );
 }
@@ -651,11 +748,13 @@ function GroupSection({
   members,
   selectedMemberId,
   onSelect,
+  onOpenPicker,
 }: {
   title: string;
   members: TeamMember[];
   selectedMemberId: string;
   onSelect: (memberId: string) => void;
+  onOpenPicker: (memberId: string, kind: PickerKind) => void;
 }) {
   return (
     <section className="space-y-5">
@@ -673,6 +772,7 @@ function GroupSection({
             member={member}
             isSelected={member.id === selectedMemberId}
             onSelect={onSelect}
+            onOpenPicker={onOpenPicker}
           />
         ))}
       </div>
@@ -684,14 +784,17 @@ function MemberCard({
   member,
   isSelected,
   onSelect,
+  onOpenPicker,
 }: {
   member: TeamMember;
   isSelected: boolean;
   onSelect: (memberId: string) => void;
+  onOpenPicker: (memberId: string, kind: PickerKind) => void;
 }) {
   const companion = companions.find((item) => item.id === member.companion_id);
   const artifact = artifacts.find((item) => item.id === member.artifact_id);
   const mountPower = mountCombatPowers.find((item) => item.id === member.mount_combat_power_id);
+  const enhancement = companionEnhancements.find((item) => item.id === member.enhancement_id);
   const classItem = classes.find((item) => item.id === member.class_id);
   const encounterNames = member.encounter_ids
     .map((id) => powers.find((item) => item.id === id)?.name)
@@ -701,16 +804,14 @@ function MemberCard({
     .filter(Boolean);
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(member.id)}
+    <div
       className={`border p-6 text-left transition ${
         isSelected
           ? "border-sky-200/30 bg-[linear-gradient(180deg,rgba(162,210,255,0.16),rgba(205,180,219,0.12))]"
           : "border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] hover:border-white/14"
       }`}
     >
-      <div className="flex items-start justify-between gap-4">
+      <button type="button" onClick={() => onSelect(member.id)} className="flex w-full items-start justify-between gap-4 text-left">
         <div className="flex items-start gap-4">
           <div className="flex h-14 w-14 items-center justify-center border border-white/8 bg-white/[0.04] text-sm font-medium text-stone-300">
             {member.group}-{member.slot}
@@ -728,12 +829,33 @@ function MemberCard({
         <div className="hidden border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-stone-500 md:block">
           {member.race || "Race pending"}
         </div>
-      </div>
+      </button>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <LoadoutCell label="Artifact" value={artifact?.name ?? "Missing artifact"} />
-        <LoadoutCell label="Companion" value={companion?.name ?? "Missing companion"} />
-        <LoadoutCell label="Mount" value={mountPower?.name ?? "Missing mount"} />
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <LoadoutCell
+          label="Artifact"
+          value={artifact?.name ?? "Select artifact"}
+          detail={artifact?.category ?? "Popup picker"}
+          onClick={() => onOpenPicker(member.id, "artifact")}
+        />
+        <LoadoutCell
+          label="Companion"
+          value={companion?.name ?? "Select companion"}
+          detail={companion?.archetype ?? "Popup picker"}
+          onClick={() => onOpenPicker(member.id, "companion")}
+        />
+        <LoadoutCell
+          label="Mount"
+          value={mountPower?.name ?? "Select mount power"}
+          detail={mountPower?.damage_type ?? "Popup picker"}
+          onClick={() => onOpenPicker(member.id, "mount")}
+        />
+        <LoadoutCell
+          label="Enhancement"
+          value={enhancement?.name ?? "Select enhancement"}
+          detail="Purple debuff"
+          onClick={() => onOpenPicker(member.id, "enhancement")}
+        />
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
@@ -752,16 +874,31 @@ function MemberCard({
           </Badge>
         ))}
       </div>
-    </button>
+    </div>
   );
 }
 
-function LoadoutCell({ label, value }: { label: string; value: string }) {
+function LoadoutCell({
+  label,
+  value,
+  detail,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+  onClick: () => void;
+}) {
   return (
-    <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-4">
+    <button
+      type="button"
+      onClick={onClick}
+      className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-4 text-left transition hover:border-sky-200/40 hover:bg-[linear-gradient(180deg,rgba(205,180,219,0.16),rgba(189,224,254,0.12))]"
+    >
       <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">{label}</p>
       <p className="mt-2 text-sm leading-6 text-stone-200">{value}</p>
-    </div>
+      <p className="mt-2 text-xs uppercase tracking-[0.14em] text-stone-500">{detail ?? "Open picker"}</p>
+    </button>
   );
 }
 
@@ -771,8 +908,13 @@ function renderEditorTab(
   updateMember: (memberId: string, patch: Partial<TeamMember>) => void,
   updateCarry: (memberId: string) => void,
   handleClassChange: (memberId: string, classId: string) => void,
+  openPicker: (memberId: string, kind: PickerKind) => void,
 ) {
   const className = classes.find((item) => item.id === selectedMember.class_id)?.name;
+  const selectedArtifact = artifacts.find((item) => item.id === selectedMember.artifact_id);
+  const selectedCompanion = companions.find((item) => item.id === selectedMember.companion_id);
+  const selectedEnhancement = companionEnhancements.find((item) => item.id === selectedMember.enhancement_id);
+  const selectedMount = mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id);
   const classEncounters = powers.filter(
     (power) =>
       power.class_name === className &&
@@ -867,30 +1009,18 @@ function renderEditorTab(
             </Select>
           </Field>
           <Field label="Purple Debuff / Enhancement">
-            <Select
-              value={selectedMember.enhancement_id}
-              onChange={(event) => updateMember(selectedMember.id, { enhancement_id: event.target.value })}
-            >
-              <option value="">Select debuff enhancement</option>
-              {companionEnhancements.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
+            <PickerField
+              title={selectedEnhancement?.name ?? "Select debuff enhancement"}
+              subtitle="Popup list with full imported enhancement roster"
+              onClick={() => openPicker(selectedMember.id, "enhancement")}
+            />
           </Field>
           <Field label="Artifact">
-            <Select
-              value={selectedMember.artifact_id}
-              onChange={(event) => updateMember(selectedMember.id, { artifact_id: event.target.value })}
-            >
-              <option value="">Select artifact</option>
-              {artifacts.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
+            <PickerField
+              title={selectedArtifact?.name ?? "Select artifact"}
+              subtitle="Popup list with images and imported artifact data"
+              onClick={() => openPicker(selectedMember.id, "artifact")}
+            />
           </Field>
           <div className="space-y-2">
             <span className="text-xs uppercase tracking-[0.18em] text-stone-500">Carry state</span>
@@ -1017,16 +1147,11 @@ function renderEditorTab(
             </Select>
           </Field>
           <Field label="Mount Combat Power">
-            <Select
-              value={selectedMember.mount_combat_power_id}
-              onChange={(event) => updateMember(selectedMember.id, { mount_combat_power_id: event.target.value })}
-            >
-              {mountCombatPowers.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
+            <PickerField
+              title={selectedMount?.name ?? "Select mount power"}
+              subtitle="Popup list of current source-aware mount entries"
+              onClick={() => openPicker(selectedMember.id, "mount")}
+            />
           </Field>
           <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-5 md:col-span-2 xl:col-span-3">
             <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Auto-slot rule</p>
@@ -1040,28 +1165,18 @@ function renderEditorTab(
       return (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <Field label="Companion">
-            <Select
-              value={selectedMember.companion_id}
-              onChange={(event) => updateMember(selectedMember.id, { companion_id: event.target.value })}
-            >
-              {companions.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
+            <PickerField
+              title={selectedCompanion?.name ?? "Select companion"}
+              subtitle={selectedCompanion?.archetype ?? "Popup list of current summon companion roster"}
+              onClick={() => openPicker(selectedMember.id, "companion")}
+            />
           </Field>
           <Field label="Enhancement">
-            <Select
-              value={selectedMember.enhancement_id}
-              onChange={(event) => updateMember(selectedMember.id, { enhancement_id: event.target.value })}
-            >
-              {companionEnhancements.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
+            <PickerField
+              title={selectedEnhancement?.name ?? "Select enhancement"}
+              subtitle="Popup list with imported debuff and buff enhancement text"
+              onClick={() => openPicker(selectedMember.id, "enhancement")}
+            />
           </Field>
           <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Support note</p>
@@ -1193,5 +1308,237 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       {children}
     </label>
   );
+}
+
+function PickerField({
+  title,
+  subtitle,
+  onClick,
+}: {
+  title: string;
+  subtitle: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-14 w-full items-center justify-between border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.12),rgba(189,224,254,0.08))] px-4 py-3 text-left transition hover:border-sky-200/40"
+    >
+      <div>
+        <p className="text-sm font-medium text-stone-100">{title}</p>
+        <p className="mt-1 text-xs leading-5 text-stone-400">{subtitle}</p>
+      </div>
+      <Search className="h-4 w-4 text-sky-100" />
+    </button>
+  );
+}
+
+function SelectionOverlay({
+  member,
+  kind,
+  query,
+  items,
+  onQueryChange,
+  onClose,
+  onSelect,
+}: {
+  member: TeamMember;
+  kind: PickerKind;
+  query: string;
+  items: PickerItem[];
+  onQueryChange: (value: string) => void;
+  onClose: () => void;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-[rgba(16,19,26,0.78)] backdrop-blur-sm">
+      <div className="mx-auto flex h-full max-w-6xl items-center justify-center px-5 py-8">
+        <div className="flex max-h-full w-full flex-col border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.22),rgba(255,200,221,0.14),rgba(189,224,254,0.1))] shadow-[0_36px_90px_rgba(0,0,0,0.35)]">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
+            <div className="max-w-3xl">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">
+                {getPickerTitle(kind)} for {member.label}
+              </p>
+              <h3 className="mt-2 text-2xl font-semibold text-stone-50">{getPickerHeading(kind)}</h3>
+              <p className="mt-2 text-sm leading-7 text-stone-400">
+                Team Builder now uses popup pickers for the high-impact equipment fields so selection stays fast even when the imported list is large.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-11 w-11 items-center justify-center border border-white/10 bg-[rgba(205,180,219,0.12)] text-stone-200 transition hover:border-sky-200/40"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="border-b border-white/10 px-6 py-4">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-100/80" />
+              <Input
+                value={query}
+                onChange={(event) => onQueryChange(event.target.value)}
+                placeholder={`Search ${getPickerHeading(kind).toLowerCase()}...`}
+                className="pl-11"
+              />
+            </div>
+          </div>
+          <div className="grid gap-4 overflow-y-auto p-6 md:grid-cols-2 xl:grid-cols-3">
+            {items.length > 0 ? (
+              items.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSelect(item.id)}
+                  className="flex min-h-[220px] flex-col border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.08))] p-5 text-left transition hover:border-sky-200/40 hover:bg-[linear-gradient(180deg,rgba(205,180,219,0.24),rgba(189,224,254,0.14))]"
+                >
+                  <div className="flex items-start gap-4">
+                    {item.imageUrl ? (
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.name}
+                        width={64}
+                        height={64}
+                        className="h-16 w-16 border border-white/10 bg-[rgba(255,255,255,0.05)] object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center border border-white/10 bg-[rgba(255,255,255,0.05)]">
+                        <ImageOff className="h-5 w-5 text-stone-500" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-base font-semibold text-stone-50">{item.name}</p>
+                      {item.subtitle ? <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{item.subtitle}</p> : null}
+                    </div>
+                  </div>
+                  {item.badges?.length ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {item.badges.map((badge) => (
+                        <Badge key={`${item.id}-${badge.label}`} variant={badge.variant}>
+                          {badge.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : null}
+                  <p className="mt-4 flex-1 text-sm leading-7 text-stone-300">{item.description}</p>
+                  {item.sourceUrl ? (
+                    <a
+                      href={item.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                      className="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-sky-100/90"
+                    >
+                      Source
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  ) : null}
+                </button>
+              ))
+            ) : (
+              <div className="md:col-span-2 xl:col-span-3">
+                <EmptyState
+                  title="No matching entries"
+                  description="Try a broader search term. The picker only shows local typed data that has already been imported into the repo."
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getPickerTitle(kind: PickerKind) {
+  switch (kind) {
+    case "artifact":
+      return "Artifact picker";
+    case "companion":
+      return "Companion picker";
+    case "mount":
+      return "Mount picker";
+    case "enhancement":
+      return "Enhancement picker";
+    default:
+      return "Picker";
+  }
+}
+
+function getPickerHeading(kind: PickerKind) {
+  switch (kind) {
+    case "artifact":
+      return "Artifacts";
+    case "companion":
+      return "Companions";
+    case "mount":
+      return "Mount combat powers";
+    case "enhancement":
+      return "Companion enhancements";
+    default:
+      return "Selections";
+  }
+}
+
+function getPickerItems(kind: PickerKind): PickerItem[] {
+  if (kind === "artifact") {
+    return artifacts.map((item) => ({
+      id: item.id,
+      name: item.name,
+      subtitle: `${item.category} / ${item.team_or_personal}`,
+      description: item.notes,
+      imageUrl: item.image_url,
+      sourceUrl: item.source_url,
+      badges: [
+        { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
+        { label: item.category, variant: "gold" },
+      ],
+    }));
+  }
+
+  if (kind === "companion") {
+    return companions.map((item) => ({
+      id: item.id,
+      name: item.name,
+      subtitle: `${item.role_tag} / ${item.archetype}`,
+      description: item.notes,
+      sourceUrl: item.source_url,
+      badges: [
+        { label: item.role_tag, variant: "purple" },
+        { label: item.verification_status.replaceAll("_", " "), variant: "blue" },
+      ],
+    }));
+  }
+
+  if (kind === "mount") {
+    return mountCombatPowers.map((item) => ({
+      id: item.id,
+      name: item.name,
+      subtitle: item.damage_type,
+      description: item.notes,
+      sourceUrl: item.source_url,
+      badges: [
+        { label: item.damage_type, variant: "orange" },
+        { label: item.verification_status.replaceAll("_", " "), variant: "blue" },
+      ],
+    }));
+  }
+
+  const enhancementText = new Map<string, string>(
+    companionEnhancementSnapshots.map((item) => [item.name, item.text]),
+  );
+
+  return companionEnhancements.map((item) => ({
+    id: item.id,
+    name: item.name,
+    subtitle: "Purple debuff / enhancement",
+    description: enhancementText.get(item.name) ?? item.notes,
+    sourceUrl: item.source_url,
+    badges: [
+      { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
+      { label: item.effect_ids.length > 0 ? "mapped effect" : "source only", variant: item.effect_ids.length > 0 ? "red" : "muted" },
+    ],
+  }));
 }
 

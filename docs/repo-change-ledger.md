@@ -796,3 +796,67 @@ Checks run:
 Result:
 
 - Both passed after the NW Hub ingestion, Team Builder auto-slotting update, and shared UI palette cleanup.
+
+## Pass 8 - Team Builder popup pickers and remote image repair
+
+### Team Builder picker workflow
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Replaced the brittle inline-only selection flow for the highest-impact Team Builder fields with popup picker overlays for:
+  - artifacts
+  - summoned companions
+  - mount combat powers
+  - companion enhancements
+- Made the member-card equipment cells clickable so the user can click directly on Artifact, Companion, Mount, or Enhancement and open the corresponding picker.
+- Added reusable picker UI with:
+  - search input
+  - scrollable comprehensive local list
+  - badges
+  - source link
+  - image tile when the selected dataset exposes an image URL
+- Updated the member editor tabs so Artifact, Companion, Mount, and Enhancement now use picker-launch buttons instead of forcing the user through long select menus.
+- Refactored the member card wrapper away from nested interactive buttons so the canvas no longer relies on invalid nested button markup.
+
+Why:
+
+- The user explicitly asked for clicking artifact, companion, mounts, and companion enhancement to open a popup with the respective list.
+- The previous Team Builder had too many fragile inline selects and nested interactions, which made the core workflow feel broken.
+
+### Remote image repair
+
+Files:
+
+- `next.config.ts`
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Added `nw-hub.com` to Next image remote patterns.
+- Switched the popup item image tile to `next/image` now that the external source is whitelisted.
+
+Why:
+
+- The imported artifact and class images are hosted on NW Hub and were at risk of failing without explicit remote image configuration.
+- The user asked to fix broken images and related Team Builder issues.
+
+### Assumptions and current limits
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Kept the popup lists comprehensive relative to the currently imported local datasets.
+- Artifacts and companion enhancements use the full imported NW Hub snapshots already stored in the repo.
+- Mount and summoned companion pickers still reflect the current local source-aware seed set because the repo does not yet contain a verified full-game mount master list or a verified full-game summoned companion master list.
+
+Why:
+
+- The user asked to prioritize a working Team Builder immediately.
+- This preserves the source-aware rule and avoids inventing unverified game entries that are not yet present in the local typed model.
