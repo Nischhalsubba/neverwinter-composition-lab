@@ -2,23 +2,10 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import {
-  AlertTriangle,
-  Calculator,
-  ExternalLink,
-  ImageOff,
-  Layers3,
-  Search,
-  ShieldPlus,
-  Swords,
-  Target,
-  Users,
-  X,
-} from "lucide-react";
+import { Calculator, ExternalLink, ImageOff, Search, Swords, Target, X } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { SummaryPanel } from "@/components/summary-panel";
-import { SourceBadge } from "@/components/source-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +19,6 @@ import {
   classes,
   companionBonuses,
   companionEnhancements,
-  companionEnhancementSnapshots,
   companionRecommendationsById,
   companions,
   createInitialTeamMembers,
@@ -44,21 +30,10 @@ import {
   mountEquipPowers,
   powers,
 } from "@/data/game-data";
+import { sanitizeUiText } from "@/lib/display-text";
 import { calculateMountHit, summarizeTeam } from "@/lib/effect-engine";
-import type { EffectStat, TeamMember, TeamMode } from "@/lib/types";
+import type { TeamMember, TeamMode } from "@/lib/types";
 import { formatPercent, titleCase } from "@/lib/utils";
-
-const editorTabs = ["Identity", "Loadout", "Companion", "Mount", "Personal Buffs", "Notes"] as const;
-
-const effectStats: EffectStat[] = [
-  "damage_bonus",
-  "power",
-  "crit_strike",
-  "crit_severity",
-  "combat_advantage",
-  "accuracy",
-  "forte",
-];
 
 const raceOptions = [
   "Human",
@@ -81,16 +56,7 @@ const roleOptions = [
   { value: "support", label: "Support" },
 ] as const;
 
-function formatRoleLabel(role: TeamMember["role"]) {
-  return role === "support_dps"
-    ? "Support DPS"
-    : role === "boost"
-      ? "Boost Person"
-      : titleCase(role);
-}
-
 type PickerKind = "artifact" | "companion" | "mount" | "enhancement";
-
 type BadgeVariant = React.ComponentProps<typeof Badge>["variant"];
 
 interface PickerState {
@@ -105,75 +71,225 @@ interface PickerItem {
   subtitle?: string;
   imageUrl?: string;
   sourceUrl?: string;
-  filters?: string[];
-  badges?: Array<{ label: string; variant: BadgeVariant }>;
+  filters: string[];
+  badges: Array<{ label: string; variant: BadgeVariant }>;
 }
 
-const seededEntityEffectMap: Record<string, string[]> = {
-  "comp-tutor": ["effect-tutor-ca", "effect-tutor-coverage"],
-  "comp-drizzt": ["effect-drizzt-damage"],
-  "comp-portobello": ["effect-portobello-power", "effect-portobello-ca"],
-  "combat-uni-party": ["effect-uni-ca"],
-  "combat-red-dragon": [
-    "effect-red-dragon-owner-damage",
-    "effect-red-dragon-owner-crit",
-    "effect-red-dragon-boss-crit-avoid",
-  ],
-};
+function formatRoleLabel(role: TeamMember["role"]) {
+  return role === "support_dps"
+    ? "Support DPS"
+    : role === "boost"
+      ? "Boost Person"
+      : titleCase(role);
+}
 
-const entityEffectMap: Record<string, string[]> = {
-  ...seededEntityEffectMap,
-  ...Object.fromEntries(artifacts.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids])),
-  ...Object.fromEntries(
-    companionEnhancements.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids]),
-  ),
-  ...Object.fromEntries(
-    companionBonuses.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids]),
-  ),
-  ...Object.fromEntries(powers.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids])),
-  ...Object.fromEntries(
-    mountCombatPowers.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids]),
-  ),
-  ...Object.fromEntries(
-    mountEquipPowers.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids]),
-  ),
-};
+function getMemberTitle(member: TeamMember) {
+  const className = classes.find((item) => item.id === member.class_id)?.name;
+  return className ? `${className}${member.paragon ? ` / ${member.paragon}` : ""}` : `Empty Slot ${member.slot}`;
+}
 
-if (typeof globalThis !== "undefined") {
-  (globalThis as unknown as { __NW_ENTITY_EFFECTS__?: Record<string, string[]> }).__NW_ENTITY_EFFECTS__ =
-    entityEffectMap;
+function getMemberSummary(member: TeamMember) {
+  const parts = [
+    member.race || "Race not set",
+    formatRoleLabel(member.role),
+    artifacts.find((item) => item.id === member.artifact_id)?.name,
+    companionEnhancements.find((item) => item.id === member.enhancement_id)?.name,
+  ].filter(Boolean);
+
+  return parts.join(" • ");
+}
+
+function getPickerItems(kind: PickerKind): PickerItem[] {
+  if (kind === "artifact") {
+    return artifacts.map((item) => {
+      const recommendation = artifactRecommendationsById[item.id];
+      return {
+        id: item.id,
+        name: item.name,
+        subtitle: `${item.category} / ${item.team_or_personal}`,
+        description:
+          recommendation?.trial || recommendation?.dungeon
+            ? [
+                recommendation?.trial ? `Trial #${recommendation.trial.rank} (${recommendation.trial.damageBoost.toFixed(2)}%).` : null,
+                recommendation?.dungeon ? `Dungeon #${recommendation.dungeon.rank} (${recommendation.dungeon.damageBoost.toFixed(2)}%).` : null,
+              ]
+                .filter(Boolean)
+                .join(" ")
+            : sanitizeUiText(item.notes, "Verified artifact entry."),
+        imageUrl: item.image_url,
+        sourceUrl: item.source_url,
+        filters: ["all", item.category, recommendation?.trial || recommendation?.dungeon ? "recommended" : "other"],
+        badges: [
+          { label: item.category, variant: "gold" },
+          ...(recommendation?.trial ? [{ label: `Trial #${recommendation.trial.rank}`, variant: "blue" as const }] : []),
+          ...(recommendation?.dungeon ? [{ label: `Dungeon #${recommendation.dungeon.rank}`, variant: "purple" as const }] : []),
+        ],
+      };
+    });
+  }
+
+  if (kind === "companion") {
+    return companions.map((item) => {
+      const recommendation = companionRecommendationsById[item.id];
+      return {
+        id: item.id,
+        name: item.name,
+        subtitle: `${item.role_tag} / ${item.archetype}`,
+        description: recommendation
+          ? `${recommendation.benefit} Rough damage boost ${recommendation.roughDamageBoost?.toFixed(2) ?? "0.00"}%.`
+          : "Verified companion entry.",
+        sourceUrl: item.source_url,
+        filters: ["all", item.role_tag, recommendation ? "recommended" : "other"],
+        badges: [
+          { label: item.role_tag, variant: "purple" },
+          ...(recommendation ? [{ label: `Support #${recommendation.rank}`, variant: "teal" as const }] : []),
+        ],
+      };
+    });
+  }
+
+  if (kind === "mount") {
+    return mountCombatPowers.map((item) => ({
+      id: item.id,
+      name: item.name,
+      subtitle: item.damage_type,
+      description: sanitizeUiText(item.notes, "Verified mount entry."),
+      sourceUrl: item.source_url,
+      filters: ["all", item.damage_type, item.effect_ids.length ? "debuff" : "other"],
+      badges: [
+        { label: item.damage_type, variant: "orange" },
+        ...(item.effect_ids.length ? [{ label: "Debuff", variant: "red" as const }] : []),
+      ],
+    }));
+  }
+
+  return companionEnhancements.map((item) => {
+    const recommendation = enhancementRecommendationsById[item.id];
+    return {
+      id: item.id,
+      name: item.name,
+      subtitle: "Companion enhancement",
+      description: recommendation
+        ? `${recommendation.benefit}${recommendation.damageBoost != null ? ` Damage boost ${recommendation.damageBoost.toFixed(2)}%.` : ""}`
+        : "Verified enhancement entry. Exact live value is hidden until fully proven.",
+      sourceUrl: item.source_url,
+      filters: ["all", recommendation ? "recommended" : "other", item.effect_ids.length ? "mapped" : "other"],
+      badges: [
+        ...(recommendation ? [{ label: `Rank #${recommendation.rank}`, variant: "purple" as const }] : []),
+        ...(item.effect_ids.length ? [{ label: "Mapped", variant: "red" as const }] : []),
+      ],
+    };
+  });
+}
+
+function getPickerFilters(kind: PickerKind) {
+  if (kind === "artifact") {
+    return [
+      { value: "all", label: "All" },
+      { value: "recommended", label: "Recommended" },
+      { value: "debuff", label: "Debuff" },
+      { value: "support", label: "Support" },
+      { value: "utility", label: "Utility" },
+      { value: "personal_burst", label: "Burst" },
+    ];
+  }
+
+  if (kind === "companion") {
+    return [
+      { value: "all", label: "All" },
+      { value: "recommended", label: "Recommended" },
+      { value: "support", label: "Support" },
+      { value: "st", label: "Damage" },
+      { value: "augment", label: "Augment" },
+    ];
+  }
+
+  if (kind === "mount") {
+    return [
+      { value: "all", label: "All" },
+      { value: "debuff", label: "Debuff" },
+      { value: "physical", label: "Physical" },
+      { value: "magical", label: "Magical" },
+      { value: "mixed", label: "Mixed" },
+      { value: "utility", label: "Utility" },
+    ];
+  }
+
+  return [
+    { value: "all", label: "All" },
+    { value: "recommended", label: "Recommended" },
+    { value: "mapped", label: "Mapped" },
+  ];
+}
+
+function getPickerLabel(kind: PickerKind) {
+  switch (kind) {
+    case "artifact":
+      return "Artifacts";
+    case "companion":
+      return "Companions";
+    case "mount":
+      return "Mounts";
+    case "enhancement":
+      return "Enhancements";
+    default:
+      return "Selections";
+  }
 }
 
 export function TeamBuilderPage() {
   const [mode, setMode] = useState<TeamMode | null>(null);
-  const [editorTab, setEditorTab] = useState<(typeof editorTabs)[number]>("Identity");
   const [bossId, setBossId] = useState(bossPresets[0]?.id ?? "");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState("");
+  const [pickerState, setPickerState] = useState<PickerState | null>(null);
+  const [pickerQuery, setPickerQuery] = useState("");
+  const [pickerFilter, setPickerFilter] = useState("all");
   const [mountBaseHitOverride, setMountBaseHitOverride] = useState(1000000);
   const [critAssumption, setCritAssumption] = useState(0.5);
   const [caAssumption, setCaAssumption] = useState(0.5);
   const [includePersonal, setIncludePersonal] = useState(true);
   const [includeTeam, setIncludeTeam] = useState(true);
   const [includeBoss, setIncludeBoss] = useState(true);
-  const [pickerState, setPickerState] = useState<PickerState | null>(null);
-  const [pickerQuery, setPickerQuery] = useState("");
-  const [pickerFilter, setPickerFilter] = useState("all");
 
   const boss = bossPresets.find((item) => item.id === bossId) ?? bossPresets[0];
   const selectedMember = teamMembers.find((member) => member.id === selectedMemberId) ?? teamMembers[0];
-  const pickerMember = teamMembers.find((member) => member.id === pickerState?.memberId);
+  const selectedClass = classes.find((item) => item.id === selectedMember?.class_id);
+  const carry = teamMembers.find((member) => member.is_carry);
   const teamState = useMemo(() => summarizeTeam(teamMembers, boss), [boss, teamMembers]);
-  const carry = teamState.carry;
-  const bossDebuffSourceCount = useMemo(
-    () => teamState.bossSummary.reduce((sum, line) => sum + line.contributions.length + line.unresolved.length, 0),
-    [teamState.bossSummary],
-  );
-  const bossDebuffResolvedPercent = useMemo(
-    () => teamState.bossSummary.reduce((sum, line) => sum + line.total, 0),
-    [teamState.bossSummary],
-  );
+  const pickerMember = teamMembers.find((member) => member.id === pickerState?.memberId);
+  const pickerItems = useMemo(() => {
+    if (!pickerState) {
+      return [];
+    }
 
+    return getPickerItems(pickerState.kind).filter((item) => {
+      const haystack = `${item.name} ${item.subtitle ?? ""} ${item.description}`.toLowerCase();
+      const queryMatches = haystack.includes(pickerQuery.toLowerCase());
+      const filterMatches = pickerFilter === "all" || item.filters.includes(pickerFilter);
+      return queryMatches && filterMatches;
+    });
+  }, [pickerFilter, pickerQuery, pickerState]);
+
+  const classEncounters = powers.filter(
+    (power) =>
+      power.class_name === selectedClass?.name &&
+      power.power_type === "encounter" &&
+      (!selectedMember?.paragon || !power.paragon_path || power.paragon_path === selectedMember.paragon),
+  );
+  const classDailies = powers.filter(
+    (power) =>
+      power.class_name === selectedClass?.name &&
+      power.power_type === "daily" &&
+      (!selectedMember?.paragon || !power.paragon_path || power.paragon_path === selectedMember.paragon),
+  );
+  const classFeatures = powers.filter(
+    (power) =>
+      power.class_name === selectedClass?.name &&
+      power.power_type === "feature" &&
+      (!selectedMember?.paragon || !power.paragon_path || power.paragon_path === selectedMember.paragon),
+  );
+  const recommendedDebuffEncounters = classEncounters.filter((power) => power.effect_ids.length > 0);
   const mountCalc = useMemo(
     () =>
       calculateMountHit({
@@ -189,36 +305,15 @@ export function TeamBuilderPage() {
       }),
     [caAssumption, critAssumption, includeBoss, includePersonal, includeTeam, mountBaseHitOverride, teamState],
   );
-  const pickerItems = useMemo(() => {
-    if (!pickerState) {
-      return [];
-    }
-
-    return getPickerItems(pickerState.kind).filter((item) => {
-      const haystack = `${item.name} ${item.subtitle ?? ""} ${item.description}`.toLowerCase();
-      const queryMatches = haystack.includes(pickerQuery.toLowerCase());
-      const filterMatches = pickerFilter === "all" || item.filters?.includes(pickerFilter);
-      return queryMatches && filterMatches;
-    });
-  }, [pickerFilter, pickerQuery, pickerState]);
-  const pickerFilters = useMemo(() => (pickerState ? getPickerFilters(pickerState.kind) : []), [pickerState]);
-  const selectedClassName = classes.find((item) => item.id === selectedMember?.class_id)?.name;
-  const selectedClassEncounters = powers.filter(
-    (power) =>
-      power.class_name === selectedClassName &&
-      power.power_type === "encounter" &&
-      (!selectedMember?.paragon || !power.paragon_path || power.paragon_path === selectedMember.paragon),
-  );
-  const selectedDebuffEncounters = selectedClassEncounters.filter((power) => power.effect_ids.length > 0);
 
   function updateTeamMode(nextMode: TeamMode) {
-    setMode(nextMode);
     const nextMembers = createInitialTeamMembers(nextMode);
+    setMode(nextMode);
     setTeamMembers(nextMembers);
     setSelectedMemberId(nextMembers[0]?.id ?? "");
-    setEditorTab("Identity");
     setPickerState(null);
     setPickerQuery("");
+    setPickerFilter("all");
   }
 
   function updateMember(memberId: string, patch: Partial<TeamMember>) {
@@ -243,6 +338,22 @@ export function TeamBuilderPage() {
     });
   }
 
+  function handleParagonChange(memberId: string, paragon: string) {
+    const member = teamMembers.find((item) => item.id === memberId);
+    if (!member) {
+      return;
+    }
+
+    const powerLoadout = getDefaultPowerLoadoutForClass(member.class_id, paragon);
+    updateMember(memberId, {
+      paragon,
+      role: getRoleForClassParagon(member.class_id, paragon),
+      encounter_ids: powerLoadout.encounter_ids,
+      daily_ids: powerLoadout.daily_ids,
+      feature_ids: powerLoadout.feature_ids,
+    });
+  }
+
   function updateCarry(memberId: string) {
     setTeamMembers((members) =>
       members.map((member) => ({ ...member, is_carry: member.id === memberId })),
@@ -257,13 +368,10 @@ export function TeamBuilderPage() {
 
     const nextEncounters = [...member.encounter_ids];
     const existingIndex = nextEncounters.indexOf(powerId);
+
     if (existingIndex >= 0) {
       nextEncounters.splice(existingIndex, 1);
-      updateMember(memberId, { encounter_ids: nextEncounters });
-      return;
-    }
-
-    if (nextEncounters.length < 3) {
+    } else if (nextEncounters.length < 3) {
       nextEncounters.push(powerId);
     } else {
       nextEncounters[2] = powerId;
@@ -272,13 +380,8 @@ export function TeamBuilderPage() {
     updateMember(memberId, { encounter_ids: nextEncounters });
   }
 
-  function focusMember(memberId: string) {
-    setSelectedMemberId(memberId);
-    setEditorTab("Identity");
-  }
-
   function openPicker(memberId: string, kind: PickerKind) {
-    focusMember(memberId);
+    setSelectedMemberId(memberId);
     setPickerState({ memberId, kind });
     setPickerQuery("");
     setPickerFilter("all");
@@ -314,82 +417,35 @@ export function TeamBuilderPage() {
     closePicker();
   }
 
-  const leftPanelCards = {
-    Roster: teamMembers.map((member) => ({
-      key: member.id,
-      title: member.label,
-      meta: `${member.group}-${member.slot} / ${formatRoleLabel(member.role)}`,
-      note: `${classes.find((item) => item.id === member.class_id)?.name ?? "No class"} / ${member.paragon || "Path pending"}`,
-    })),
-    Classes: classes.map((item) => ({
-      key: item.id,
-      title: item.name,
-      meta: item.role_focus.join(", "),
-      note: item.identity_note,
-    })),
-    Companions: companions.map((item) => ({
-      key: item.id,
-      title: item.name,
-      meta: item.role_tag.toUpperCase(),
-      note: item.notes,
-    })),
-    Artifacts: artifacts.map((item) => ({
-      key: item.id,
-      title: item.name,
-      meta: `Rank ${item.rank_order ?? "-"}`,
-      note: item.notes,
-    })),
-    Mounts: mountCombatPowers.map((item) => ({
-      key: item.id,
-      title: item.name,
-      meta: item.damage_type,
-      note: item.notes,
-    })),
-    Powers: [],
-    Effects: [...teamState.bossSummary, ...teamState.teamSummary].map((item) => ({
-      key: item.stat,
-      title: titleCase(item.stat),
-      meta: formatPercent(item.total),
-      note:
-        item.unresolved.length > 0
-          ? `${item.unresolved.length} unresolved sources still tracked`
-          : "Resolved from current team selections",
-    })),
-  };
-
   if (!mode) {
     return (
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <p className="text-[11px] uppercase tracking-[0.24em] text-sky-200/80">Team Builder Start</p>
-            <CardTitle className="text-[32px]">Choose Dungeon or Trial</CardTitle>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">Team Builder Start</p>
+            <CardTitle className="text-[32px]">Choose party size</CardTitle>
             <CardDescription>
-              Dungeon creates 5 empty slots. Trial creates 10 empty slots split into Group A and Group B. After that, click a slot to configure class, artifact, purple debuff, and encounter selections.
+              Start with dungeon for 5 players or trial for 10 players. Every slot begins empty.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <button
               type="button"
               onClick={() => updateTeamMode("dungeon")}
-              className="border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.1))] p-8 text-left transition hover:border-sky-200/40"
+              className="border border-white/10 bg-white/[0.03] p-8 text-left transition hover:border-sky-200/40"
             >
-              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">5 slots</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">5 players</p>
               <p className="mt-3 text-2xl font-semibold text-stone-100">Dungeon</p>
-              <p className="mt-4 text-sm leading-7 text-stone-400">
-                Single party layout for fast 5-player planning with empty member slots.
-              </p>
+              <p className="mt-3 text-sm text-stone-400">Single party. Best for standard 5-player group building.</p>
             </button>
             <button
               type="button"
               onClick={() => updateTeamMode("trial")}
-              className="border border-white/10 bg-[linear-gradient(180deg,rgba(255,200,221,0.16),rgba(162,210,255,0.1))] p-8 text-left transition hover:border-pink-200/40"
+              className="border border-white/10 bg-white/[0.03] p-8 text-left transition hover:border-sky-200/40"
             >
-              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">10 slots</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">10 players</p>
               <p className="mt-3 text-2xl font-semibold text-stone-100">Trial</p>
-              <p className="mt-4 text-sm leading-7 text-stone-400">
-                Two groups of five with empty slots so the full composition starts from scratch.
-              </p>
+              <p className="mt-3 text-sm text-stone-400">Two groups of five for endgame trial planning.</p>
             </button>
           </CardContent>
         </Card>
@@ -399,21 +455,20 @@ export function TeamBuilderPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden">
-        <CardContent className="space-y-6 p-7 min-[1900px]:p-8">
-          <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.12),rgba(189,224,254,0.06))] p-4 min-[1900px]:p-5">
-            <div className="grid gap-3 min-[1500px]:grid-cols-[auto_auto_minmax(240px,1fr)_minmax(240px,1fr)_auto]">
-            <div className="flex flex-wrap gap-2">
-              <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
-                Dungeon
-              </Button>
-              <Button variant={mode === "trial" ? "primary" : "secondary"} onClick={() => updateTeamMode("trial")}>
-                Trial
-              </Button>
-            </div>
-            <Button variant="secondary" onClick={() => updateTeamMode(mode)}>
-              Reset Layout
+      <Card>
+        <CardContent className="grid gap-4 p-6 xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)]">
+          <div className="flex flex-wrap gap-2">
+            <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
+              Dungeon
             </Button>
+            <Button variant={mode === "trial" ? "primary" : "secondary"} onClick={() => updateTeamMode("trial")}>
+              Trial
+            </Button>
+          </div>
+          <Button variant="secondary" onClick={() => updateTeamMode(mode)}>
+            Reset
+          </Button>
+          <Field label="Boss preset">
             <Select value={bossId} onChange={(event) => setBossId(event.target.value)}>
               {bossPresets.map((preset) => (
                 <option key={preset.id} value={preset.id}>
@@ -421,396 +476,441 @@ export function TeamBuilderPage() {
                 </option>
               ))}
             </Select>
+          </Field>
+          <Field label="Carry">
             <Select value={carry?.id ?? ""} onChange={(event) => updateCarry(event.target.value)}>
+              <option value="">No carry selected</option>
               {teamMembers.map((member) => (
                 <option key={member.id} value={member.id}>
-                  Carry: {member.label}
+                  {member.group}-{member.slot} {getMemberTitle(member)}
                 </option>
               ))}
             </Select>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" onClick={() => setSelectedMemberId(teamMembers[0]?.id ?? "")}>First Slot</Button>
-              <Button variant="secondary" onClick={() => updateCarry(selectedMemberId || teamMembers[0]?.id || "")}>Mark Carry</Button>
-            </div>
-          </div>
-          </div>
+          </Field>
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-        <Card className="h-fit xl:sticky xl:top-5">
+      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
+        <Card className="h-fit">
           <CardHeader>
             <CardTitle>Roster</CardTitle>
-            <CardDescription>
-              Select a slot, then configure the member on the right.
-            </CardDescription>
+            <CardDescription>Click a slot. Everything for that slot is visible immediately in the middle panel.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-3">
-              {leftPanelCards[activeTab].length > 0 ? (
-                leftPanelCards[activeTab].map((item) => (
-                  <button
-                    type="button"
-                    key={item.key}
-                    onClick={() => activeTab === "Roster" && focusMember(item.key)}
-                    className={`block w-full border p-5 text-left transition ${
-                      item.key === selectedMemberId
-                        ? "border-sky-200/30 bg-[linear-gradient(180deg,rgba(162,210,255,0.18),rgba(205,180,219,0.12))]"
-                        : "border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] hover:border-white/12"
-                    }`}
-                  >
-                    <p className="text-sm font-medium text-stone-100">{item.title}</p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{item.meta}</p>
-                    <p className="mt-3 text-sm leading-7 text-stone-400">{item.note}</p>
-                  </button>
-                ))
-              ) : (
-                <EmptyState
-                  title="No structured entries yet"
-                  description="This browse view is reserved for future verified data instead of guessed values."
-                />
-              )}
-            </div>
+          <CardContent className="space-y-6">
+            <RosterGroup
+              title="Group A"
+              members={teamMembers.filter((member) => member.group === "A")}
+              selectedMemberId={selectedMemberId}
+              onSelect={setSelectedMemberId}
+            />
+            {mode === "trial" ? (
+              <RosterGroup
+                title="Group B"
+                members={teamMembers.filter((member) => member.group === "B")}
+                selectedMemberId={selectedMemberId}
+                onSelect={setSelectedMemberId}
+              />
+            ) : null}
           </CardContent>
         </Card>
 
         <div className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-2xl">
-                <CardTitle>Team Canvas</CardTitle>
-                <CardDescription>
-                  Member cards stay readable first. The summary rail drops below until the viewport is truly wide enough for a third column.
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="teal">{mode === "trial" ? "Trial layout" : "Dungeon layout"}</Badge>
-                <Badge variant="muted">{teamMembers.length} members</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-10">
-                <GroupSection
-                  title="Group A"
-                  members={teamMembers.filter((member) => member.group === "A")}
-                  selectedMemberId={selectedMemberId}
-                  onSelect={focusMember}
-                  onOpenPicker={openPicker}
-                />
-              {mode === "trial" ? (
-                <GroupSection
-                  title="Group B"
-                  members={teamMembers.filter((member) => member.group === "B")}
-                  selectedMemberId={selectedMemberId}
-                  onSelect={focusMember}
-                  onOpenPicker={openPicker}
-                />
-              ) : null}
-            </CardContent>
-          </Card>
-
           {selectedMember ? (
-            <Card>
-              <CardHeader className="space-y-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="max-w-2xl">
-                    <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-sky-100" />
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">Member Config Panel</p>
-                    </div>
-                    <CardTitle className="mt-2 text-[28px]">{selectedMember.label}</CardTitle>
-                    <CardDescription>
-                      Select class and paragon first, then adjust the auto-slotted support, buff, and debuff powers for this member.
-                    </CardDescription>
-                  </div>
-                  {(() => {
-                    const sourceItem =
-                      companions.find((item) => item.id === selectedMember.companion_id) ??
-                      artifacts.find((item) => item.id === selectedMember.artifact_id);
-                    return sourceItem ? <SourceBadge {...sourceItem} /> : null;
-                  })()}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {editorTabs.map((tab) => (
-                    <Button
-                      key={tab}
-                      size="sm"
-                      variant={editorTab === tab ? "primary" : "secondary"}
-                      onClick={() => setEditorTab(tab)}
-                    >
-                      {tab}
-                    </Button>
-                  ))}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.1),rgba(189,224,254,0.08))] p-5 md:grid-cols-2 xl:grid-cols-4">
-                  <Field label="Class">
-                    <Select
-                      value={selectedMember.class_id}
-                      onChange={(event) => handleClassChange(selectedMember.id, event.target.value)}
-                    >
-                      <option value="">Select class</option>
-                      {classes.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label="Paragon">
-                    <Select
-                      value={selectedMember.paragon}
-                      onChange={(event) => {
-                        const paragon = event.target.value;
-                        const nextLoadout = getDefaultPowerLoadoutForClass(selectedMember.class_id, paragon);
-                        updateMember(selectedMember.id, {
-                          paragon,
-                          role: getRoleForClassParagon(selectedMember.class_id, paragon),
-                          encounter_ids: nextLoadout.encounter_ids,
-                          daily_ids: nextLoadout.daily_ids,
-                          feature_ids: nextLoadout.feature_ids,
-                        });
-                      }}
-                    >
-                      <option value="">{selectedMember.class_id ? "Select paragon" : "Select class first"}</option>
-                      {(classes.find((item) => item.id === selectedMember.class_id)?.paragon_options ?? []).map((paragon) => (
-                        <option key={paragon} value={paragon}>
-                          {paragon}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label="Race">
-                    <Select
-                      value={selectedMember.race}
-                      onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}
-                    >
-                      <option value="">Select race</option>
-                      {raceOptions.map((race) => (
-                        <option key={race} value={race}>
-                          {race}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <div className="space-y-2">
-                    <span className="text-xs uppercase tracking-[0.18em] text-stone-500">Carry state</span>
-                    <Button
-                      className="w-full"
-                      variant={selectedMember.is_carry ? "primary" : "secondary"}
-                      onClick={() => updateCarry(selectedMember.id)}
-                    >
-                      {selectedMember.is_carry ? "Selected carry DPS" : "Mark as carry DPS"}
-                    </Button>
-                  </div>
-                  {!selectedMember.class_id ? (
-                    <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(255,200,221,0.14),rgba(189,224,254,0.08))] p-4 md:col-span-2 xl:col-span-4">
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Start here</p>
-                      <p className="mt-2 text-sm leading-6 text-stone-300">
-                        Pick a class first. The builder will then open the paragon list and auto-slot the current support-oriented encounter, daily, and feature defaults for that class path.
-                      </p>
-                    </div>
-                  ) : null}
-                  <Field label="Role">
-                    <Select
-                      value={selectedMember.role}
-                      onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
-                    >
-                      {roleOptions.map((role) => (
-                        <option key={role.value} value={role.value}>
-                          {role.label}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label="Artifact">
-                    <PickerField
-                      title={artifacts.find((item) => item.id === selectedMember.artifact_id)?.name ?? "Select artifact"}
-                      subtitle="Full artifact list with filters"
-                      onClick={() => openPicker(selectedMember.id, "artifact")}
-                    />
-                  </Field>
-                  <Field label="Companion">
-                    <PickerField
-                      title={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Select companion"}
-                      subtitle="Full companion list with filters"
-                      onClick={() => openPicker(selectedMember.id, "companion")}
-                    />
-                  </Field>
-                  <Field label="Enhancement">
-                    <PickerField
-                      title={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Select enhancement"}
-                      subtitle="Purple debuff / enhancement"
-                      onClick={() => openPicker(selectedMember.id, "enhancement")}
-                    />
-                  </Field>
-                  <Field label="Mount">
-                    <PickerField
-                      title={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Select mount power"}
-                      subtitle="Mount combat powers with filters"
-                      onClick={() => openPicker(selectedMember.id, "mount")}
-                    />
-                  </Field>
-                </div>
-                <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.05))] p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+            <>
+              <Card>
+                <CardHeader>
+                  <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">Class debuff encounters</p>
-                      <p className="mt-2 text-sm text-stone-300">
-                        {selectedMember.class_id
-                          ? "These are the debuff-capable encounters currently mapped for the selected class and paragon."
-                          : "Select a class first to see debuff-capable encounters."}
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">
+                        Selected slot {selectedMember.group}-{selectedMember.slot}
                       </p>
+                      <CardTitle className="mt-2">{getMemberTitle(selectedMember)}</CardTitle>
+                      <CardDescription>{getMemberSummary(selectedMember)}</CardDescription>
                     </div>
-                    {selectedMember.class_id ? (
-                      <Badge variant="blue">{selectedDebuffEncounters.length} mapped debuff encounters</Badge>
-                    ) : null}
+                    <div className="flex flex-wrap gap-2">
+                      {selectedMember.is_carry ? <Badge variant="teal">Carry</Badge> : null}
+                      <Badge variant="muted">{formatRoleLabel(selectedMember.role)}</Badge>
+                    </div>
                   </div>
-                  {selectedDebuffEncounters.length > 0 ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {selectedDebuffEncounters.map((power) => {
-                        const isSelected = selectedMember.encounter_ids.includes(power.id);
-                        return (
-                          <button
-                            key={power.id}
-                            type="button"
-                            onClick={() => assignEncounter(selectedMember.id, power.id)}
-                            className={`border px-3 py-2 text-left text-sm transition ${
-                              isSelected
-                                ? "border-sky-200/30 bg-[linear-gradient(180deg,rgba(162,210,255,0.22),rgba(205,180,219,0.16))] text-stone-50"
-                                : "border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] text-stone-300 hover:border-white/16"
-                            }`}
-                          >
-                            {power.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : selectedMember.class_id ? (
-                    <p className="mt-4 text-sm text-stone-400">No mapped debuff encounters are attached to this class/paragon yet.</p>
-                  ) : null}
-                </div>
-                {renderEditorTab(
-                  editorTab,
-                  selectedMember,
-                  updateMember,
-                  updateCarry,
-                  handleClassChange,
-                  openPicker,
-                )}
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <Field label="Class">
+                      <Select value={selectedMember.class_id} onChange={(event) => handleClassChange(selectedMember.id, event.target.value)}>
+                        <option value="">Select class</option>
+                        {classes.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Paragon">
+                      <Select value={selectedMember.paragon} onChange={(event) => handleParagonChange(selectedMember.id, event.target.value)}>
+                        <option value="">{selectedMember.class_id ? "Select paragon" : "Select class first"}</option>
+                        {(selectedClass?.paragon_options ?? []).map((paragon) => (
+                          <option key={paragon} value={paragon}>
+                            {paragon}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Role">
+                      <Select
+                        value={selectedMember.role}
+                        onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
+                      >
+                        {roleOptions.map((role) => (
+                          <option key={role.value} value={role.value}>
+                            {role.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Race">
+                      <Select value={selectedMember.race} onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}>
+                        <option value="">Select race</option>
+                        {raceOptions.map((race) => (
+                          <option key={race} value={race}>
+                            {race}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <Field label="Artifact">
+                      <PickerField
+                        title={artifacts.find((item) => item.id === selectedMember.artifact_id)?.name ?? "Select artifact"}
+                        subtitle="Ranked artifact list"
+                        onClick={() => openPicker(selectedMember.id, "artifact")}
+                      />
+                    </Field>
+                    <Field label="Companion">
+                      <PickerField
+                        title={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Select companion"}
+                        subtitle="Support and damage companions"
+                        onClick={() => openPicker(selectedMember.id, "companion")}
+                      />
+                    </Field>
+                    <Field label="Enhancement">
+                      <PickerField
+                        title={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Select enhancement"}
+                        subtitle="Only proven values shown"
+                        onClick={() => openPicker(selectedMember.id, "enhancement")}
+                      />
+                    </Field>
+                    <Field label="Mount combat power">
+                      <PickerField
+                        title={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Select mount"}
+                        subtitle="Mount power list"
+                        onClick={() => openPicker(selectedMember.id, "mount")}
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant={selectedMember.is_carry ? "primary" : "secondary"} onClick={() => updateCarry(selectedMember.id)}>
+                      {selectedMember.is_carry ? "Selected carry" : "Mark as carry"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() =>
+                        updateMember(selectedMember.id, {
+                          artifact_id: "",
+                          companion_id: "",
+                          enhancement_id: "",
+                          mount_combat_power_id: "",
+                          encounter_ids: [],
+                          daily_ids: [],
+                          feature_ids: [],
+                        })
+                      }
+                    >
+                      Clear slot loadout
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Power Loadout</CardTitle>
+                  <CardDescription>
+                    Class and paragon selection auto-fill the current support-oriented defaults. Adjust them here if needed.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Recommended debuff encounters</p>
+                    {recommendedDebuffEncounters.length > 0 ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {recommendedDebuffEncounters.map((power) => {
+                          const isSelected = selectedMember.encounter_ids.includes(power.id);
+                          return (
+                            <button
+                              key={power.id}
+                              type="button"
+                              onClick={() => assignEncounter(selectedMember.id, power.id)}
+                              className={`border px-3 py-2 text-sm transition ${
+                                isSelected
+                                  ? "border-sky-200/40 bg-[rgba(162,210,255,0.16)] text-stone-50"
+                                  : "border-white/10 bg-white/[0.03] text-stone-300 hover:border-white/20"
+                              }`}
+                            >
+                              {power.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-stone-400">
+                        {selectedMember.class_id ? "No mapped debuff encounters for this class and paragon." : "Select class and paragon first."}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <Field label="Encounter 1">
+                      <Select
+                        value={selectedMember.encounter_ids[0] ?? ""}
+                        onChange={(event) =>
+                          updateMember(selectedMember.id, {
+                            encounter_ids: [
+                              event.target.value,
+                              selectedMember.encounter_ids[1] ?? "",
+                              selectedMember.encounter_ids[2] ?? "",
+                            ].filter(Boolean),
+                          })
+                        }
+                      >
+                        <option value="">{selectedClass ? "Select encounter" : "Select class first"}</option>
+                        {classEncounters.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Encounter 2">
+                      <Select
+                        value={selectedMember.encounter_ids[1] ?? ""}
+                        onChange={(event) =>
+                          updateMember(selectedMember.id, {
+                            encounter_ids: [
+                              selectedMember.encounter_ids[0] ?? "",
+                              event.target.value,
+                              selectedMember.encounter_ids[2] ?? "",
+                            ].filter(Boolean),
+                          })
+                        }
+                      >
+                        <option value="">{selectedClass ? "Select encounter" : "Select class first"}</option>
+                        {classEncounters.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Encounter 3">
+                      <Select
+                        value={selectedMember.encounter_ids[2] ?? ""}
+                        onChange={(event) =>
+                          updateMember(selectedMember.id, {
+                            encounter_ids: [
+                              selectedMember.encounter_ids[0] ?? "",
+                              selectedMember.encounter_ids[1] ?? "",
+                              event.target.value,
+                            ].filter(Boolean),
+                          })
+                        }
+                      >
+                        <option value="">{selectedClass ? "Select encounter" : "Select class first"}</option>
+                        {classEncounters.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Daily">
+                      <Select
+                        value={selectedMember.daily_ids[0] ?? ""}
+                        onChange={(event) => updateMember(selectedMember.id, { daily_ids: [event.target.value].filter(Boolean) })}
+                      >
+                        <option value="">{selectedClass ? "Select daily" : "Select class first"}</option>
+                        {classDailies.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Feature 1">
+                      <Select
+                        value={selectedMember.feature_ids[0] ?? ""}
+                        onChange={(event) =>
+                          updateMember(selectedMember.id, {
+                            feature_ids: [event.target.value, selectedMember.feature_ids[1] ?? ""].filter(Boolean),
+                          })
+                        }
+                      >
+                        <option value="">{selectedClass ? "Select feature" : "Select class first"}</option>
+                        {classFeatures.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Feature 2">
+                      <Select
+                        value={selectedMember.feature_ids[1] ?? ""}
+                        onChange={(event) =>
+                          updateMember(selectedMember.id, {
+                            feature_ids: [selectedMember.feature_ids[0] ?? "", event.target.value].filter(Boolean),
+                          })
+                        }
+                      >
+                        <option value="">{selectedClass ? "Select feature" : "Select class first"}</option>
+                        {classFeatures.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Companion bonus">
+                      <Select
+                        value={selectedMember.companion_bonus_id}
+                        onChange={(event) => updateMember(selectedMember.id, { companion_bonus_id: event.target.value })}
+                      >
+                        <option value="">Select bonus</option>
+                        {companionBonuses.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Mount equip power">
+                      <Select
+                        value={selectedMember.mount_equip_power_id}
+                        onChange={(event) => updateMember(selectedMember.id, { mount_equip_power_id: event.target.value })}
+                      >
+                        <option value="">None</option>
+                        {mountEquipPowers.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {selectedMember.insignia_bonus_ids.map((value, index) => (
+                      <Field key={index} label={`Insignia bonus ${index + 1}`}>
+                        <Select
+                          value={value ?? ""}
+                          onChange={(event) => {
+                            const next = [...selectedMember.insignia_bonus_ids];
+                            next[index] = event.target.value;
+                            updateMember(selectedMember.id, { insignia_bonus_ids: next });
+                          }}
+                        >
+                          <option value="">None</option>
+                          {insigniaBonuses.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </Select>
+                      </Field>
+                    ))}
+                  </div>
+
+                  <Field label="Notes">
+                    <Textarea
+                      placeholder="Rotation or assignment notes"
+                      value={selectedMember.notes}
+                      onChange={(event) => updateMember(selectedMember.id, { notes: event.target.value })}
+                    />
+                  </Field>
+                </CardContent>
+              </Card>
+            </>
           ) : null}
         </div>
-        <div className="grid gap-6 xl:col-span-2 xl:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2 text-rose-200">
-                <Layers3 className="h-4 w-4" />
-                <p className="text-xs uppercase tracking-[0.22em]">Boss debuff total</p>
-              </div>
-              <CardTitle>{bossDebuffSourceCount} applied or tracked sources</CardTitle>
-              <CardDescription>
-                Display aggregate for planning only. Internal debuff math still stays split by debuff type.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.12),rgba(189,224,254,0.08))] px-5 py-4">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Total debuff sources</p>
-                <p className="mt-2 text-2xl font-semibold text-stone-100">{bossDebuffSourceCount}</p>
-              </div>
-              <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(255,200,221,0.12),rgba(162,210,255,0.08))] px-5 py-4">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Resolved combined percent</p>
-                <p className="mt-2 text-2xl font-semibold text-stone-100">{formatPercent(bossDebuffResolvedPercent)}</p>
-              </div>
-            </CardContent>
-          </Card>
+
+        <div className="space-y-6">
           <SummaryPanel
-            icon={Layers3}
-            title="Boss Debuff Summary"
+            icon={Target}
+            title="Boss Debuffs"
             lines={teamState.bossSummary.map((line) => ({
               label: titleCase(line.stat),
               value: formatPercent(line.total),
-              detail: `${line.contributions.length} resolved / ${line.unresolved.length} pending`,
+              detail: `${line.contributions.length} active sources`,
             }))}
           />
           <SummaryPanel
-            icon={ShieldPlus}
-            title="Team Buff Summary"
+            icon={Swords}
+            title="Team Buffs"
             lines={teamState.teamSummary.map((line) => ({
               label: titleCase(line.stat),
               value: formatPercent(line.total),
-              detail: `${line.contributions.length} resolved / ${line.unresolved.length} pending`,
-            }))}
-          />
-          <SummaryPanel
-            icon={Users}
-            title={carry?.label ?? "Carry pending"}
-            lines={Object.entries(teamState.carryState).map(([key, value]) => ({
-              label: titleCase(key),
-              value: formatPercent(value),
-              detail: "Carry-state output",
+              detail: `${line.contributions.length} active sources`,
             }))}
           />
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-2 text-orange-200">
-                <Calculator className="h-4 w-4" />
-                <p className="text-xs uppercase tracking-[0.22em]">Final Mount Hit Calculator</p>
+              <CardTitle>Carry Summary</CardTitle>
+              <CardDescription>{carry ? getMemberTitle(carry) : "No carry selected"}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-stone-300">
+              <p>Damage bonus: {formatPercent(teamState.carryState.outgoing_damage_bonus)}</p>
+              <p>Combat advantage: {formatPercent(teamState.carryState.effective_ca)}</p>
+              <p>Power: {formatPercent(teamState.carryState.effective_power)}</p>
+              <p>Crit strike: {formatPercent(teamState.carryState.effective_crit_strike)}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-sky-100" />
+                <CardTitle>Mount Hit Calculator</CardTitle>
               </div>
-              <CardTitle>Mount-hit estimator</CardTitle>
-              <CardDescription>
-                Supports unresolved mount base data through a local base-hit override while keeping the rest of the stack visible.
-              </CardDescription>
+              <CardDescription>Simple breakdown for the currently selected carry setup.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Field label="Mount owner">
-                <Select value={carry?.id ?? ""} onChange={(event) => updateCarry(event.target.value)}>
-                  {teamMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.label}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Selected damage mount">
-                <Select
-                  value={carry?.mount_combat_power_id ?? ""}
-                  onChange={(event) => carry && updateMember(carry.id, { mount_combat_power_id: event.target.value })}
-                >
-                  {mountCombatPowers.map((power) => (
-                    <option key={power.id} value={power.id}>
-                      {power.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Base hit override">
+              <Field label="Base hit">
                 <Input
                   type="number"
                   value={mountBaseHitOverride}
-                  onChange={(event) => setMountBaseHitOverride(Number(event.target.value))}
+                  onChange={(event) => setMountBaseHitOverride(Number(event.target.value) || 0)}
                 />
               </Field>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Crit assumption">
                   <Input
                     type="number"
-                    step="0.01"
+                    step="0.05"
                     value={critAssumption}
-                    onChange={(event) => setCritAssumption(Number(event.target.value))}
+                    onChange={(event) => setCritAssumption(Number(event.target.value) || 0)}
                   />
                 </Field>
                 <Field label="CA assumption">
                   <Input
                     type="number"
-                    step="0.01"
+                    step="0.05"
                     value={caAssumption}
-                    onChange={(event) => setCaAssumption(Number(event.target.value))}
+                    onChange={(event) => setCaAssumption(Number(event.target.value) || 0)}
                   />
                 </Field>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant={includePersonal ? "primary" : "secondary"} onClick={() => setIncludePersonal((value) => !value)}>
                   Personal
                 </Button>
@@ -821,82 +921,27 @@ export function TeamBuilderPage() {
                   Boss
                 </Button>
               </div>
-              <div className="space-y-2 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.44),rgba(17,0,28,0.9))] p-5">
-                {Object.entries(mountCalc).map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between text-sm">
-                    <span className="text-stone-400">{titleCase(key)}</span>
-                    <span className="font-medium text-stone-100">{Math.round(value).toLocaleString()}</span>
-                  </div>
-                ))}
+              <div className="grid gap-3 text-sm text-stone-300">
+                <p>After owner: {Math.round(mountCalc.afterOwnerScaling).toLocaleString()}</p>
+                <p>After personal: {Math.round(mountCalc.afterPersonalBuffs).toLocaleString()}</p>
+                <p>After team: {Math.round(mountCalc.afterTeamBuffs).toLocaleString()}</p>
+                <p>After boss: {Math.round(mountCalc.afterBossDebuffs).toLocaleString()}</p>
+                <p className="text-base font-semibold text-stone-100">
+                  Final estimated hit: {Math.round(mountCalc.finalEstimatedHit).toLocaleString()}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2 text-rose-200">
-                <AlertTriangle className="h-4 w-4" />
-                <p className="text-xs uppercase tracking-[0.22em]">Coverage</p>
-              </div>
-              <CardTitle>Missing & duplicate effects</CardTitle>
-              <CardDescription>Warnings are scoped by effect type instead of one generic team score.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] p-5">
-                <p className="mb-3 text-sm font-medium text-stone-100">Missing effects</p>
-                <div className="flex flex-wrap gap-2">
-                  {teamState.missingBoss.length > 0 ? (
-                    teamState.missingBoss.map((line) => (
-                      <Badge key={line.stat} variant="red">
-                        {titleCase(line.stat)}
-                      </Badge>
-                    ))
-                  ) : (
-                    <Badge variant="green">Core boss debuff categories covered or tracked</Badge>
-                  )}
-                </div>
-              </div>
-              <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] p-5">
-                <p className="mb-3 text-sm font-medium text-stone-100">Duplicate effects</p>
-                <div className="space-y-2">
-                  {teamState.duplicates.length > 0 ? (
-                    teamState.duplicates.map((warning) => (
-                      <div key={warning.stackKey} className="rounded-[20px] border border-amber-300/20 bg-amber-300/8 p-4">
-                        <p className="text-sm font-medium text-amber-100">{warning.reason}</p>
-                        <p className="mt-1 text-sm leading-6 text-stone-300">{warning.effectNames.join(", ")}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm leading-6 text-stone-400">No strongest-only conflicts detected from the current seed selections.</p>
-                  )}
-                </div>
-              </div>
-              {selectedMember ? (
-                <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] p-5">
-                  <div className="mb-3 flex items-center justify-between gap-4">
-                    <p className="text-sm font-medium text-stone-100">Selected member provenance</p>
-                    {(() => {
-                      const sourceItem =
-                        companions.find((item) => item.id === selectedMember.companion_id) ??
-                        artifacts.find((item) => item.id === selectedMember.artifact_id);
-                      return sourceItem ? <SourceBadge {...sourceItem} /> : null;
-                    })()}
-                  </div>
-                  <p className="text-sm leading-6 text-stone-400">
-                    The UI keeps source and verification badges close to the selected loadout so unresolved live values stay visible during planning.
-                  </p>
-                </div>
-              ) : null}
             </CardContent>
           </Card>
         </div>
       </div>
+
       {pickerState && pickerMember ? (
         <SelectionOverlay
           member={pickerMember}
           kind={pickerState.kind}
           query={pickerQuery}
           activeFilter={pickerFilter}
-          filters={pickerFilters}
+          filters={getPickerFilters(pickerState.kind)}
           items={pickerItems}
           onQueryChange={setPickerQuery}
           onFilterChange={setPickerFilter}
@@ -908,568 +953,49 @@ export function TeamBuilderPage() {
   );
 }
 
-function GroupSection({
+function RosterGroup({
   title,
   members,
   selectedMemberId,
   onSelect,
-  onOpenPicker,
 }: {
   title: string;
   members: TeamMember[];
   selectedMemberId: string;
   onSelect: (memberId: string) => void;
-  onOpenPicker: (memberId: string, kind: PickerKind) => void;
 }) {
   return (
-    <section className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-stone-100">
-          <Swords className="h-4 w-4 text-sky-100" />
-          <p className="text-sm font-medium">{title}</p>
-        </div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">{members.length} members</p>
-      </div>
-      <div className="grid gap-5 xl:grid-cols-2">
+    <section className="space-y-3">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">{title}</p>
+      <div className="space-y-2">
         {members.map((member) => (
-          <MemberCard
+          <button
             key={member.id}
-            member={member}
-            isSelected={member.id === selectedMemberId}
-            onSelect={onSelect}
-            onOpenPicker={onOpenPicker}
-          />
+            type="button"
+            onClick={() => onSelect(member.id)}
+            className={`block w-full border p-4 text-left transition ${
+              member.id === selectedMemberId
+                ? "border-sky-200/40 bg-[rgba(162,210,255,0.12)]"
+                : "border-white/10 bg-white/[0.03] hover:border-white/20"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-stone-100">
+                {member.group}-{member.slot} {getMemberTitle(member)}
+              </p>
+              {member.is_carry ? <Badge variant="teal">Carry</Badge> : null}
+            </div>
+            <p className="mt-2 text-sm text-stone-400">{getMemberSummary(member)}</p>
+          </button>
         ))}
       </div>
     </section>
   );
 }
 
-function MemberCard({
-  member,
-  isSelected,
-  onSelect,
-  onOpenPicker,
-}: {
-  member: TeamMember;
-  isSelected: boolean;
-  onSelect: (memberId: string) => void;
-  onOpenPicker: (memberId: string, kind: PickerKind) => void;
-}) {
-  const companion = companions.find((item) => item.id === member.companion_id);
-  const artifact = artifacts.find((item) => item.id === member.artifact_id);
-  const mountPower = mountCombatPowers.find((item) => item.id === member.mount_combat_power_id);
-  const enhancement = companionEnhancements.find((item) => item.id === member.enhancement_id);
-  const classItem = classes.find((item) => item.id === member.class_id);
-  const encounterNames = member.encounter_ids
-    .map((id) => powers.find((item) => item.id === id)?.name)
-    .filter(Boolean);
-  const featureNames = member.feature_ids
-    .map((id) => powers.find((item) => item.id === id)?.name)
-    .filter(Boolean);
-
-  return (
-    <div
-      className={`border p-6 text-left transition ${
-        isSelected
-          ? "border-sky-200/30 bg-[linear-gradient(180deg,rgba(162,210,255,0.16),rgba(205,180,219,0.12))]"
-          : "border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] hover:border-white/14"
-      }`}
-    >
-      <button type="button" onClick={() => onSelect(member.id)} className="flex w-full items-start justify-between gap-4 text-left">
-        <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 items-center justify-center border border-white/8 bg-white/[0.04] text-sm font-medium text-stone-300">
-            {member.group}-{member.slot}
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-lg font-semibold text-stone-50">{member.class_id ? member.label : `Empty Slot ${member.slot}`}</p>
-              {member.is_carry ? <Badge variant="teal">Carry</Badge> : <Badge variant="muted">{formatRoleLabel(member.role)}</Badge>}
-            </div>
-            <p className="mt-2 text-sm text-stone-400">
-              {classItem?.name ?? "Class not selected"} {member.paragon ? `/ ${member.paragon}` : ""}
-            </p>
-          </div>
-        </div>
-        <div className="hidden border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-stone-500 md:block">
-          {member.race || "Race pending"}
-        </div>
-      </button>
-
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <LoadoutCell
-          label="Artifact"
-          value={artifact?.name ?? "Select artifact"}
-          detail={artifact?.category ?? "Popup picker"}
-          onClick={() => onOpenPicker(member.id, "artifact")}
-        />
-        <LoadoutCell
-          label="Companion"
-          value={companion?.name ?? "Select companion"}
-          detail={companion?.archetype ?? "Popup picker"}
-          onClick={() => onOpenPicker(member.id, "companion")}
-        />
-        <LoadoutCell
-          label="Mount"
-          value={mountPower?.name ?? "Select mount power"}
-          detail={mountPower?.damage_type ?? "Popup picker"}
-          onClick={() => onOpenPicker(member.id, "mount")}
-        />
-        <LoadoutCell
-          label="Enhancement"
-          value={enhancement?.name ?? "Select enhancement"}
-          detail="Purple debuff"
-          onClick={() => onOpenPicker(member.id, "enhancement")}
-        />
-      </div>
-
-      <div className="mt-6 flex flex-wrap gap-2">
-        {companion?.role_tag ? <Badge variant="purple">{companion.role_tag}</Badge> : null}
-        {artifact?.category ? <Badge variant="gold">{artifact.category}</Badge> : null}
-        {mountPower?.damage_type ? <Badge variant="orange">{mountPower.damage_type}</Badge> : null}
-        {member.role === "support" ? <Badge variant="blue">Support contribution</Badge> : null}
-        {encounterNames.map((name) => (
-          <Badge key={name} variant="red">
-            {name}
-          </Badge>
-        ))}
-        {featureNames.map((name) => (
-          <Badge key={name} variant="teal">
-            {name}
-          </Badge>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function LoadoutCell({
-  label,
-  value,
-  detail,
-  onClick,
-}: {
-  label: string;
-  value: string;
-  detail?: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-4 text-left transition hover:border-sky-200/40 hover:bg-[linear-gradient(180deg,rgba(205,180,219,0.16),rgba(189,224,254,0.12))]"
-    >
-      <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">{label}</p>
-      <p className="mt-2 text-sm leading-6 text-stone-200">{value}</p>
-      <p className="mt-2 text-xs uppercase tracking-[0.14em] text-stone-500">{detail ?? "Open picker"}</p>
-    </button>
-  );
-}
-
-function renderEditorTab(
-  editorTab: (typeof editorTabs)[number],
-  selectedMember: TeamMember,
-  updateMember: (memberId: string, patch: Partial<TeamMember>) => void,
-  updateCarry: (memberId: string) => void,
-  handleClassChange: (memberId: string, classId: string) => void,
-  openPicker: (memberId: string, kind: PickerKind) => void,
-) {
-  const className = classes.find((item) => item.id === selectedMember.class_id)?.name;
-  const selectedArtifact = artifacts.find((item) => item.id === selectedMember.artifact_id);
-  const selectedCompanion = companions.find((item) => item.id === selectedMember.companion_id);
-  const selectedEnhancement = companionEnhancements.find((item) => item.id === selectedMember.enhancement_id);
-  const selectedMount = mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id);
-  const classEncounters = powers.filter(
-    (power) =>
-      power.class_name === className &&
-      power.power_type === "encounter" &&
-      (!selectedMember.paragon || !power.paragon_path || power.paragon_path === selectedMember.paragon),
-  );
-  const classFeatures = powers.filter(
-    (power) =>
-      power.class_name === className &&
-      power.power_type === "feature" &&
-      (!selectedMember.paragon || !power.paragon_path || power.paragon_path === selectedMember.paragon),
-  );
-
-  switch (editorTab) {
-    case "Identity":
-      return (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <Field label="Slot Context">
-            <Select
-              value={`${selectedMember.group}-${selectedMember.slot}`}
-              disabled
-            >
-              <option value={`${selectedMember.group}-${selectedMember.slot}`}>
-                Group {selectedMember.group} / Slot {selectedMember.slot}
-              </option>
-            </Select>
-          </Field>
-          <Field label="Label">
-            <Input
-              value={selectedMember.label}
-              onChange={(event) => updateMember(selectedMember.id, { label: event.target.value })}
-            />
-          </Field>
-          <Field label="Class">
-            <Select
-              value={selectedMember.class_id}
-              onChange={(event) => handleClassChange(selectedMember.id, event.target.value)}
-            >
-              <option value="">Select class</option>
-              {classes.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Role">
-            <Select
-              value={selectedMember.role}
-              onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
-            >
-              {roleOptions.map((role) => (
-                <option key={role.value} value={role.value}>
-                  {role.label}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Paragon / Path">
-            <Select
-              value={selectedMember.paragon}
-              onChange={(event) => {
-                const paragon = event.target.value;
-                const nextLoadout = getDefaultPowerLoadoutForClass(selectedMember.class_id, paragon);
-                updateMember(selectedMember.id, {
-                  paragon,
-                  role: getRoleForClassParagon(selectedMember.class_id, paragon),
-                  encounter_ids: nextLoadout.encounter_ids,
-                  daily_ids: nextLoadout.daily_ids,
-                  feature_ids: nextLoadout.feature_ids,
-                });
-              }}
-            >
-              <option value="">{selectedMember.class_id ? "Select paragon" : "Select class first"}</option>
-              {(classes.find((item) => item.id === selectedMember.class_id)?.paragon_options ?? []).map((paragon) => (
-                <option key={paragon} value={paragon}>
-                  {paragon}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Race">
-            <Select
-              value={selectedMember.race}
-              onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}
-            >
-              <option value="">Select race</option>
-              {raceOptions.map((race) => (
-                <option key={race} value={race}>
-                  {race}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Purple Debuff / Enhancement">
-            <PickerField
-              title={selectedEnhancement?.name ?? "Select debuff enhancement"}
-              subtitle="Popup list with full imported enhancement roster"
-              onClick={() => openPicker(selectedMember.id, "enhancement")}
-            />
-          </Field>
-          <Field label="Artifact">
-            <PickerField
-              title={selectedArtifact?.name ?? "Select artifact"}
-              subtitle="Popup list with images and imported artifact data"
-              onClick={() => openPicker(selectedMember.id, "artifact")}
-            />
-          </Field>
-          <div className="space-y-2">
-            <span className="text-xs uppercase tracking-[0.18em] text-stone-500">Carry state</span>
-            <Button
-              className="w-full"
-              variant={selectedMember.is_carry ? "primary" : "secondary"}
-              onClick={() => updateCarry(selectedMember.id)}
-            >
-              {selectedMember.is_carry ? "Selected carry DPS" : "Mark as carry DPS"}
-            </Button>
-          </div>
-        </div>
-      );
-    case "Loadout":
-      return (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <Field label="Encounter 1">
-            <Select
-              value={selectedMember.encounter_ids[0] ?? ""}
-              onChange={(event) =>
-                updateMember(selectedMember.id, {
-                  encounter_ids: [
-                    event.target.value,
-                    selectedMember.encounter_ids[1] ?? "",
-                    selectedMember.encounter_ids[2] ?? "",
-                  ].filter(Boolean),
-                })
-              }
-            >
-              <option value="">{className ? "Select encounter" : "Select class first"}</option>
-              {classEncounters.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Encounter 2">
-            <Select
-              value={selectedMember.encounter_ids[1] ?? ""}
-              onChange={(event) =>
-                updateMember(selectedMember.id, {
-                  encounter_ids: [
-                    selectedMember.encounter_ids[0] ?? "",
-                    event.target.value,
-                    selectedMember.encounter_ids[2] ?? "",
-                  ].filter(Boolean),
-                })
-              }
-            >
-              <option value="">{className ? "Select encounter" : "Select class first"}</option>
-              {classEncounters.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Encounter 3">
-            <Select
-              value={selectedMember.encounter_ids[2] ?? ""}
-              onChange={(event) =>
-                updateMember(selectedMember.id, {
-                  encounter_ids: [
-                    selectedMember.encounter_ids[0] ?? "",
-                    selectedMember.encounter_ids[1] ?? "",
-                    event.target.value,
-                  ].filter(Boolean),
-                })
-              }
-            >
-              <option value="">{className ? "Select encounter" : "Select class first"}</option>
-              {classEncounters.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Feature 1">
-            <Select
-              value={selectedMember.feature_ids[0] ?? ""}
-              onChange={(event) =>
-                updateMember(selectedMember.id, {
-                  feature_ids: [event.target.value, selectedMember.feature_ids[1] ?? ""].filter(Boolean),
-                })
-              }
-            >
-              <option value="">{className ? "Select feature" : "Select class first"}</option>
-              {classFeatures.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Feature 2">
-            <Select
-              value={selectedMember.feature_ids[1] ?? ""}
-              onChange={(event) =>
-                updateMember(selectedMember.id, {
-                  feature_ids: [selectedMember.feature_ids[0] ?? "", event.target.value].filter(Boolean),
-                })
-              }
-            >
-              <option value="">{className ? "Select feature" : "Select class first"}</option>
-              {classFeatures.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Companion Bonus">
-            <Select
-              value={selectedMember.companion_bonus_id}
-              onChange={(event) => updateMember(selectedMember.id, { companion_bonus_id: event.target.value })}
-            >
-              {companionBonuses.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Mount Combat Power">
-            <PickerField
-              title={selectedMount?.name ?? "Select mount power"}
-              subtitle="Popup list of current source-aware mount entries"
-              onClick={() => openPicker(selectedMember.id, "mount")}
-            />
-          </Field>
-          <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-5 md:col-span-2 xl:col-span-3">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Auto-slot rule</p>
-            <p className="mt-2 text-sm leading-6 text-stone-300">
-              Changing class auto-fills the currently seeded encounter and feature loadout for that class. You can override each slot manually after that.
-            </p>
-          </div>
-        </div>
-      );
-    case "Companion":
-      return (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <Field label="Companion">
-            <PickerField
-              title={selectedCompanion?.name ?? "Select companion"}
-              subtitle={selectedCompanion?.archetype ?? "Popup list of current summon companion roster"}
-              onClick={() => openPicker(selectedMember.id, "companion")}
-            />
-          </Field>
-          <Field label="Enhancement">
-            <PickerField
-              title={selectedEnhancement?.name ?? "Select enhancement"}
-              subtitle="Popup list with imported debuff and buff enhancement text"
-              onClick={() => openPicker(selectedMember.id, "enhancement")}
-            />
-          </Field>
-          <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-5">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Support note</p>
-            <p className="mt-2 text-sm leading-6 text-stone-300">
-              Companion records remain source-aware. Unresolved live values stay in the model instead of being guessed.
-            </p>
-          </div>
-        </div>
-      );
-    case "Mount":
-      return (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <Field label="Mount Equip Power">
-            <Select
-              value={selectedMember.mount_equip_power_id}
-              onChange={(event) => updateMember(selectedMember.id, { mount_equip_power_id: event.target.value })}
-            >
-              <option value="">None</option>
-              {mountEquipPowers.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Insignia Bonus 1">
-            <Select
-              value={selectedMember.insignia_bonus_ids[0] ?? ""}
-              onChange={(event) =>
-                updateMember(selectedMember.id, {
-                  insignia_bonus_ids: [
-                    event.target.value,
-                    selectedMember.insignia_bonus_ids[1] ?? "",
-                    selectedMember.insignia_bonus_ids[2] ?? "",
-                  ],
-                })
-              }
-            >
-              {insigniaBonuses.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Insignia Bonus 2">
-            <Select
-              value={selectedMember.insignia_bonus_ids[1] ?? ""}
-              onChange={(event) =>
-                updateMember(selectedMember.id, {
-                  insignia_bonus_ids: [
-                    selectedMember.insignia_bonus_ids[0] ?? "",
-                    event.target.value,
-                    selectedMember.insignia_bonus_ids[2] ?? "",
-                  ],
-                })
-              }
-            >
-              {insigniaBonuses.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Insignia Bonus 3">
-            <Select
-              value={selectedMember.insignia_bonus_ids[2] ?? ""}
-              onChange={(event) =>
-                updateMember(selectedMember.id, {
-                  insignia_bonus_ids: [
-                    selectedMember.insignia_bonus_ids[0] ?? "",
-                    selectedMember.insignia_bonus_ids[1] ?? "",
-                    event.target.value,
-                  ],
-                })
-              }
-            >
-              {insigniaBonuses.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-      );
-    case "Personal Buffs":
-      return (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {effectStats.map((stat) => (
-            <Field key={stat} label={`Personal ${titleCase(stat)}`}>
-              <Input
-                type="number"
-                step="0.01"
-                value={selectedMember.personal_overrides[stat] ?? ""}
-                onChange={(event) =>
-                  updateMember(selectedMember.id, {
-                    personal_overrides: {
-                      ...selectedMember.personal_overrides,
-                      [stat]: event.target.value === "" ? undefined : Number(event.target.value),
-                    },
-                  })
-                }
-              />
-            </Field>
-          ))}
-        </div>
-      );
-    case "Notes":
-      return (
-        <Field label="Notes">
-          <Textarea
-            placeholder="Rotation assumptions, uptime notes, unresolved live values..."
-            value={selectedMember.notes}
-            onChange={(event) => updateMember(selectedMember.id, { notes: event.target.value })}
-          />
-        </Field>
-      );
-    default:
-      return null;
-  }
-}
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block space-y-2.5">
+    <label className="block space-y-2">
       <span className="text-xs uppercase tracking-[0.18em] text-stone-500">{label}</span>
       {children}
     </label>
@@ -1489,11 +1015,11 @@ function PickerField({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-14 w-full items-center justify-between border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.12),rgba(189,224,254,0.08))] px-4 py-3 text-left transition hover:border-sky-200/40"
+      className="flex min-h-14 w-full items-center justify-between border border-white/10 bg-white/[0.03] px-4 py-3 text-left transition hover:border-sky-200/40"
     >
       <div>
         <p className="text-sm font-medium text-stone-100">{title}</p>
-        <p className="mt-1 text-xs leading-5 text-stone-400">{subtitle}</p>
+        <p className="mt-1 text-xs text-stone-400">{subtitle}</p>
       </div>
       <Search className="h-4 w-4 text-sky-100" />
     </button>
@@ -1524,23 +1050,21 @@ function SelectionOverlay({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-[rgba(16,19,26,0.78)] backdrop-blur-sm">
-      <div className="mx-auto flex h-full max-w-[1400px] items-center justify-center px-5 py-8">
-        <div className="flex max-h-full w-full flex-col overflow-hidden border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.22),rgba(255,200,221,0.14),rgba(189,224,254,0.1))] shadow-[0_36px_90px_rgba(0,0,0,0.35)]">
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
-            <div className="max-w-3xl">
+    <div className="fixed inset-0 z-50 bg-[rgba(16,19,26,0.82)] backdrop-blur-sm">
+      <div className="mx-auto flex h-full max-w-[1320px] items-center justify-center px-5 py-8">
+        <div className="flex max-h-full w-full flex-col overflow-hidden border border-white/10 bg-[rgba(30,32,46,0.96)] shadow-[0_36px_90px_rgba(0,0,0,0.35)]">
+          <div className="flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
+            <div>
               <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">
-                {getPickerTitle(kind)} for {member.label}
+                {getPickerLabel(kind)} for {member.group}-{member.slot}
               </p>
-              <h3 className="mt-2 text-2xl font-semibold text-stone-50">{getPickerHeading(kind)}</h3>
-              <p className="mt-2 text-sm leading-7 text-stone-400">
-                Search, filter, and choose from the imported local data. Recommended sheet-backed entries are tagged directly in the list.
-              </p>
+              <h3 className="mt-2 text-2xl font-semibold text-stone-50">{getPickerLabel(kind)}</h3>
+              <p className="mt-2 text-sm text-stone-400">Only concise, proven values are shown in this picker.</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex h-11 w-11 items-center justify-center border border-white/10 bg-[rgba(205,180,219,0.12)] text-stone-200 transition hover:border-sky-200/40"
+              className="flex h-10 w-10 items-center justify-center border border-white/10 bg-white/[0.04] text-stone-200 transition hover:border-sky-200/40"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1551,7 +1075,7 @@ function SelectionOverlay({
               <Input
                 value={query}
                 onChange={(event) => onQueryChange(event.target.value)}
-                placeholder={`Search ${getPickerHeading(kind).toLowerCase()}...`}
+                placeholder={`Search ${getPickerLabel(kind).toLowerCase()}...`}
                 className="pl-11"
               />
             </div>
@@ -1573,28 +1097,30 @@ function SelectionOverlay({
               items.map((item) => (
                 <div
                   key={item.id}
-                  className="grid gap-4 border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.08))] p-4 lg:grid-cols-[84px_minmax(0,1.3fr)_minmax(0,0.9fr)_132px] lg:items-center"
+                  className="grid gap-4 border border-white/10 bg-white/[0.03] p-4 lg:grid-cols-[72px_minmax(0,1fr)_140px]"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start">
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
                         alt={item.name}
-                        width={72}
-                        height={72}
-                        className="h-[72px] w-[72px] border border-white/10 bg-[rgba(255,255,255,0.05)] object-cover"
+                        width={64}
+                        height={64}
+                        className="h-16 w-16 border border-white/10 bg-white/[0.04] object-cover"
                       />
                     ) : (
-                      <div className="flex h-[72px] w-[72px] items-center justify-center border border-white/10 bg-[rgba(255,255,255,0.05)]">
-                        <ImageOff className="h-5 w-5 text-stone-500" />
+                      <div className="flex h-16 w-16 items-center justify-center border border-white/10 bg-white/[0.04]">
+                        <ImageOff className="h-4 w-4 text-stone-500" />
                       </div>
                     )}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-base font-semibold text-stone-50">{item.name}</p>
-                    {item.subtitle ? <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{item.subtitle}</p> : null}
-                    {item.badges?.length ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-base font-semibold text-stone-50">{item.name}</p>
+                      {item.subtitle ? <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{item.subtitle}</p> : null}
+                    </div>
+                    {item.badges.length ? (
+                      <div className="flex flex-wrap gap-2">
                         {item.badges.map((badge) => (
                           <Badge key={`${item.id}-${badge.label}`} variant={badge.variant}>
                             {badge.label}
@@ -1602,11 +1128,9 @@ function SelectionOverlay({
                         ))}
                       </div>
                     ) : null}
+                    <p className="text-sm leading-6 text-stone-300">{item.description}</p>
                   </div>
-                  <div className="min-w-0">
-                    <p className="max-h-[5.5rem] overflow-hidden text-sm leading-6 text-stone-300">{item.description}</p>
-                  </div>
-                  <div className="flex flex-row items-center justify-between gap-3 lg:flex-col lg:items-stretch">
+                  <div className="flex flex-col items-stretch justify-between gap-3">
                     <Button variant="primary" onClick={() => onSelect(item.id)}>
                       Select
                     </Button>
@@ -1615,7 +1139,7 @@ function SelectionOverlay({
                         href={item.sourceUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-2 text-xs uppercase tracking-[0.16em] text-sky-100/90 lg:justify-start"
+                        className="inline-flex items-center justify-center gap-2 text-xs uppercase tracking-[0.16em] text-sky-100/90"
                       >
                         Source
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -1625,12 +1149,10 @@ function SelectionOverlay({
                 </div>
               ))
             ) : (
-              <div>
-                <EmptyState
-                  title="No matching entries"
-                  description="Try a broader search term. The picker only shows local typed data that has already been imported into the repo."
-                />
-              </div>
+              <EmptyState
+                title="No matching entries"
+                description="Try a broader search or switch filters."
+              />
             )}
           </div>
         </div>
@@ -1638,181 +1160,3 @@ function SelectionOverlay({
     </div>
   );
 }
-
-function getPickerTitle(kind: PickerKind) {
-  switch (kind) {
-    case "artifact":
-      return "Artifact picker";
-    case "companion":
-      return "Companion picker";
-    case "mount":
-      return "Mount picker";
-    case "enhancement":
-      return "Enhancement picker";
-    default:
-      return "Picker";
-  }
-}
-
-function getPickerHeading(kind: PickerKind) {
-  switch (kind) {
-    case "artifact":
-      return "Artifacts";
-    case "companion":
-      return "Companions";
-    case "mount":
-      return "Mount combat powers";
-    case "enhancement":
-      return "Companion enhancements";
-    default:
-      return "Selections";
-  }
-}
-
-function getPickerItems(kind: PickerKind): PickerItem[] {
-  if (kind === "artifact") {
-    return artifacts.map((item) => {
-      const recommendation = artifactRecommendationsById[item.id];
-
-      return {
-        id: item.id,
-        name: item.name,
-        subtitle: `${item.category} / ${item.team_or_personal}`,
-        description: item.notes,
-        imageUrl: item.image_url,
-        sourceUrl: item.source_url,
-        filters: [
-          "all",
-          item.category,
-          item.team_or_personal,
-          item.effect_ids.length ? "mapped" : "source-only",
-          recommendation?.trial || recommendation?.dungeon ? "recommended" : "not-recommended",
-        ],
-        badges: [
-          { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
-          { label: item.category, variant: "gold" },
-          ...(recommendation?.trial ? [{ label: `Trial #${recommendation.trial.rank}`, variant: "blue" as const }] : []),
-          ...(recommendation?.dungeon ? [{ label: `Dungeon #${recommendation.dungeon.rank}`, variant: "purple" as const }] : []),
-        ],
-      };
-    });
-  }
-
-  if (kind === "companion") {
-    return companions.map((item) => {
-      const recommendation = companionRecommendationsById[item.id];
-
-      return {
-        id: item.id,
-        name: item.name,
-        subtitle: `${item.role_tag} / ${item.archetype}`,
-        description: item.notes,
-        sourceUrl: item.source_url,
-        filters: [
-          "all",
-          item.role_tag,
-          item.effect_ids.length ? "mapped" : "source-only",
-          recommendation ? "recommended" : "not-recommended",
-        ],
-        badges: [
-          { label: item.role_tag, variant: "purple" },
-          { label: item.verification_status.replaceAll("_", " "), variant: "blue" },
-          ...(recommendation ? [{ label: `Support #${recommendation.rank}`, variant: "teal" as const }] : []),
-        ],
-      };
-    });
-  }
-
-  if (kind === "mount") {
-    return mountCombatPowers.map((item) => ({
-      id: item.id,
-      name: item.name,
-      subtitle: item.damage_type,
-      description: item.notes,
-      sourceUrl: item.source_url,
-      filters: [
-        "all",
-        item.damage_type,
-        item.effect_ids.length ? "debuff-capable" : "source-only",
-        item.affected_by_team_buffs ? "team-scaled" : "owner-scaled",
-      ],
-      badges: [
-        { label: item.damage_type, variant: "orange" },
-        { label: item.verification_status.replaceAll("_", " "), variant: "blue" },
-      ],
-    }));
-  }
-
-  const enhancementText = new Map<string, string>(
-    companionEnhancementSnapshots.map((item) => [item.name, item.text]),
-  );
-
-  return companionEnhancements.map((item) => {
-    const recommendation = enhancementRecommendationsById[item.id];
-
-    return {
-      id: item.id,
-      name: item.name,
-      subtitle: "Purple debuff / enhancement",
-      description: enhancementText.get(item.name) ?? item.notes,
-      sourceUrl: item.source_url,
-      filters: [
-        "all",
-        item.effect_ids.length > 0 ? "mapped" : "source-only",
-        recommendation ? "recommended" : "not-recommended",
-      ],
-      badges: [
-        { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
-        { label: item.effect_ids.length > 0 ? "mapped effect" : "source only", variant: item.effect_ids.length > 0 ? "red" : "muted" },
-        ...(recommendation ? [{ label: `Rank #${recommendation.rank}`, variant: "purple" as const }] : []),
-      ],
-    };
-  });
-}
-
-function getPickerFilters(kind: PickerKind) {
-  if (kind === "artifact") {
-    return [
-      { value: "all", label: "All" },
-      { value: "recommended", label: "Recommended" },
-      { value: "debuff", label: "Debuff" },
-      { value: "support", label: "Support" },
-      { value: "utility", label: "Utility" },
-      { value: "personal_burst", label: "Burst" },
-      { value: "mapped", label: "Mapped" },
-    ];
-  }
-
-  if (kind === "companion") {
-    return [
-      { value: "all", label: "All" },
-      { value: "recommended", label: "Recommended" },
-      { value: "support", label: "Support" },
-      { value: "st", label: "Damage" },
-      { value: "augment", label: "Augment" },
-      { value: "source-only", label: "Source Only" },
-      { value: "mapped", label: "Mapped" },
-    ];
-  }
-
-  if (kind === "mount") {
-    return [
-      { value: "all", label: "All" },
-      { value: "debuff-capable", label: "Debuff" },
-      { value: "team-scaled", label: "Team Scaled" },
-      { value: "owner-scaled", label: "Owner Scaled" },
-      { value: "physical", label: "Physical" },
-      { value: "mixed", label: "Mixed" },
-      { value: "utility", label: "Utility" },
-    ];
-  }
-
-  return [
-    { value: "all", label: "All" },
-    { value: "recommended", label: "Recommended" },
-    { value: "mapped", label: "Mapped" },
-    { value: "source-only", label: "Source Only" },
-  ];
-}
-
-  const activeTab = "Roster" as const;

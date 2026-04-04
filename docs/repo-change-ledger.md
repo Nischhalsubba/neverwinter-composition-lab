@@ -1205,3 +1205,58 @@ Checks run:
 Result:
 
 - Both passed after integrating the recommendation overlays and Team Builder picker updates.
+
+## Pass 14 - Team Builder full layout reset and proven-value UI filtering
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `lib/display-text.ts`
+- `app/companions/page.tsx`
+
+Changes:
+
+- Rebuilt the Team Builder layout from scratch around a simpler three-column structure:
+  - left = roster
+  - center = always-visible selected slot setup
+  - right = summaries and mount calculator
+- Removed the hidden tab-first setup pattern that required users to scroll before discovering where class and paragon selection lived.
+- Moved the critical slot setup fields into the first visible card for the selected slot:
+  - class
+  - paragon
+  - role
+  - race
+  - artifact
+  - companion
+  - enhancement
+  - mount
+  - carry toggle
+- Kept the debuff encounter chips and loadout controls directly under the setup card so the full slot workflow stays in one visible vertical sequence.
+- Replaced the old Team Canvas card wall with a leaner roster list because the user explicitly wanted the UI to be easier to understand for endgame players.
+- Added `lib/display-text.ts` with UI-only sanitization helpers that suppress text containing unresolved variable placeholders or uncertain phrasing such as:
+  - `<x>`
+  - quality-dependent tooltip text
+  - pending / unresolved wording
+- Updated Team Builder pickers to show only concise, proven display text instead of raw placeholder-heavy tooltip dumps.
+- Updated the companions reference page to sanitize raw NW Hub tooltip text and prefer sheet-backed proven summaries where available.
+
+Why:
+
+- The user explicitly said the current Team Builder hides key setup controls below the fold and that most users would miss them.
+- The user also explicitly requested a much simpler endgame-focused UI and asked for uncertain tooltip text to be removed from the visible app.
+- The sanitization layer preserves source-aware data in the repo while preventing placeholder or unresolved values from being shown as if they were usable live values.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the Team Builder rewrite and proven-value filtering pass.

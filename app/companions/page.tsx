@@ -2,6 +2,7 @@ import { ContentPage } from "@/components/content-page";
 import { SourceBadge } from "@/components/source-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { sanitizeUiText } from "@/lib/display-text";
 import {
   companionEnhancementSnapshots,
   companionPowerSnapshots,
@@ -83,7 +84,9 @@ export default function Page() {
                       ))}
                     </div>
                     <p className="mt-3 text-sm font-medium text-stone-100">{item.name}</p>
-                    <p className="mt-2 text-sm leading-6 text-stone-400">{item.text}</p>
+                    <p className="mt-2 text-sm leading-6 text-stone-400">
+                      {sanitizeUiText(item.text, "Verified slot-bonus entry. Exact variable tooltip values are hidden until fully proven.")}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -112,7 +115,11 @@ export default function Page() {
                         <p className="text-sm font-medium text-stone-100">{item.name}</p>
                         {recommendation ? <Badge variant="teal">Rank #{recommendation.rank}</Badge> : null}
                       </div>
-                      <p className="mt-2 text-sm leading-6 text-stone-400">{item.text}</p>
+                      <p className="mt-2 text-sm leading-6 text-stone-400">
+                        {recommendation
+                          ? `${recommendation.benefit}${recommendation.damageBoost != null ? ` Damage boost ${recommendation.damageBoost.toFixed(2)}%.` : ""}`
+                          : sanitizeUiText(item.text, "Verified enhancement entry. Exact variable tooltip values are hidden until fully proven.")}
+                      </p>
                     </div>
                   );
                 })}
