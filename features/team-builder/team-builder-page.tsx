@@ -45,7 +45,6 @@ import { calculateMountHit, summarizeTeam } from "@/lib/effect-engine";
 import type { EffectStat, TeamMember, TeamMode } from "@/lib/types";
 import { formatPercent, titleCase } from "@/lib/utils";
 
-const leftTabs = ["Roster", "Classes", "Companions", "Artifacts", "Mounts", "Powers", "Effects"] as const;
 const editorTabs = ["Identity", "Loadout", "Companion", "Mount", "Personal Buffs", "Notes"] as const;
 
 const effectStats: EffectStat[] = [
@@ -69,6 +68,23 @@ const raceOptions = [
   "Aasimar",
   "Menzoberranzan Renegade",
 ] as const;
+
+const roleOptions = [
+  { value: "tank", label: "Tank" },
+  { value: "healer", label: "Healer" },
+  { value: "dps", label: "DPS" },
+  { value: "boost", label: "Boost Person" },
+  { value: "support_dps", label: "Support DPS" },
+  { value: "support", label: "Support" },
+] as const;
+
+function formatRoleLabel(role: TeamMember["role"]) {
+  return role === "support_dps"
+    ? "Support DPS"
+    : role === "boost"
+      ? "Boost Person"
+      : titleCase(role);
+}
 
 type PickerKind = "artifact" | "companion" | "mount" | "enhancement";
 
@@ -127,7 +143,6 @@ if (typeof globalThis !== "undefined") {
 
 export function TeamBuilderPage() {
   const [mode, setMode] = useState<TeamMode | null>(null);
-  const [activeTab, setActiveTab] = useState<(typeof leftTabs)[number]>("Roster");
   const [editorTab, setEditorTab] = useState<(typeof editorTabs)[number]>("Identity");
   const [bossId, setBossId] = useState(bossPresets[0]?.id ?? "");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -184,6 +199,14 @@ export function TeamBuilderPage() {
     });
   }, [pickerFilter, pickerQuery, pickerState]);
   const pickerFilters = useMemo(() => (pickerState ? getPickerFilters(pickerState.kind) : []), [pickerState]);
+  const selectedClassName = classes.find((item) => item.id === selectedMember?.class_id)?.name;
+  const selectedClassEncounters = powers.filter(
+    (power) =>
+      power.class_name === selectedClassName &&
+      power.power_type === "encounter" &&
+      (!selectedMember?.paragon || !power.paragon_path || power.paragon_path === selectedMember.paragon),
+  );
+  const selectedDebuffEncounters = selectedClassEncounters.filter((power) => power.effect_ids.length > 0);
 
   function updateTeamMode(nextMode: TeamMode) {
     setMode(nextMode);
@@ -221,6 +244,29 @@ export function TeamBuilderPage() {
     setTeamMembers((members) =>
       members.map((member) => ({ ...member, is_carry: member.id === memberId })),
     );
+  }
+
+  function assignEncounter(memberId: string, powerId: string) {
+    const member = teamMembers.find((entry) => entry.id === memberId);
+    if (!member) {
+      return;
+    }
+
+    const nextEncounters = [...member.encounter_ids];
+    const existingIndex = nextEncounters.indexOf(powerId);
+    if (existingIndex >= 0) {
+      nextEncounters.splice(existingIndex, 1);
+      updateMember(memberId, { encounter_ids: nextEncounters });
+      return;
+    }
+
+    if (nextEncounters.length < 3) {
+      nextEncounters.push(powerId);
+    } else {
+      nextEncounters[2] = powerId;
+    }
+
+    updateMember(memberId, { encounter_ids: nextEncounters });
   }
 
   function openPicker(memberId: string, kind: PickerKind) {
@@ -264,7 +310,7 @@ export function TeamBuilderPage() {
     Roster: teamMembers.map((member) => ({
       key: member.id,
       title: member.label,
-      meta: `${member.group}-${member.slot} / ${member.role.toUpperCase()}`,
+      meta: `${member.group}-${member.slot} / ${formatRoleLabel(member.role)}`,
       note: `${classes.find((item) => item.id === member.class_id)?.name ?? "No class"} / ${member.paragon || "Path pending"}`,
     })),
     Classes: classes.map((item) => ({
@@ -347,26 +393,6 @@ export function TeamBuilderPage() {
     <div className="space-y-6">
       <Card className="overflow-hidden">
         <CardContent className="space-y-6 p-7 min-[1900px]:p-8">
-          <div className="grid gap-5 min-[1500px]:grid-cols-[minmax(0,1.35fr)_360px]">
-            <div className="max-w-4xl">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-sky-200/80">Core feature</p>
-              <h2 className="mt-2 text-[38px] font-semibold tracking-[-0.035em] text-stone-50 min-[1900px]:text-[46px]">Team Builder</h2>
-              <p className="mt-4 max-w-3xl text-base leading-8 text-stone-400">
-                Build a dungeon shell for 5 players or a trial shell for 10 players in two groups of five. The layout now favors readable cards and breathable spacing instead of compressing the planner into one dense strip.
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 min-[1500px]:grid-cols-1">
-              <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.08))] p-5">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Boss preset</p>
-                <p className="mt-3 text-base font-medium text-stone-100">{boss.name}</p>
-              </div>
-              <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(255,200,221,0.14),rgba(162,210,255,0.08))] p-5">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Selected carry</p>
-                <p className="mt-3 text-base font-medium text-stone-100">{carry?.label ?? "Pending"}</p>
-              </div>
-            </div>
-          </div>
-
           <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.12),rgba(189,224,254,0.06))] p-4 min-[1900px]:p-5">
             <div className="grid gap-3 min-[1500px]:grid-cols-[auto_auto_minmax(240px,1fr)_minmax(240px,1fr)_auto]">
             <div className="flex flex-wrap gap-2">
@@ -395,36 +421,23 @@ export function TeamBuilderPage() {
               ))}
             </Select>
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary">Save</Button>
-              <Button variant="secondary">Load</Button>
-              <Button variant="secondary">Share</Button>
+              <Button variant="secondary" onClick={() => setSelectedMemberId(teamMembers[0]?.id ?? "")}>First Slot</Button>
+              <Button variant="secondary" onClick={() => updateCarry(selectedMemberId || teamMembers[0]?.id || "")}>Mark Carry</Button>
             </div>
           </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)] min-[1950px]:grid-cols-[320px_minmax(0,1fr)_360px]">
+      <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
         <Card className="h-fit xl:sticky xl:top-5">
           <CardHeader>
-            <CardTitle>Roster & Reference</CardTitle>
+            <CardTitle>Roster</CardTitle>
             <CardDescription>
-              Keep the active composition on the right. Use this rail to jump between slots or browse reference data without losing the selected member.
+              Select a slot, then configure the member on the right.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="grid grid-cols-2 gap-2">
-              {leftTabs.map((tab) => (
-                <Button
-                  key={tab}
-                  size="sm"
-                  variant={activeTab === tab ? "primary" : "secondary"}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab}
-                </Button>
-              ))}
-            </div>
             <div className="space-y-3">
               {leftPanelCards[activeTab].length > 0 ? (
                 leftPanelCards[activeTab].map((item) => (
@@ -582,6 +595,18 @@ export function TeamBuilderPage() {
                       {selectedMember.is_carry ? "Selected carry DPS" : "Mark as carry DPS"}
                     </Button>
                   </div>
+                  <Field label="Role">
+                    <Select
+                      value={selectedMember.role}
+                      onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
+                    >
+                      {roleOptions.map((role) => (
+                        <option key={role.value} value={role.value}>
+                          {role.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
                   <Field label="Artifact">
                     <PickerField
                       title={artifacts.find((item) => item.id === selectedMember.artifact_id)?.name ?? "Select artifact"}
@@ -611,6 +636,44 @@ export function TeamBuilderPage() {
                     />
                   </Field>
                 </div>
+                <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.05))] p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">Class debuff encounters</p>
+                      <p className="mt-2 text-sm text-stone-300">
+                        {selectedMember.class_id
+                          ? "These are the debuff-capable encounters currently mapped for the selected class and paragon."
+                          : "Select a class first to see debuff-capable encounters."}
+                      </p>
+                    </div>
+                    {selectedMember.class_id ? (
+                      <Badge variant="blue">{selectedDebuffEncounters.length} mapped debuff encounters</Badge>
+                    ) : null}
+                  </div>
+                  {selectedDebuffEncounters.length > 0 ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {selectedDebuffEncounters.map((power) => {
+                        const isSelected = selectedMember.encounter_ids.includes(power.id);
+                        return (
+                          <button
+                            key={power.id}
+                            type="button"
+                            onClick={() => assignEncounter(selectedMember.id, power.id)}
+                            className={`border px-3 py-2 text-left text-sm transition ${
+                              isSelected
+                                ? "border-sky-200/30 bg-[linear-gradient(180deg,rgba(162,210,255,0.22),rgba(205,180,219,0.16))] text-stone-50"
+                                : "border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] text-stone-300 hover:border-white/16"
+                            }`}
+                          >
+                            {power.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : selectedMember.class_id ? (
+                    <p className="mt-4 text-sm text-stone-400">No mapped debuff encounters are attached to this class/paragon yet.</p>
+                  ) : null}
+                </div>
                 {renderEditorTab(
                   editorTab,
                   selectedMember,
@@ -623,8 +686,7 @@ export function TeamBuilderPage() {
             </Card>
           ) : null}
         </div>
-
-        <div className="grid gap-6 xl:col-span-2 xl:grid-cols-2 min-[1950px]:col-span-1 min-[1950px]:grid-cols-1">
+        <div className="grid gap-6 xl:col-span-2 xl:grid-cols-2">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2 text-rose-200">
@@ -665,29 +727,15 @@ export function TeamBuilderPage() {
               detail: `${line.contributions.length} resolved / ${line.unresolved.length} pending`,
             }))}
           />
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2 text-sky-100">
-                <Users className="h-4 w-4" />
-                <p className="text-xs uppercase tracking-[0.22em]">Carry DPS State</p>
-              </div>
-              <CardTitle>{carry?.label ?? "Carry pending"}</CardTitle>
-              <CardDescription>
-                Personal buffs, team buffs, and boss-state coverage remain separated for the carry.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {Object.entries(teamState.carryState).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] px-5 py-4"
-                >
-                  <span className="text-sm text-stone-400">{titleCase(key)}</span>
-                  <span className="text-sm font-medium text-stone-100">{formatPercent(value)}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <SummaryPanel
+            icon={Users}
+            title={carry?.label ?? "Carry pending"}
+            lines={Object.entries(teamState.carryState).map(([key, value]) => ({
+              label: titleCase(key),
+              value: formatPercent(value),
+              detail: "Carry-state output",
+            }))}
+          />
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2 text-orange-200">
@@ -920,7 +968,7 @@ function MemberCard({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-lg font-semibold text-stone-50">{member.class_id ? member.label : `Empty Slot ${member.slot}`}</p>
-              {member.is_carry ? <Badge variant="teal">Carry</Badge> : <Badge variant="muted">{member.role}</Badge>}
+              {member.is_carry ? <Badge variant="teal">Carry</Badge> : <Badge variant="muted">{formatRoleLabel(member.role)}</Badge>}
             </div>
             <p className="mt-2 text-sm text-stone-400">
               {classItem?.name ?? "Class not selected"} {member.paragon ? `/ ${member.paragon}` : ""}
@@ -1067,10 +1115,11 @@ function renderEditorTab(
               value={selectedMember.role}
               onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
             >
-              <option value="dps">DPS</option>
-              <option value="support">Support</option>
-              <option value="healer">Healer</option>
-              <option value="tank">Tank</option>
+              {roleOptions.map((role) => (
+                <option key={role.value} value={role.value}>
+                  {role.label}
+                </option>
+              ))}
             </Select>
           </Field>
           <Field label="Paragon / Path">
@@ -1716,3 +1765,4 @@ function getPickerFilters(kind: PickerKind) {
   ];
 }
 
+  const activeTab = "Roster" as const;

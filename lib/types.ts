@@ -57,7 +57,7 @@ export type EffectScope =
   | "targeted_ally";
 
 export type TeamMode = "dungeon" | "trial";
-export type TeamRole = "dps" | "healer" | "tank" | "support";
+export type TeamRole = "dps" | "healer" | "tank" | "support" | "boost" | "support_dps";
 
 export interface SourceMetadata {
   source_url: string;

@@ -1050,3 +1050,93 @@ Checks run:
 Result:
 
 - Both passed after moving the mount-sheet extraction into the dedicated local snapshot file.
+
+## Pass 12 - Functional-only navigation and Team Builder role/setup overhaul
+
+### Main navigation collapse
+
+Files:
+
+- `config/navigation.ts`
+- `components/layout/app-shell.tsx`
+- `app/reference/page.tsx`
+
+Changes:
+
+- Collapsed the main navigation down to the functional core:
+  - Dashboard
+  - Team Builder
+  - Reference Hub
+- Moved the supporting routes into a single `Reference Hub` entry instead of keeping each secondary page in the primary sidebar.
+- Simplified the shell header and removed extra chrome such as the old right summary rail and the non-functional quick-action header buttons.
+- Kept `Data Notes` as the only secondary sidebar utility link.
+
+Why:
+
+- The user explicitly asked to merge the non-core pages into one menu and remove unnecessary app chrome.
+- Team Builder is the primary workflow and needed visual priority over the rest of the product shell.
+
+### Team Builder role and setup flow
+
+Files:
+
+- `lib/types.ts`
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Expanded the team role model to support:
+  - Tank
+  - Healer
+  - DPS
+  - Boost Person
+  - Support DPS
+  - Support
+- Added clean display formatting for the new role labels inside roster cards and member cards.
+- Reworked the selected-member quick setup area so it now includes:
+  - class
+  - paragon
+  - race
+  - role
+  - artifact
+  - companion
+  - enhancement
+  - mount
+- Added a dedicated `Class debuff encounters` section that lists the currently mapped debuff-capable encounters for the selected class and paragon and lets the user slot them directly into the active encounter loadout.
+
+Why:
+
+- The user explicitly asked for empty-slot setup to also expose class selection and the debuff encounters available to that class/paragon.
+- The user also explicitly asked for additional functional role options beyond the earlier smaller role model.
+
+### Team Builder chrome reduction
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Removed or simplified several decorative Team Builder boxes so the page focuses more tightly on:
+  - mode / boss / carry controls
+  - roster
+  - team canvas
+  - selected member configuration
+  - functional summaries
+- Reduced the left rail to a roster-first panel instead of a multi-tab mini reference browser.
+- Simplified the carry state panel into a summary block instead of another large custom card.
+
+Why:
+
+- The user explicitly asked to remove unnecessary boxes and keep the Team Builder functional rather than decorative.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the navigation collapse and Team Builder setup/role redesign.
