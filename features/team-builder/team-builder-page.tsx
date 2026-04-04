@@ -134,7 +134,7 @@ export function TeamBuilderPage() {
     Roster: teamMembers.map((member) => ({
       key: member.id,
       title: member.label,
-      meta: `${member.group}-${member.slot} • ${member.role.toUpperCase()}`,
+      meta: `${member.group}-${member.slot} / ${member.role.toUpperCase()}`,
       note: `${classes.find((item) => item.id === member.class_id)?.name ?? "No class"} / ${member.paragon || "Path pending"}`,
     })),
     Classes: classes.map((item) => ({
@@ -174,31 +174,32 @@ export function TeamBuilderPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Card className="overflow-hidden">
-        <CardContent className="space-y-5 p-6">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-            <div className="max-w-3xl">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-teal-200/80">Core feature</p>
-              <h2 className="mt-2 text-[34px] font-semibold tracking-[-0.03em] text-stone-50">Team Builder</h2>
-              <p className="mt-3 text-sm leading-7 text-stone-400">
-                Build a dungeon shell for 5 players or a trial shell for 10 players in two groups of five. The layout is being simplified so the composition is readable before the math panels compete for attention.
+        <CardContent className="space-y-6 p-7 min-[1900px]:p-8">
+          <div className="grid gap-5 min-[1500px]:grid-cols-[minmax(0,1.35fr)_360px]">
+            <div className="max-w-4xl">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-200/80">Core feature</p>
+              <h2 className="mt-2 text-[38px] font-semibold tracking-[-0.035em] text-stone-50 min-[1900px]:text-[46px]">Team Builder</h2>
+              <p className="mt-4 max-w-3xl text-base leading-8 text-stone-400">
+                Build a dungeon shell for 5 players or a trial shell for 10 players in two groups of five. The layout now favors readable cards and breathable spacing instead of compressing the planner into one dense strip.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:w-[520px]">
-              <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+            <div className="grid gap-3 sm:grid-cols-2 min-[1500px]:grid-cols-1">
+              <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.42),rgba(17,0,28,0.82))] p-5">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Boss preset</p>
-                <p className="mt-2 text-sm font-medium text-stone-100">{boss.name}</p>
+                <p className="mt-3 text-base font-medium text-stone-100">{boss.name}</p>
               </div>
-              <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+              <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.42),rgba(17,0,28,0.82))] p-5">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Selected carry</p>
-                <p className="mt-2 text-sm font-medium text-stone-100">{carry?.label ?? "Pending"}</p>
+                <p className="mt-3 text-base font-medium text-stone-100">{carry?.label ?? "Pending"}</p>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-3 xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)_auto]">
-            <div className="flex gap-2">
+          <div className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.28),rgba(17,0,28,0.72))] p-4 min-[1900px]:p-5">
+            <div className="grid gap-3 min-[1500px]:grid-cols-[auto_auto_minmax(240px,1fr)_minmax(240px,1fr)_auto]">
+            <div className="flex flex-wrap gap-2">
               <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
                 Dungeon
               </Button>
@@ -229,16 +230,17 @@ export function TeamBuilderPage() {
               <Button variant="secondary">Share</Button>
             </div>
           </div>
+          </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-5 2xl:grid-cols-[300px_minmax(0,1fr)_340px]">
-        <Card className="h-fit">
+      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)] min-[1950px]:grid-cols-[320px_minmax(0,1fr)_360px]">
+        <Card className="h-fit xl:sticky xl:top-5">
           <CardHeader>
             <CardTitle>Library Sidebar</CardTitle>
-            <CardDescription>Browse mode stays separate from detailed composition editing.</CardDescription>
+            <CardDescription>Browse data separately from the active build so the main canvas keeps its space.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="grid grid-cols-2 gap-2">
               {leftTabs.map((tab) => (
                 <Button
@@ -258,15 +260,15 @@ export function TeamBuilderPage() {
                     type="button"
                     key={item.key}
                     onClick={() => activeTab === "Roster" && setSelectedMemberId(item.key)}
-                    className={`block w-full rounded-2xl border p-4 text-left transition ${
+                    className={`block w-full rounded-[22px] border p-5 text-left transition ${
                       item.key === selectedMemberId
-                        ? "border-teal-300/30 bg-teal-300/8"
-                        : "border-white/8 bg-black/20 hover:border-white/12"
+                        ? "border-fuchsia-300/16 bg-[linear-gradient(180deg,rgba(79,1,71,0.44),rgba(17,0,28,0.82))]"
+                        : "border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.3),rgba(17,0,28,0.78))] hover:border-white/12"
                     }`}
                   >
                     <p className="text-sm font-medium text-stone-100">{item.title}</p>
                     <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{item.meta}</p>
-                    <p className="mt-3 text-sm leading-6 text-stone-400">{item.note}</p>
+                    <p className="mt-3 text-sm leading-7 text-stone-400">{item.note}</p>
                   </button>
                 ))
               ) : (
@@ -281,17 +283,19 @@ export function TeamBuilderPage() {
 
         <div className="space-y-6">
           <Card>
-            <CardHeader className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
+            <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
                 <CardTitle>Team Canvas</CardTitle>
-                <CardDescription>Selected members stay large enough to read at a glance.</CardDescription>
+                <CardDescription>
+                  Member cards stay readable first. The summary rail drops below until the viewport is truly wide enough for a third column.
+                </CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="teal">{mode === "trial" ? "Trial layout" : "Dungeon layout"}</Badge>
                 <Badge variant="muted">{teamMembers.length} members</Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-8">
+            <CardContent className="space-y-10">
               <GroupSection
                 title="Group A"
                 members={teamMembers.filter((member) => member.group === "A")}
@@ -311,14 +315,14 @@ export function TeamBuilderPage() {
 
           {selectedMember ? (
             <Card>
-              <CardHeader className="space-y-4">
+              <CardHeader className="space-y-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
+                  <div className="max-w-2xl">
                     <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-teal-200" />
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-teal-200/80">Member Config Panel</p>
+                      <Target className="h-4 w-4 text-fuchsia-200" />
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-fuchsia-200/80">Member Config Panel</p>
                     </div>
-                    <CardTitle className="mt-2 text-2xl">{selectedMember.label}</CardTitle>
+                    <CardTitle className="mt-2 text-[28px]">{selectedMember.label}</CardTitle>
                     <CardDescription>
                       The editor is now segmented so identity, loadout, support layers, and notes do not collapse into one long wall of fields.
                     </CardDescription>
@@ -348,7 +352,7 @@ export function TeamBuilderPage() {
           ) : null}
         </div>
 
-        <div className="space-y-6">
+        <div className="grid gap-6 xl:col-span-2 xl:grid-cols-2 min-[1950px]:col-span-1 min-[1950px]:grid-cols-1">
           <SummaryPanel
             icon={Layers3}
             title="Boss Debuff Summary"
@@ -380,7 +384,10 @@ export function TeamBuilderPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {Object.entries(teamState.carryState).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between rounded-2xl border border-white/8 bg-black/20 px-4 py-3">
+                <div
+                  key={key}
+                  className="flex items-center justify-between rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] px-5 py-4"
+                >
                   <span className="text-sm text-stone-400">{titleCase(key)}</span>
                   <span className="text-sm font-medium text-stone-100">{formatPercent(value)}</span>
                 </div>
@@ -456,7 +463,7 @@ export function TeamBuilderPage() {
                   Boss
                 </Button>
               </div>
-              <div className="space-y-2 rounded-[20px] border border-white/8 bg-black/25 p-4">
+              <div className="space-y-2 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.44),rgba(17,0,28,0.9))] p-5">
                 {Object.entries(mountCalc).map(([key, value]) => (
                   <div key={key} className="flex items-center justify-between text-sm">
                     <span className="text-stone-400">{titleCase(key)}</span>
@@ -476,7 +483,7 @@ export function TeamBuilderPage() {
               <CardDescription>Warnings are scoped by effect type instead of one generic team score.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+              <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] p-5">
                 <p className="mb-3 text-sm font-medium text-stone-100">Missing effects</p>
                 <div className="flex flex-wrap gap-2">
                   {teamState.missingBoss.length > 0 ? (
@@ -490,12 +497,12 @@ export function TeamBuilderPage() {
                   )}
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+              <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] p-5">
                 <p className="mb-3 text-sm font-medium text-stone-100">Duplicate effects</p>
                 <div className="space-y-2">
                   {teamState.duplicates.length > 0 ? (
                     teamState.duplicates.map((warning) => (
-                      <div key={warning.stackKey} className="rounded-2xl border border-amber-300/20 bg-amber-300/8 p-3">
+                      <div key={warning.stackKey} className="rounded-[20px] border border-amber-300/20 bg-amber-300/8 p-4">
                         <p className="text-sm font-medium text-amber-100">{warning.reason}</p>
                         <p className="mt-1 text-sm leading-6 text-stone-300">{warning.effectNames.join(", ")}</p>
                       </div>
@@ -506,7 +513,7 @@ export function TeamBuilderPage() {
                 </div>
               </div>
               {selectedMember ? (
-                <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] p-5">
                   <div className="mb-3 flex items-center justify-between gap-4">
                     <p className="text-sm font-medium text-stone-100">Selected member provenance</p>
                     {(() => {
@@ -541,15 +548,15 @@ function GroupSection({
   onSelect: (memberId: string) => void;
 }) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-stone-100">
-          <Swords className="h-4 w-4 text-teal-200" />
+          <Swords className="h-4 w-4 text-fuchsia-200" />
           <p className="text-sm font-medium">{title}</p>
         </div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">{members.length} members</p>
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-2">
         {members.map((member) => (
           <MemberCard
             key={member.id}
@@ -581,15 +588,15 @@ function MemberCard({
     <button
       type="button"
       onClick={() => onSelect(member.id)}
-      className={`rounded-[26px] border p-5 text-left transition ${
+      className={`rounded-[28px] border p-6 text-left transition ${
         isSelected
-          ? "border-teal-300/32 bg-[linear-gradient(180deg,rgba(26,60,63,0.26),rgba(12,17,22,0.96))]"
-          : "border-white/8 bg-black/20 hover:border-white/14"
+          ? "border-fuchsia-300/16 bg-[linear-gradient(180deg,rgba(79,1,71,0.42),rgba(17,0,28,0.92))]"
+          : "border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.28),rgba(17,0,28,0.84))] hover:border-white/14"
       }`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.04] text-sm font-medium text-stone-300">
+          <div className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-white/8 bg-white/[0.04] text-sm font-medium text-stone-300">
             {member.group}-{member.slot}
           </div>
           <div>
@@ -598,22 +605,22 @@ function MemberCard({
               {member.is_carry ? <Badge variant="teal">Carry</Badge> : <Badge variant="muted">{member.role}</Badge>}
             </div>
             <p className="mt-2 text-sm text-stone-400">
-              {classItem?.name ?? "Class pending"} {member.paragon ? `• ${member.paragon}` : ""}
+              {classItem?.name ?? "Class pending"} {member.paragon ? `/ ${member.paragon}` : ""}
             </p>
           </div>
         </div>
-        <div className="hidden rounded-2xl border border-white/8 bg-black/20 px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-stone-500 md:block">
+        <div className="hidden rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.26),rgba(17,0,28,0.78))] px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-stone-500 md:block">
           {member.race || "Race pending"}
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <LoadoutCell label="Artifact" value={artifact?.name ?? "Missing artifact"} />
         <LoadoutCell label="Companion" value={companion?.name ?? "Missing companion"} />
         <LoadoutCell label="Mount" value={mountPower?.name ?? "Missing mount"} />
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2">
         {companion?.role_tag ? <Badge variant="purple">{companion.role_tag}</Badge> : null}
         {artifact?.category ? <Badge variant="gold">{artifact.category}</Badge> : null}
         {mountPower?.damage_type ? <Badge variant="orange">{mountPower.damage_type}</Badge> : null}
@@ -625,7 +632,7 @@ function MemberCard({
 
 function LoadoutCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
+    <div className="rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.26),rgba(17,0,28,0.78))] p-4">
       <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">{label}</p>
       <p className="mt-2 text-sm leading-6 text-stone-200">{value}</p>
     </div>
@@ -765,7 +772,7 @@ function renderEditorTab(
               ))}
             </Select>
           </Field>
-          <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+          <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.3),rgba(17,0,28,0.76))] p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Support note</p>
             <p className="mt-2 text-sm leading-6 text-stone-300">
               Companion records remain source-aware. Unresolved live values stay in the model instead of being guessed.
@@ -890,7 +897,7 @@ function renderEditorTab(
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block space-y-2">
+    <label className="block space-y-2.5">
       <span className="text-xs uppercase tracking-[0.18em] text-stone-500">{label}</span>
       {children}
     </label>

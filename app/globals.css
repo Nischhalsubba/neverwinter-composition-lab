@@ -1,23 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #090a10;
-  --foreground: #f5f5f4;
-  --panel: #11131b;
-  --panel-2: #171924;
-  --border: rgba(255, 255, 255, 0.1);
-  --muted: #a8a29e;
-  --teal: #58d7d0;
-  --green: #52d992;
-  --red: #ff7c8f;
-  --purple: #c78fff;
-  --orange: #ffac5f;
-  --gold: #f4c35d;
-  --blue: #6db6ff;
+  --dark-amethyst: #3a015c;
+  --deep-purple: #4f0147;
+  --midnight-violet: #35012c;
+  --midnight-violet-2: #290025;
+  --midnight-violet-3: #11001c;
+  --background: var(--midnight-violet-3);
+  --foreground: #f6eef9;
+  --panel: rgba(58, 1, 92, 0.2);
+  --panel-2: rgba(41, 0, 37, 0.78);
+  --border: rgba(255, 255, 255, 0.08);
+  --muted: #b39bb6;
+  --teal: #d59cff;
+  --green: #8bcf9d;
+  --red: #ff8db3;
+  --purple: #f0a8ff;
+  --orange: #ffbb8a;
+  --gold: #ffd47a;
+  --blue: #b9b5ff;
   --radius-chip: 12px;
-  --radius-card: 24px;
-  --radius-panel: 28px;
-  --shadow-panel: 0 20px 70px rgba(0, 0, 0, 0.45);
+  --radius-card: 28px;
+  --radius-panel: 34px;
+  --shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.42);
 }
 
 @theme inline {
@@ -36,7 +41,16 @@ html {
 
 body {
   margin: 0;
-  background: var(--background);
+  background:
+    radial-gradient(circle at top left, rgba(79, 1, 71, 0.4), transparent 26%),
+    radial-gradient(circle at 82% 14%, rgba(58, 1, 92, 0.3), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(53, 1, 44, 0.28), transparent 32%),
+    linear-gradient(
+      180deg,
+      var(--midnight-violet-3) 0%,
+      var(--midnight-violet-2) 36%,
+      var(--midnight-violet) 100%
+    );
   color: var(--foreground);
   font-feature-settings: "ss01" 1, "cv01" 1, "cv02" 1;
 }
@@ -55,10 +69,10 @@ textarea {
 
 input::placeholder,
 textarea::placeholder {
-  color: #78716c;
+  color: #9e88a5;
 }
 
 ::selection {
-  background: rgba(88, 215, 208, 0.3);
+  background: rgba(213, 156, 255, 0.32);
   color: white;
 }

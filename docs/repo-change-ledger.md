@@ -443,3 +443,86 @@ Result:
 - The Team Builder still uses seeded data rather than full live-verified entity depth.
 - The shell still does not implement the fully collapsible sidebar/drawer behavior from the frontend spec.
 - The summary rail still uses static card blocks rather than advanced compare/inspector interactions.
+
+## Pass 4 - Spacious violet theme overhaul
+
+### Global visual system
+
+Files:
+
+- `app/globals.css`
+- `components/ui/card.tsx`
+- `components/ui/button.tsx`
+- `components/ui/badge.tsx`
+- `components/ui/input.tsx`
+- `components/ui/select.tsx`
+- `components/ui/textarea.tsx`
+- `components/summary-panel.tsx`
+
+Changes:
+
+- Replaced the previous teal-forward shell styling with the new violet palette based on:
+  - `#3a015c`
+  - `#4f0147`
+  - `#35012c`
+  - `#290025`
+  - `#11001c`
+- Updated background gradients, surface fills, borders, shadows, and focus states to use the new darker purple system.
+- Increased padding, radius, and panel softness across cards, form controls, badges, and summary panels.
+
+Why:
+
+- The user explicitly requested the new color theme and asked for a more spacious layout.
+- The previous styling still felt too compressed and too close to utility-dashboard density.
+
+### Shell spacing pass
+
+Files:
+
+- `components/layout/app-shell.tsx`
+
+Changes:
+
+- Widened the overall shell max width.
+- Increased spacing in the top bar and sidebar.
+- Shifted active navigation and shell accents into the new violet palette.
+- Softened the right rail presentation so it reads as secondary structure instead of competing with the main page.
+
+Why:
+
+- The previous shell still consumed too much attention and did not feel premium or spacious enough.
+
+### Team Builder widening pass
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Increased hero spacing and control-row breathing room.
+- Delayed the third-column Team Builder layout to only appear at much larger widths.
+- Let the summary rail fall below the main content on smaller desktop widths instead of compressing the center canvas.
+- Enlarged member cards, increased internal card spacing, and updated selected-state styling to match the violet shell.
+- Cleaned remaining malformed separator text inside roster/member labels.
+
+Why:
+
+- The previous Team Builder still had broken-looking compression in large desktop screenshots.
+- The center planning surface needed to be wider than the side rails.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the palette and spacing overhaul.
+
+### Remaining follow-up
+
+- Some non-Team-Builder pages still use the earlier content density and can be widened in a later pass.
+- The shell still has static utility actions rather than fully wired interactions.
