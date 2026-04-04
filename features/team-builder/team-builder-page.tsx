@@ -29,6 +29,7 @@ import {
   companions,
   createInitialTeamMembers,
   getDefaultPowerLoadoutForClass,
+  getRoleForClassParagon,
   insigniaBonuses,
   mountCombatPowers,
   mountEquipPowers,
@@ -63,25 +64,34 @@ const raceOptions = [
   "Menzoberranzan Renegade",
 ] as const;
 
-const entityEffectMap: Record<string, string[]> = {
+const seededEntityEffectMap: Record<string, string[]> = {
   "comp-tutor": ["effect-tutor-ca", "effect-tutor-coverage"],
   "comp-drizzt": ["effect-drizzt-damage"],
   "comp-portobello": ["effect-portobello-power", "effect-portobello-ca"],
-  "enh-armor-break": ["effect-armor-break-defense"],
-  "enh-dulled-senses": ["effect-dulled-senses-awareness"],
-  "enh-vulnerability": ["effect-vulnerability-crit-avoid"],
-  "enh-slowed-reactions": ["effect-slowed-reactions-deflect"],
-  "artifact-mythallar": ["effect-mythallar-defense"],
-  "artifact-halaster": ["effect-halaster-defense"],
-  "artifact-wyvern": ["effect-wyvern-incoming"],
-  "artifact-charm": ["effect-charm-serpent-incoming"],
-  "artifact-lantern": ["effect-lantern-incoming"],
   "combat-uni-party": ["effect-uni-ca"],
   "combat-red-dragon": [
     "effect-red-dragon-owner-damage",
     "effect-red-dragon-owner-crit",
     "effect-red-dragon-boss-crit-avoid",
   ],
+};
+
+const entityEffectMap: Record<string, string[]> = {
+  ...seededEntityEffectMap,
+  ...Object.fromEntries(artifacts.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids])),
+  ...Object.fromEntries(
+    companionEnhancements.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids]),
+  ),
+  ...Object.fromEntries(
+    companionBonuses.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids]),
+  ),
+  ...Object.fromEntries(powers.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids])),
+  ...Object.fromEntries(
+    mountCombatPowers.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids]),
+  ),
+  ...Object.fromEntries(
+    mountEquipPowers.filter((item) => item.effect_ids.length).map((item) => [item.id, item.effect_ids]),
+  ),
 };
 
 if (typeof globalThis !== "undefined") {
@@ -148,14 +158,16 @@ export function TeamBuilderPage() {
 
   function handleClassChange(memberId: string, classId: string) {
     const classItem = classes.find((item) => item.id === classId);
-    const powerLoadout = getDefaultPowerLoadoutForClass(classId);
+    const defaultParagon = classItem?.paragon_options[0] ?? "";
+    const powerLoadout = getDefaultPowerLoadoutForClass(classId, defaultParagon);
 
     updateMember(memberId, {
       class_id: classId,
+      paragon: defaultParagon,
       encounter_ids: powerLoadout.encounter_ids,
       daily_ids: powerLoadout.daily_ids,
       feature_ids: powerLoadout.feature_ids,
-      role: classItem?.role_focus[0] ?? "support",
+      role: getRoleForClassParagon(classId, defaultParagon),
       label: classItem?.name ? `${classItem.name} Slot` : `Empty Slot ${memberId.replace("member-", "")}`,
     });
   }
@@ -762,10 +774,16 @@ function renderEditorTab(
 ) {
   const className = classes.find((item) => item.id === selectedMember.class_id)?.name;
   const classEncounters = powers.filter(
-    (power) => power.class_name === className && power.power_type === "encounter",
+    (power) =>
+      power.class_name === className &&
+      power.power_type === "encounter" &&
+      (!selectedMember.paragon || !power.paragon_path || power.paragon_path === selectedMember.paragon),
   );
   const classFeatures = powers.filter(
-    (power) => power.class_name === className && power.power_type === "feature",
+    (power) =>
+      power.class_name === className &&
+      power.power_type === "feature" &&
+      (!selectedMember.paragon || !power.paragon_path || power.paragon_path === selectedMember.paragon),
   );
 
   switch (editorTab) {
@@ -813,11 +831,27 @@ function renderEditorTab(
             </Select>
           </Field>
           <Field label="Paragon / Path">
-            <Input
-              placeholder="Verified or working path"
+            <Select
               value={selectedMember.paragon}
-              onChange={(event) => updateMember(selectedMember.id, { paragon: event.target.value })}
-            />
+              onChange={(event) => {
+                const paragon = event.target.value;
+                const nextLoadout = getDefaultPowerLoadoutForClass(selectedMember.class_id, paragon);
+                updateMember(selectedMember.id, {
+                  paragon,
+                  role: getRoleForClassParagon(selectedMember.class_id, paragon),
+                  encounter_ids: nextLoadout.encounter_ids,
+                  daily_ids: nextLoadout.daily_ids,
+                  feature_ids: nextLoadout.feature_ids,
+                });
+              }}
+            >
+              <option value="">{selectedMember.class_id ? "Select paragon" : "Select class first"}</option>
+              {(classes.find((item) => item.id === selectedMember.class_id)?.paragon_options ?? []).map((paragon) => (
+                <option key={paragon} value={paragon}>
+                  {paragon}
+                </option>
+              ))}
+            </Select>
           </Field>
           <Field label="Race">
             <Select

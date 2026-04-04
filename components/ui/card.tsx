@@ -9,7 +9,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.1),rgba(255,200,221,0.08),rgba(18,23,31,0.96))] shadow-[0_16px_36px_rgba(0,0,0,0.16)] backdrop-blur-md",
+        "border border-[rgba(205,180,219,0.3)] bg-[linear-gradient(180deg,rgba(205,180,219,0.18),rgba(255,200,221,0.14),rgba(189,224,254,0.12))] shadow-[0_16px_36px_rgba(205,180,219,0.12)] backdrop-blur-md",
         className,
       )}
       {...props}
@@ -37,7 +37,7 @@ export function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("text-lg font-semibold tracking-[0.01em] text-stone-100", className)}
+      className={cn("text-lg font-semibold tracking-[0.01em] text-[rgba(205,180,219,0.96)]", className)}
       {...props}
     />
   );
@@ -47,5 +47,5 @@ export function CardDescription({
   className,
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("text-sm leading-7 text-stone-400", className)} {...props} />;
+  return <p className={cn("text-sm leading-7 text-[rgba(205,180,219,0.78)]", className)} {...props} />;
 }

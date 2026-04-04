@@ -87,12 +87,16 @@ export interface GameClass extends SourcedEntity {
   role_focus: TeamRole[];
   paragon_options: string[];
   identity_note: string;
+  image_url?: string;
 }
 
 export interface PowerDefinition extends SourcedEntity {
   class_name: string;
   power_type: "encounter" | "daily" | "feature";
   effect_ids: string[];
+  paragon_path?: string | null;
+  description?: string;
+  image_url?: string;
 }
 
 export interface Companion extends SourcedEntity {
@@ -119,6 +123,7 @@ export interface Artifact extends SourcedEntity {
   rank_order: number | null;
   team_or_personal: "team" | "personal";
   effect_ids: string[];
+  image_url?: string;
 }
 
 export interface Mount extends SourcedEntity {

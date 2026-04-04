@@ -664,3 +664,135 @@ Result:
 
 - Many route-level components still contain square-corner utility classes in markup even though the global stylesheet already flattens them.
 - The Team Builder still uses source-aware partial power seeds where the docs do not yet verify full live class loadouts.
+
+## Pass 7 - NW Hub data ingestion and Team Builder auto-slotting
+
+### Live-source ingestion
+
+Files:
+
+- `data/nw-hub/artifacts.ts`
+- `data/nw-hub/companions.ts`
+- `data/nw-hub/companion-powers.ts`
+- `data/nw-hub/companion-enhancements.ts`
+- `data/nw-hub/classes.ts`
+- `data/nw-hub/class-powers.ts`
+- `data/nw-hub/class-feats.ts`
+- `data/nw-hub/class-features.ts`
+- `data/game-data.ts`
+
+Changes:
+
+- Pulled the NW Hub client bundles and extracted the locally typed snapshots for:
+  - artifacts
+  - companion enhancement powers
+  - companion player bonuses
+  - class metadata
+  - class powers
+  - class feats
+  - class features / mechanics / skills
+- Stored those snapshots under `data/nw-hub/` so the repo now contains the imported source data instead of relying on live requests at runtime.
+- Rebuilt the app-facing `classes`, `powers`, `companionEnhancements`, `companionBonuses`, and `artifacts` exports in `data/game-data.ts` from the NW Hub snapshot files.
+- Added direct image URLs for artifacts and classes where the NW Hub dataset exposed them.
+- Added snapshot exports like `artifactSnapshots`, `companionEnhancementSnapshots`, `companionPowerSnapshots`, and `classSnapshots` so route pages can render the richer imported data directly.
+
+Why:
+
+- The user explicitly asked for the app to list artifacts, companion enhancements, companion slot powers, and class information from NW Hub rather than relying on the older hand-seeded subset.
+- Storing the extracted data locally keeps the app patch-aware and source-aware without introducing runtime scraping or a backend.
+
+### Team Builder class and power behavior
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `lib/types.ts`
+- `lib/effect-engine.ts`
+- `data/game-data.ts`
+
+Changes:
+
+- Switched Team Builder class selection to use the imported NW Hub class/paragon data.
+- Class selection now auto-selects a default paragon path from the imported class metadata.
+- Paragon selection is now a dropdown instead of a free-text input.
+- Changing class or paragon now re-slots:
+  - encounter powers
+  - daily powers
+  - class features
+- Added imported power metadata fields to the typed model:
+  - `paragon_path`
+  - `description`
+  - `image_url`
+- Built a first-pass effect inference layer for imported encounter powers so known boss-debuff style encounters can contribute real effect IDs when their text explicitly exposes supported categories.
+- Changed the Team Builder entity-to-effect mapping so it is built from the actual imported `powers`, `artifacts`, `companionEnhancements`, `companionBonuses`, and mount exports instead of relying only on the small hardcoded map.
+
+Why:
+
+- The user asked for class selection to automatically pick the relevant buff/debuff encounter for the selected class and paragon path.
+- The old free-text paragon field made it impossible to keep class loadouts aligned with imported class data.
+- Building the entity-to-effect map from the data layer prevents repeating the same manual mapping work as the dataset grows.
+
+### Library route upgrades
+
+Files:
+
+- `app/artifacts/page.tsx`
+- `app/classes/page.tsx`
+- `app/companions/page.tsx`
+
+Changes:
+
+- Replaced the older minimal artifact page with an NW Hub-backed artifact library that now shows:
+  - artifact images
+  - power text
+  - top-rank item level
+  - top-rank combined rating
+  - top-rank stats
+- Replaced the older minimal classes page with an NW Hub-backed class page that now shows:
+  - class emblems
+  - paragon paths
+  - imported power counts
+- Replaced the older companion page with a view centered on:
+  - imported companion slot bonuses
+  - imported enhancement powers
+
+Why:
+
+- The user asked for the app to surface the imported NW Hub data directly.
+- The older pages still reflected the earlier seed-only foundation and no longer matched the source-backed data layer.
+
+### Palette cleanup
+
+Files:
+
+- `components/ui/button.tsx`
+- `components/ui/badge.tsx`
+- `components/ui/card.tsx`
+- `components/ui/input.tsx`
+- `components/ui/select.tsx`
+- `components/ui/textarea.tsx`
+- `components/summary-panel.tsx`
+
+Changes:
+
+- Removed the remaining older named accent colors from the shared UI primitives and replaced them with the current five-color pastel palette using direct RGBA values derived from:
+  - `#cdb4db`
+  - `#ffc8dd`
+  - `#ffafcc`
+  - `#bde0fe`
+  - `#a2d2ff`
+
+Why:
+
+- The user explicitly asked to stop using the previous accent colors and to replace them with the provided palette.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the NW Hub ingestion, Team Builder auto-slotting update, and shared UI palette cleanup.

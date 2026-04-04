@@ -1,4 +1,22 @@
 import {
+  nwHubArtifactsRaw,
+} from "@/data/nw-hub/artifacts";
+import {
+  nwHubClassFeaturesRaw,
+} from "@/data/nw-hub/class-features";
+import {
+  nwHubClassPowersRaw,
+} from "@/data/nw-hub/class-powers";
+import {
+  nwHubClassMetaRaw,
+} from "@/data/nw-hub/classes";
+import {
+  nwHubCompanionEnhancementsRaw,
+} from "@/data/nw-hub/companion-enhancements";
+import {
+  nwHubCompanionPowersRaw,
+} from "@/data/nw-hub/companion-powers";
+import {
   type Artifact,
   type BossPreset,
   type Companion,
@@ -12,12 +30,52 @@ import {
   type MountEquipPower,
   type PatchChange,
   type PowerDefinition,
+  type TeamRole,
   type TeamMember,
 } from "@/lib/types";
 
 const moduleVersion = "module_32_5";
+const nwHubSourceVersion = "nw-hub-2026-04-04";
 
-export const effectCatalog: EffectDefinition[] = [
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function makeEntityId(prefix: string, value: string) {
+  return `${prefix}-${slugify(value)}`;
+}
+
+function uniqueValues<T>(items: T[]) {
+  return Array.from(new Set(items));
+}
+
+function normalizeRole(value: string): TeamRole {
+  const normalized = value.toLowerCase();
+
+  if (normalized === "tank") {
+    return "tank";
+  }
+
+  if (normalized === "healer") {
+    return "healer";
+  }
+
+  if (normalized === "dps") {
+    return "dps";
+  }
+
+  return "support";
+}
+
+function parsePercentValue(text: string) {
+  const match = text.match(/(\d+(?:\.\d+)?)%/);
+  return match ? Number(match[1]) / 100 : null;
+}
+
+const seededEffectCatalog: EffectDefinition[] = [
   {
     id: "effect-tutor-ca",
     name: "Tutor Combat Advantage",
@@ -282,185 +340,289 @@ export const effectCatalog: EffectDefinition[] = [
   },
 ];
 
-export const classes: GameClass[] = [
-  {
-    id: "class-bard",
-    name: "Bard",
-    role_focus: ["support", "dps", "healer"],
-    paragon_options: [],
-    identity_note: "Patch notes in the docs highlight bard support range and duration improvements.",
-    source_type: "official_archive",
-    source_url: "https://www.arcgames.com/en/games/neverwinter/news/tag/nw-patch-notes",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Specific powers should stay patch-aware.",
-  },
-  {
-    id: "class-cleric",
-    name: "Cleric",
-    role_focus: ["healer", "support", "dps"],
-    paragon_options: [],
-    identity_note: "Recent official notes surfaced cleric balance updates.",
-    source_type: "official_announcement",
-    source_url: "https://steamcommunity.com/app/109600/announcements/",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Used as a practical roster seed.",
-  },
-  {
-    id: "class-paladin",
-    name: "Paladin",
-    role_focus: ["tank", "support", "healer"],
-    paragon_options: [],
-    identity_note: "Support artifact seed included a paladin support example.",
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Useful for tank/support shells.",
-  },
-  {
-    id: "class-ranger",
-    name: "Ranger",
-    role_focus: ["dps", "support"],
-    paragon_options: [],
-    identity_note: "Ranger build seed supplied companion and mount examples.",
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Specific paragon/path can be entered manually until verified.",
-  },
-  {
-    id: "class-rogue",
-    name: "Rogue",
-    role_focus: ["dps", "support"],
-    paragon_options: [],
-    identity_note: "Docs call out Rogue CA support changes on control-immune targets.",
-    source_type: "official_archive",
-    source_url: "https://www.arcgames.com/en/games/neverwinter/news/tag/nw-patch-notes",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Carry candidate class seed.",
-  },
-  {
-    id: "class-wizard",
-    name: "Wizard",
-    role_focus: ["dps", "support"],
-    paragon_options: [],
-    identity_note: "Historical and current docs both surface wizard debuff interactions.",
-    source_type: "community_reference",
-    source_url: "https://neverwinter-mmo.fandom.com/wiki/Patch_Notes",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Power-specific stacking behavior must remain patch-aware.",
-  },
-];
+type RawEncounterPower = (typeof nwHubClassPowersRaw)[number]["powers"][number];
+
+function inferPowerEffects(className: string, power: RawEncounterPower): EffectDefinition[] {
+  const description = "description" in power && typeof power.description === "string" ? power.description : "";
+  const effects: EffectDefinition[] = [];
+  const sourceUrl = "https://nw-hub.com/classes";
+  const baseId = `effect-${slugify(className)}-${slugify(power.name)}`;
+  const notePrefix =
+    "Directly extracted from NW Hub class power text on 2026-04-04. Community-maintained source; in-game tooltip confirmation is still recommended.";
+
+  const addEffect = (
+    suffix: string,
+    name: string,
+    stat: EffectDefinition["stat"],
+    value: number,
+    scope: EffectDefinition["scope"],
+    category: EffectDefinition["effect_category"],
+    notes: string,
+  ) => {
+    effects.push({
+      id: `${baseId}-${suffix}`,
+      name,
+      effect_category: category,
+      stat,
+      value,
+      stack_rule: "strongest_only",
+      scope,
+      source_type: "community_reference",
+      source_url: sourceUrl,
+      source_version: nwHubSourceVersion,
+      verification_status: "verified",
+      notes: `${notePrefix} ${notes}`,
+    });
+  };
+
+  if (/takes (\d+(?:\.\d+)?)% more damage/i.test(description)) {
+    const match = description.match(/takes (\d+(?:\.\d+)?)% more damage/i);
+    if (match) {
+      addEffect(
+        "incoming-damage",
+        `${power.name} Incoming Damage`,
+        "incoming_damage",
+        Number(match[1]) / 100,
+        "boss",
+        "boss_debuff",
+        "Encounter text states that the target takes increased damage.",
+      );
+    }
+  }
+
+  if (/damage resistance is lowered by (\d+(?:\.\d+)?)%/i.test(description)) {
+    const match = description.match(/damage resistance is lowered by (\d+(?:\.\d+)?)%/i);
+    if (match) {
+      addEffect(
+        "defense-reduction",
+        `${power.name} Defense Reduction`,
+        "defense_reduction",
+        Number(match[1]) / 100,
+        "boss",
+        "boss_debuff",
+        "Encounter text explicitly lowers target damage resistance.",
+      );
+    }
+  }
+
+  if (/reduces the awareness of all targets by (\d+(?:\.\d+)?)%/i.test(description)) {
+    const match = description.match(/reduces the awareness of all targets by (\d+(?:\.\d+)?)%/i);
+    if (match) {
+      addEffect(
+        "awareness-reduction",
+        `${power.name} Awareness Reduction`,
+        "awareness_reduction",
+        Number(match[1]) / 100,
+        "boss",
+        "boss_debuff",
+        "Encounter text explicitly reduces target awareness.",
+      );
+    }
+  }
+
+  if (/takes (\d+(?:\.\d+)?)% more magical and projectile damage/i.test(description)) {
+    const match = description.match(/takes (\d+(?:\.\d+)?)% more magical and projectile damage/i);
+    if (match) {
+      const value = Number(match[1]) / 100;
+      addEffect(
+        "magical-vulnerability",
+        `${power.name} Magical Vulnerability`,
+        "magical_vulnerability",
+        value,
+        "boss",
+        "typed_vulnerability",
+        "Spell text says the target takes more magical damage.",
+      );
+      addEffect(
+        "projectile-vulnerability",
+        `${power.name} Projectile Vulnerability`,
+        "projectile_vulnerability",
+        value,
+        "boss",
+        "typed_vulnerability",
+        "Spell text says the target takes more projectile damage.",
+      );
+    }
+  }
+
+  if (/allies within .* deal (\d+(?:\.\d+)?)% more damage/i.test(description)) {
+    const match = description.match(/allies within .* deal (\d+(?:\.\d+)?)% more damage/i);
+    if (match) {
+      addEffect(
+        "team-damage",
+        `${power.name} Team Damage Bonus`,
+        "damage_bonus",
+        Number(match[1]) / 100,
+        "team",
+        "team_buff",
+        "Encounter text explicitly buffs allied damage.",
+      );
+    }
+  }
+
+  return effects;
+}
+
+const nwHubEncounterEffects = nwHubClassPowersRaw.flatMap((classRoot) =>
+  classRoot.powers
+    .filter((power) => power.type === "Encounter")
+    .flatMap((power) => inferPowerEffects(classRoot.className, power)),
+);
+
+export const effectCatalog: EffectDefinition[] = [...seededEffectCatalog, ...nwHubEncounterEffects];
+
+export const classes: GameClass[] = nwHubClassMetaRaw.map((item) => ({
+  id: makeEntityId("class", item.className),
+  name: item.className,
+  role_focus: uniqueValues(item.paragons.map((paragon) => normalizeRole(paragon.role))),
+  paragon_options: item.paragons.map((paragon) => paragon.name),
+  identity_note: `${item.className} currently exposes ${item.paragons.length} NW Hub paragon path records.`,
+  image_url: item.emblem_url,
+  source_type: "community_reference",
+  source_url: item.source_url,
+  source_version: nwHubSourceVersion,
+  verification_status: "verified",
+  notes:
+    "Directly extracted from NW Hub class metadata on 2026-04-04. Role focus and paragon options reflect that community-maintained source.",
+}));
+
+const powerEffectIds = new Map<string, string[]>(
+  nwHubEncounterEffects.map((effect) => {
+    const key = effect.id
+      .replace(/^effect-/, "")
+      .replace(/-(incoming-damage|defense-reduction|awareness-reduction|magical-vulnerability|projectile-vulnerability)$/, "");
+    return [key, [] as string[]];
+  }),
+);
+
+nwHubEncounterEffects.forEach((effect) => {
+  const key = effect.id
+    .replace(/^effect-/, "")
+    .replace(/-(incoming-damage|defense-reduction|awareness-reduction|magical-vulnerability|projectile-vulnerability)$/, "");
+  powerEffectIds.set(key, [...(powerEffectIds.get(key) ?? []), effect.id]);
+});
+
+function buildPowerId(className: string, powerName: string, powerType: string, paragonPath?: string | null) {
+  return [
+    "power",
+    slugify(className),
+    slugify(paragonPath || "shared"),
+    slugify(powerType),
+    slugify(powerName),
+  ].join("-");
+}
+
+function buildPowerEffectIds(className: string, powerName: string) {
+  return powerEffectIds.get(`${slugify(className)}-${slugify(powerName)}`) ?? [];
+}
 
 export const powers: PowerDefinition[] = [
-  {
-    id: "power-pack-tactics-ranger",
-    name: "Pack Tactics",
-    class_name: "Ranger",
-    power_type: "feature",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Mentioned repeatedly in connected build docs but no exact value was recovered.",
-  },
-  {
-    id: "power-mystic-aura-ranger",
-    name: "Mystic Aura / Runic Aura",
-    class_name: "Ranger",
-    power_type: "feature",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Observed in the ranger build seed as a recurring support optimization note.",
-  },
-  {
-    id: "power-pack-tactics-wizard",
-    name: "Pack Tactics",
-    class_name: "Wizard",
-    power_type: "feature",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Observed in the wizard build seed support optimization notes.",
-  },
-  {
-    id: "power-mystic-aura-wizard",
-    name: "Mystic Aura",
-    class_name: "Wizard",
-    power_type: "feature",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Included as a structured seed with unresolved exact value.",
-  },
-  {
-    id: "power-ray-of-enfeeblement",
-    name: "Ray of Enfeeblement",
-    class_name: "Wizard",
-    power_type: "encounter",
-    effect_ids: [],
-    source_type: "official_archive",
-    source_url: "https://www.arcgames.com/en/games/neverwinter/news/tag/nw-patch-notes",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Historical patch notes explicitly mention debuff behavior and stacking corrections. Exact live value should remain unresolved.",
-  },
-  {
-    id: "power-prophecy-of-doom",
-    name: "Prophecy of Doom",
-    class_name: "Cleric",
-    power_type: "encounter",
-    effect_ids: [],
-    source_type: "official_archive",
-    source_url: "https://www.arcgames.com/en/games/neverwinter/news/tag/nw-patch-notes",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Source registry confirms this power interacts with buffs and debuffs on the caster. Exact live value remains unresolved.",
-  },
+  ...nwHubClassPowersRaw.flatMap((classRoot) =>
+    classRoot.powers
+      .filter((power) => power.type === "Encounter" || power.type === "Daily")
+      .map((power) => ({
+        id: buildPowerId(
+          classRoot.className,
+          power.name,
+          power.type,
+          "paragonPath" in power ? power.paragonPath ?? null : null,
+        ),
+        name: power.name,
+        class_name: classRoot.className,
+        power_type: power.type === "Encounter" ? ("encounter" as const) : ("daily" as const),
+        paragon_path: "paragonPath" in power ? power.paragonPath ?? null : null,
+        description: "description" in power && typeof power.description === "string" ? power.description : "",
+        image_url: power.image_url ?? undefined,
+        effect_ids: power.type === "Encounter" ? buildPowerEffectIds(classRoot.className, power.name) : [],
+        source_type: "community_reference" as const,
+        source_url: "https://nw-hub.com/classes",
+        source_version: nwHubSourceVersion,
+        verification_status: "verified" as const,
+        notes:
+          "Directly extracted from NW Hub class power data on 2026-04-04. Effect IDs are only attached where the power text exposed a supported buff/debuff category.",
+      })),
+  ),
+  ...nwHubClassFeaturesRaw
+    .filter((feature) => "isClassFeature" in feature && feature.isClassFeature)
+    .map((feature) => ({
+      id: buildPowerId(
+        feature.className,
+        feature.name,
+        "Feature",
+        "paragonPath" in feature ? feature.paragonPath ?? null : null,
+      ),
+      name: feature.name,
+      class_name: feature.className,
+      power_type: "feature" as const,
+      paragon_path: "paragonPath" in feature ? feature.paragonPath ?? null : null,
+      description: feature.description,
+      image_url: feature.image_url ?? undefined,
+      effect_ids: [],
+      source_type: "community_reference" as const,
+      source_url: "https://nw-hub.com/classes",
+      source_version: nwHubSourceVersion,
+      verification_status: "verified" as const,
+      notes: "Directly extracted from NW Hub class feature data on 2026-04-04.",
+    })),
 ];
 
-export const classPowerPresets: Record<
-  string,
-  Pick<TeamMember, "encounter_ids" | "daily_ids" | "feature_ids">
-> = {
-  "class-ranger": {
-    encounter_ids: [],
-    daily_ids: [],
-    feature_ids: ["power-pack-tactics-ranger", "power-mystic-aura-ranger"],
-  },
-  "class-cleric": {
-    encounter_ids: ["power-prophecy-of-doom"],
-    daily_ids: [],
-    feature_ids: [],
-  },
-  "class-wizard": {
-    encounter_ids: ["power-ray-of-enfeeblement"],
-    daily_ids: [],
-    feature_ids: ["power-pack-tactics-wizard", "power-mystic-aura-wizard"],
-  },
-};
+function scoreSupportPriority(power: PowerDefinition) {
+  const text = `${power.name} ${power.description ?? ""}`.toLowerCase();
+  let score = power.effect_ids.length * 100;
 
-export function getDefaultPowerLoadoutForClass(classId: string) {
-  return (
-    classPowerPresets[classId] ?? {
-      encounter_ids: [],
-      daily_ids: [],
-      feature_ids: [],
-    }
+  if (/more damage|damage resistance|awareness|critical avoidance|deflect|allies|team|party/.test(text)) {
+    score += 40;
+  }
+
+  if (/heal|restore|shield|mitigation|cover/.test(text)) {
+    score += 10;
+  }
+
+  return score;
+}
+
+function filterClassPowers(classId: string, powerType: PowerDefinition["power_type"], paragonPath?: string) {
+  const className = classes.find((item) => item.id === classId)?.name;
+  if (!className) {
+    return [];
+  }
+
+  return powers.filter(
+    (power) =>
+      power.class_name === className &&
+      power.power_type === powerType &&
+      (!paragonPath || !power.paragon_path || power.paragon_path === paragonPath),
   );
+}
+
+export function getRoleForClassParagon(classId: string, paragonPath: string) {
+  const classItem = classes.find((item) => item.id === classId);
+  const meta = nwHubClassMetaRaw.find((item) => item.className === classItem?.name);
+  const paragon = meta?.paragons.find((item) => item.name === paragonPath);
+  return paragon ? normalizeRole(paragon.role) : classItem?.role_focus[0] ?? "support";
+}
+
+export function getDefaultPowerLoadoutForClass(classId: string, paragonPath?: string) {
+  const encounters = filterClassPowers(classId, "encounter", paragonPath)
+    .sort((left, right) => scoreSupportPriority(right) - scoreSupportPriority(left))
+    .slice(0, 3)
+    .map((power) => power.id);
+
+  const dailies = filterClassPowers(classId, "daily", paragonPath)
+    .sort((left, right) => scoreSupportPriority(right) - scoreSupportPriority(left))
+    .slice(0, 1)
+    .map((power) => power.id);
+
+  const features = filterClassPowers(classId, "feature", paragonPath)
+    .sort((left, right) => scoreSupportPriority(right) - scoreSupportPriority(left))
+    .slice(0, 2)
+    .map((power) => power.id);
+
+  return {
+    encounter_ids: encounters,
+    daily_ids: dailies,
+    feature_ids: features,
+  };
 }
 
 export const companions: Companion[] = [
@@ -556,170 +718,91 @@ export const companions: Companion[] = [
   },
 ];
 
-export const companionEnhancements: CompanionEnhancement[] = [
-  {
-    id: "enh-armor-break",
-    name: "Armor Break",
-    effect_ids: ["effect-armor-break-defense"],
-    source_type: "wiki_reference",
-    source_url:
-      "https://neverwinter.fandom.com/wiki/Companion/Enhancement_powers",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Priority support enhancement.",
-  },
-  {
-    id: "enh-dulled-senses",
-    name: "Dulled Senses",
-    effect_ids: ["effect-dulled-senses-awareness"],
-    source_type: "wiki_reference",
-    source_url:
-      "https://neverwinter.fandom.com/wiki/Companion/Enhancement_powers",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Priority support enhancement.",
-  },
-  {
-    id: "enh-vulnerability",
-    name: "Vulnerability",
-    effect_ids: ["effect-vulnerability-crit-avoid"],
-    source_type: "wiki_reference",
-    source_url:
-      "https://neverwinter.fandom.com/wiki/Companion/Enhancement_powers",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Priority support enhancement.",
-  },
-  {
-    id: "enh-slowed-reactions",
-    name: "Slowed Reactions",
-    effect_ids: ["effect-slowed-reactions-deflect"],
-    source_type: "wiki_reference",
-    source_url:
-      "https://neverwinter.fandom.com/wiki/Companion/Enhancement_powers",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Priority support enhancement.",
-  },
-];
+const companionEnhancementEffectMap: Record<string, string[]> = {
+  "Armor Break": ["effect-armor-break-defense"],
+  "Dulled Senses": ["effect-dulled-senses-awareness"],
+  Vulnerability: ["effect-vulnerability-crit-avoid"],
+  "Slowed Reactions": ["effect-slowed-reactions-deflect"],
+};
 
-export const companionBonuses: CompanionBonus[] = [
-  {
-    id: "bonus-batiri",
-    name: "Batiri",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Core ST bonus package seed.",
-  },
-  {
-    id: "bonus-minsc",
-    name: "Minsc",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Core ST bonus package seed.",
-  },
-  {
-    id: "bonus-neverwinter-knight",
-    name: "Neverwinter Knight",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Core ST bonus package seed.",
-  },
-];
+export const companionEnhancements: CompanionEnhancement[] = nwHubCompanionEnhancementsRaw.map((item) => ({
+  id: makeEntityId("enh", item.name),
+  name: item.name,
+  effect_ids: companionEnhancementEffectMap[item.name] ?? [],
+  source_type: "community_reference",
+  source_url: item.source_url,
+  source_version: nwHubSourceVersion,
+  verification_status: "verified",
+  notes:
+    "Directly extracted from NW Hub companion enhancement data on 2026-04-04. Effect IDs are attached only for the currently supported boss-debuff categories.",
+}));
 
-export const artifacts: Artifact[] = [
-  {
-    id: "artifact-mythallar",
-    name: "Mythallar Fragment",
-    category: "debuff",
-    exact_value: null,
-    duration_sec: null,
-    cooldown_sec: null,
-    rank_order: 1,
-    team_or_personal: "team",
-    effect_ids: ["effect-mythallar-defense"],
-    source_type: "wiki_reference",
-    source_url: "https://neverwinter.fandom.com/wiki/Mythallar_Fragment",
-    source_version: moduleVersion,
-    verification_status: "verified",
-    notes: "Ranked first in the recovered debuff artifact list; exact live value still pending.",
-  },
-  {
-    id: "artifact-halaster",
-    name: "Halaster's Blast Scepter",
-    category: "debuff",
-    exact_value: 0.15,
-    duration_sec: null,
-    cooldown_sec: null,
-    rank_order: 2,
-    team_or_personal: "team",
-    effect_ids: ["effect-halaster-defense"],
-    source_type: "wiki_reference",
-    source_url:
-      "https://neverwinter.fandom.com/wiki/Halaster%27s_Blast_Scepter/Tooltip",
-    source_version: moduleVersion,
-    verification_status: "verified",
-    notes: "Exact tooltip value recovered in the source registry.",
-  },
-  {
-    id: "artifact-wyvern",
-    name: "Wyvern-Venom Coated Knives",
-    category: "debuff",
-    exact_value: null,
-    duration_sec: null,
-    cooldown_sec: null,
-    rank_order: 3,
-    team_or_personal: "team",
-    effect_ids: ["effect-wyvern-incoming"],
-    source_type: "wiki_reference",
-    source_url:
-      "https://neverwinter.fandom.com/wiki/Wyvern-Venom_Coated_Knives/Tooltip",
-    source_version: moduleVersion,
-    verification_status: "verified",
-    notes: "Verified as a debuff artifact with unresolved live value.",
-  },
-  {
-    id: "artifact-charm",
-    name: "Charm of the Serpent",
-    category: "debuff",
-    exact_value: 0.16,
-    duration_sec: null,
-    cooldown_sec: null,
-    rank_order: 8,
-    team_or_personal: "team",
-    effect_ids: ["effect-charm-serpent-incoming"],
-    source_type: "wiki_reference",
-    source_url: "https://neverwinter.fandom.com/wiki/Charm_of_the_Serpent",
-    source_version: moduleVersion,
-    verification_status: "verified",
-    notes: "Verified exact mythic value in the docs.",
-  },
-  {
-    id: "artifact-lantern",
-    name: "Lantern of Revelation",
-    category: "debuff",
-    exact_value: 0.1,
-    duration_sec: null,
-    cooldown_sec: null,
-    rank_order: 10,
-    team_or_personal: "team",
-    effect_ids: ["effect-lantern-incoming"],
-    source_type: "wiki_reference",
-    source_url: "https://neverwinter.fandom.com/wiki/Lantern_of_Revelation",
-    source_version: moduleVersion,
-    verification_status: "verified",
-    notes: "Verified exact mythic value in the docs.",
-  },
-];
+export const companionBonuses: CompanionBonus[] = nwHubCompanionPowersRaw.map((item) => ({
+  id: makeEntityId("bonus", item.name),
+  name: item.name,
+  effect_ids: [],
+  source_type: "community_reference",
+  source_url: item.source_url,
+  source_version: nwHubSourceVersion,
+  verification_status: "verified",
+  notes: `Roles: ${item.roles.join(", ")}. ${item.text}`,
+}));
+
+const artifactEffectMap: Record<string, string[]> = {
+  "Halaster's Blast Scepter": ["effect-halaster-defense"],
+  "Wyvern-Venom Coated Knives": ["effect-wyvern-incoming"],
+  "Charm of the Serpent": ["effect-charm-serpent-incoming"],
+  "Lantern of Revelation": ["effect-lantern-incoming"],
+  "Xeleth's Blast Scepter": ["effect-halaster-defense"],
+};
+
+function inferArtifactCategoryFromText(text: string): Artifact["category"] {
+  const normalized = text.toLowerCase();
+
+  if (/lowered by|more damage|debuff|reduced/i.test(normalized)) {
+    return "debuff";
+  }
+
+  if (/allies|party|team/i.test(normalized)) {
+    return "support";
+  }
+
+  if (/heal|shield|immunity|cleanse/i.test(normalized)) {
+    return "utility";
+  }
+
+  return "personal_burst";
+}
+
+export const artifacts: Artifact[] = nwHubArtifactsRaw.map((item, index) => ({
+  id: makeEntityId("artifact", item.name),
+  name: item.name,
+  category: inferArtifactCategoryFromText(item.powertext),
+  exact_value: parsePercentValue(item.powertext),
+  duration_sec: (() => {
+    const match = item.powertext.match(/for (\d+(?:\.\d+)?) seconds?/i);
+    return match ? Number(match[1]) : null;
+  })(),
+  cooldown_sec: (() => {
+    const match = item.powertext.match(/cooldown .*? (\d+(?:\.\d+)?)%/i);
+    return match ? Number(match[1]) : null;
+  })(),
+  rank_order: index + 1,
+  team_or_personal: artifactEffectMap[item.name]?.length ? "team" : "personal",
+  effect_ids: artifactEffectMap[item.name] ?? [],
+  image_url: item.image_url,
+  source_type: "community_reference",
+  source_url: item.source_url,
+  source_version: nwHubSourceVersion,
+  verification_status: "verified",
+  notes:
+    "Directly extracted from NW Hub artifact data on 2026-04-04. Full rank and stat data remain available in the NW Hub snapshot files under data/nw-hub.",
+}));
+
+export const artifactSnapshots = nwHubArtifactsRaw;
+export const companionEnhancementSnapshots = nwHubCompanionEnhancementsRaw;
+export const companionPowerSnapshots = nwHubCompanionPowersRaw;
+export const classSnapshots = nwHubClassMetaRaw;
 
 export const mountCombatPowers: MountCombatPower[] = [
   {
