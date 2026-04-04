@@ -14,6 +14,14 @@ import {
   nwHubCompanionsRaw,
 } from "@/data/nw-hub/companions";
 import {
+  mountEquipBonusRows,
+  mountSheetSourceUrl,
+  mountSheetSourceVersion,
+  mountSingleTargetDamageRows,
+  mountSupportDungeonRows,
+  mountSupportTrialRows,
+} from "@/data/google-sheet/mounts";
+import {
   nwHubCompanionEnhancementsRaw,
 } from "@/data/nw-hub/companion-enhancements";
 import {
@@ -39,10 +47,6 @@ import {
 
 const moduleVersion = "module_32_5";
 const nwHubSourceVersion = "nw-hub-2026-04-04";
-const mountSheetSourceUrl =
-  "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=2133630453#gid=2133630453";
-const mountSheetSourceVersion = "aragon-mount-sheet-2025-11-22";
-
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -1190,172 +1194,76 @@ type MountSheetRow = {
   affectedByBossDebuffs?: boolean;
 };
 
+const mountEffectMap: Record<string, string[]> = {
+  "Hag's Enchanted Cauldron": ["effect-hag-defense", "effect-hag-crit-avoid"],
+  Pegasus: ["effect-pegasus-team-damage"],
+  "Red Dragon": [
+    "effect-red-dragon-owner-damage",
+    "effect-red-dragon-owner-crit",
+    "effect-red-dragon-boss-crit-avoid",
+    "effect-red-dragon-boss-outgoing-damage",
+    "effect-red-dragon-owner-accuracy",
+  ],
+  "Glorious Undead Lion": ["effect-undead-lion-incoming", "effect-undead-lion-accuracy"],
+  "Twice-Paled Alder": ["effect-alder-incoming", "effect-alder-outgoing"],
+  "Phantom Panther": ["effect-panther-incoming", "effect-panther-crit-strike"],
+  Swarm: ["effect-swarm-incoming", "effect-swarm-outgoing", "effect-swarm-crit-strike"],
+  "Eclipse Lion": ["effect-eclipse-lion-incoming", "effect-eclipse-lion-outgoing"],
+  "King of Spines / Tyrannosaur": ["effect-tyrannosaur-incoming"],
+  "Brain Stealer Dragon": ["effect-brain-stealer-incoming"],
+  "Bestial Fire Archon": ["effect-fire-archon-incoming"],
+  Balgora: ["effect-balgora-incoming"],
+  "Reconnaissance Balloons": ["effect-balloons-incoming"],
+  Cauldron: ["effect-cauldron-team-accuracy", "effect-cauldron-team-ca"],
+  Salamander: ["effect-salamander-owner-damage", "effect-salamander-deflect", "effect-salamander-outgoing", "effect-salamander-crit-strike"],
+};
+
+const dungeonBenefitMap = new Map(
+  mountSupportDungeonRows.map((item) => [item.name, item.damageBoostAtMythic100Bolster]),
+);
+
+function getSheetMountDamageType(name: string): MountCombatPower["damage_type"] {
+  if (name === "Bestial Fire Archon") {
+    return "magical";
+  }
+
+  if (name === "King of Spines / Tyrannosaur" || name === "Salamander") {
+    return "physical";
+  }
+
+  if (
+    name === "Hag's Enchanted Cauldron" ||
+    name === "Swarm" ||
+    name === "Cauldron" ||
+    name === "Reconnaissance Balloons"
+  ) {
+    return "utility";
+  }
+
+  return "mixed";
+}
+
 const mountCombatRows: MountSheetRow[] = [
-  {
-    name: "Hag's Enchanted Cauldron",
-    note: "-7.5% to enemy defense and crit avoidance. Trial support ranking #1, dungeon support ranking #1 from the Aragon mount sheet.",
-    damageType: "utility",
-    trialBenefit: 0.075,
-    dungeonBenefit: 0.075,
-    effectIds: ["effect-hag-defense", "effect-hag-crit-avoid"],
-    canCrit: false,
-    canGainCa: false,
-    affectedByTeamBuffs: false,
-    affectedByBossDebuffs: false,
-  },
-  {
-    name: "Pegasus",
-    note: "1,000 magnitude damage and allies gain +15% damage or damage resist or healing depending on role. Trial and dungeon support ranking 7.89%.",
-    damageType: "mixed",
-    trialBenefit: 0.0789,
-    dungeonBenefit: 0.0789,
-    effectIds: ["effect-pegasus-team-damage"],
-  },
-  {
-    name: "Red Dragon",
-    note: "-15% to target critical avoidance, -15% to target outgoing damage, +15% damage to caster and crit strike + accuracy. Trial support ranking 7.46%, dungeon support ranking 7.46%.",
-    damageType: "mixed",
-    trialBenefit: 0.0746,
-    dungeonBenefit: 0.0746,
-    effectIds: [
-      "effect-red-dragon-owner-damage",
-      "effect-red-dragon-owner-crit",
-      "effect-red-dragon-boss-crit-avoid",
-      "effect-red-dragon-boss-outgoing-damage",
-      "effect-red-dragon-owner-accuracy",
-    ],
-  },
-  {
-    name: "Glorious Undead Lion",
-    note: "+16% incoming damage received by targets and reduces their accuracy by 16%. Trial support ranking 6.40%, dungeon support ranking 8.42%.",
-    damageType: "mixed",
-    trialBenefit: 0.064,
-    dungeonBenefit: 0.0842,
-    effectIds: ["effect-undead-lion-incoming", "effect-undead-lion-accuracy"],
-  },
-  {
-    name: "Twice-Paled Alder",
-    note: "+16% incoming damage received by targets and reduces their outgoing damage by 16%. Trial support ranking 6.40%, dungeon support ranking 8.42%.",
-    damageType: "mixed",
-    trialBenefit: 0.064,
-    dungeonBenefit: 0.0842,
-    effectIds: ["effect-alder-incoming", "effect-alder-outgoing"],
-  },
-  {
-    name: "Phantom Panther",
-    note: "+16% incoming damage received by targets and reduces their critical strike by 16%. Trial support ranking 6.40%, dungeon support ranking 8.42%.",
-    damageType: "mixed",
-    trialBenefit: 0.064,
-    dungeonBenefit: 0.0842,
-    effectIds: ["effect-panther-incoming", "effect-panther-crit-strike"],
-  },
-  {
-    name: "Swarm",
-    note: "+15% incoming damage received by target with -15% to outgoing damage and critical chance. Trial support ranking 6.00%, dungeon support ranking 7.89%.",
-    damageType: "utility",
-    trialBenefit: 0.06,
-    dungeonBenefit: 0.0789,
-    effectIds: ["effect-swarm-incoming", "effect-swarm-outgoing", "effect-swarm-crit-strike"],
-  },
-  {
-    name: "Eclipse Lion",
-    note: "600 magnitude damage, 15% incoming damage received and 15% outgoing damage reduced to the targets. Trial support ranking 6.00%, dungeon support ranking 7.89%.",
-    damageType: "mixed",
-    trialBenefit: 0.06,
-    dungeonBenefit: 0.0789,
-    effectIds: ["effect-eclipse-lion-incoming", "effect-eclipse-lion-outgoing"],
-  },
-  {
-    name: "King of Spines / Tyrannosaur",
-    note: "6s root to controllable targets with 15% incoming damage received, with minion consume. Trial support ranking 6.00%, dungeon support ranking 7.89%.",
-    damageType: "physical",
-    trialBenefit: 0.06,
-    dungeonBenefit: 0.0789,
-    effectIds: ["effect-tyrannosaur-incoming"],
-  },
-  {
-    name: "Brain Stealer Dragon",
-    note: "+15% incoming damage received to targets. Trial support ranking 6.00%, dungeon support ranking 7.89%.",
-    damageType: "mixed",
-    trialBenefit: 0.06,
-    dungeonBenefit: 0.0789,
-    effectIds: ["effect-brain-stealer-incoming"],
-  },
-  {
-    name: "Bestial Fire Archon",
-    note: "+15% incoming damage received to targets within magma pools. Trial support ranking 6.00%, dungeon support ranking 7.89%.",
-    damageType: "magical",
-    trialBenefit: 0.06,
-    dungeonBenefit: 0.0789,
-    effectIds: ["effect-fire-archon-incoming"],
-  },
-  {
-    name: "Balgora",
-    note: "750 magnitude damage, 20 magnitude DoT for 10s and +11% damage taken by targets. Trial support ranking 4.40%, dungeon support ranking 5.79%.",
-    damageType: "mixed",
-    trialBenefit: 0.044,
-    dungeonBenefit: 0.0579,
-    effectIds: ["effect-balgora-incoming"],
-  },
-  {
-    name: "Reconnaissance Balloons",
-    note: "800 magnitude with +7.5% damage taken by targets. Treasure increases a random stat by 1.5% for 10s. Trial support ranking 3.00%, dungeon support ranking 3.95%.",
-    damageType: "utility",
-    trialBenefit: 0.03,
-    dungeonBenefit: 0.0395,
-    effectIds: ["effect-balloons-incoming"],
-  },
-  {
-    name: "Cauldron",
-    note: "115 magnitude DoT for 10s and all allies gain +15% Accuracy and Combat Advantage. Sheet notes zero gain at capped assumptions.",
-    damageType: "utility",
-    trialBenefit: 0,
-    dungeonBenefit: 0,
-    effectIds: ["effect-cauldron-team-accuracy", "effect-cauldron-team-ca"],
-  },
-  {
-    name: "Salamander",
-    note: "+15% damage buff to caster. Target is slowed, -15% deflect, -15% damage, -13% crit chance. Sheet notes zero gain at capped assumptions.",
-    damageType: "physical",
-    trialBenefit: 0,
-    dungeonBenefit: 0,
-    effectIds: ["effect-salamander-owner-damage", "effect-salamander-deflect", "effect-salamander-outgoing", "effect-salamander-crit-strike"],
-  },
-  {
-    name: "Demonic Gravehound",
-    note: "Physical 3,938 + 394 magnitude damage against control immune enemies, so bosses.",
-    damageType: "physical",
-  },
-  {
-    name: "Grubshank the Burdened",
-    note: "Magical 2,362 + 2,264 DoT for 5s.",
-    damageType: "magical",
-  },
-  {
-    name: "Hellfire Engine",
-    note: "Magical 1,969 + 2,264 DoT for 5s.",
-    damageType: "magical",
-  },
-  {
-    name: "Tunnel Vision",
-    note: "Magical 3,938 magnitude damage.",
-    damageType: "magical",
-  },
-  {
-    name: "Legendary Giant Toad",
-    note: "Magical 3,938 magnitude damage.",
-    damageType: "magical",
-  },
-  {
-    name: "Golden Warhorse",
-    note: "Magical 3,938 magnitude damage.",
-    damageType: "magical",
-  },
-  {
-    name: "Bigby's Hand",
-    note: "Physical 3,347 + 591 magnitude damage against control immune enemies, so bosses.",
-    damageType: "physical",
-  },
+  ...mountSupportTrialRows.map((item) => ({
+    name: item.name,
+    note: `${item.sourceNote}${item.rank ? ` Trial support ranking #${item.rank}.` : ""}`,
+    damageType: getSheetMountDamageType(item.name),
+    trialBenefit:
+      item.damageBoostAt150Debuffs90Buffs != null ? item.damageBoostAt150Debuffs90Buffs / 100 : null,
+    dungeonBenefit:
+      dungeonBenefitMap.get(item.name) != null ? (dungeonBenefitMap.get(item.name) as number) / 100 : null,
+    effectIds: mountEffectMap[item.name] ?? [],
+    canCrit: item.name !== "Hag's Enchanted Cauldron",
+    canGainCa: item.name !== "Hag's Enchanted Cauldron",
+    affectedByTeamBuffs: item.name !== "Hag's Enchanted Cauldron",
+    affectedByBossDebuffs: item.name !== "Hag's Enchanted Cauldron",
+  })),
+  ...mountSingleTargetDamageRows.map((item) => ({
+    name: item.name,
+    note: item.sourceNote,
+    damageType: item.damageType,
+    effectIds: mountEffectMap[item.name] ?? [],
+  })),
 ];
 
 export const mountCombatPowers: MountCombatPower[] = mountCombatRows.map((item) => {
@@ -1387,15 +1295,7 @@ export const mountCombatPowers: MountCombatPower[] = mountCombatRows.map((item) 
   };
 });
 
-const mountEquipRows = [
-  { mountName: "Ebon Riding Lizard", powerName: "Pack Tactics", note: "+2,953 Combat Advantage and Awareness." },
-  { mountName: "Myconid Bulette", powerName: "Mystic Aura", note: "+2,953 Power and Accuracy." },
-  { mountName: "Manticore", powerName: "Runic Aura", note: "+2,953 Power and Defense." },
-  { mountName: "Dragon Chicken", powerName: "Avian Aura", note: "Forte and Power." },
-  { mountName: "Turmish Lion", powerName: "Ferocity", note: "Extra damage per hit." },
-] as const;
-
-export const mountEquipPowers: MountEquipPower[] = mountEquipRows.map((item) => ({
+export const mountEquipPowers: MountEquipPower[] = mountEquipBonusRows.map((item) => ({
   id: makeEntityId("equip", `${item.mountName}-${item.powerName}`),
   name: `${item.mountName} - ${item.powerName}`,
   mount_id: makeEntityId("mount", item.mountName),
@@ -1404,14 +1304,14 @@ export const mountEquipPowers: MountEquipPower[] = mountEquipRows.map((item) => 
   source_url: mountSheetSourceUrl,
   source_version: mountSheetSourceVersion,
   verification_status: "partially_recovered",
-  notes: item.note,
+  notes: item.sourceNote,
 }));
 
 export const mounts: Mount[] = Array.from(
-  new Set([
-    ...mountCombatRows.map((item) => item.name),
-    ...mountEquipRows.map((item) => item.mountName),
-  ]),
+    new Set([
+      ...mountCombatRows.map((item) => item.name),
+      ...mountEquipBonusRows.map((item) => item.mountName),
+    ]),
 ).map((name) => {
   const mountId = makeEntityId("mount", name);
   const combatIds = mountCombatPowers.filter((item) => item.mount_id === mountId).map((item) => item.id);

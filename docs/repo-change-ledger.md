@@ -1014,3 +1014,39 @@ Checks run:
 Result:
 
 - Both passed after the mount-sheet ingestion and popup list-layout rewrite.
+
+## Pass 11 - Full mount sheet extraction preserved locally
+
+### Local sheet snapshot
+
+Files:
+
+- `data/google-sheet/mounts.ts`
+- `data/game-data.ts`
+
+Changes:
+
+- Added a dedicated local snapshot file for the Google Sheet mount tab:
+  `data/google-sheet/mounts.ts`
+- Preserved the extracted rows from the sheet in structured sections:
+  - trial support mounts
+  - dungeon support mounts
+  - ST damage mount powers
+  - mount equip bonuses
+- Switched `data/game-data.ts` to import and derive the mount model from that local snapshot instead of relying on duplicated inline transcription.
+
+Why:
+
+- The user explicitly asked to extract all mount debuff information from the Google Sheet.
+- Keeping the sheet extraction in its own typed file makes the source durable, inspectable, and reusable for future ingestion work.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after moving the mount-sheet extraction into the dedicated local snapshot file.
