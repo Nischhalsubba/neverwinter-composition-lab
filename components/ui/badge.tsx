@@ -4,19 +4,19 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase",
+  "inline-flex items-center border px-3 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase",
   {
     variants: {
       variant: {
-        default: "border-white/10 bg-white/6 text-stone-200",
-        teal: "border-fuchsia-300/18 bg-fuchsia-300/10 text-fuchsia-100",
-        green: "border-emerald-300/18 bg-emerald-300/10 text-emerald-100",
-        red: "border-rose-300/18 bg-rose-300/10 text-rose-100",
-        purple: "border-violet-300/18 bg-violet-300/12 text-violet-100",
-        orange: "border-orange-300/18 bg-orange-300/10 text-orange-100",
-        gold: "border-amber-300/18 bg-amber-300/10 text-amber-100",
-        blue: "border-indigo-300/18 bg-indigo-300/10 text-indigo-100",
-        muted: "border-white/8 bg-black/16 text-stone-400",
+        default: "border-white/12 bg-white/8 text-stone-200",
+        teal: "border-sky-200/40 bg-sky-200/20 text-sky-100",
+        green: "border-emerald-200/38 bg-emerald-200/18 text-emerald-50",
+        red: "border-pink-200/40 bg-pink-200/18 text-pink-50",
+        purple: "border-violet-200/40 bg-violet-200/18 text-violet-50",
+        orange: "border-rose-100/45 bg-rose-100/20 text-rose-50",
+        gold: "border-amber-100/45 bg-amber-100/18 text-amber-50",
+        blue: "border-blue-100/45 bg-blue-100/20 text-blue-50",
+        muted: "border-white/8 bg-white/6 text-stone-400",
       },
     },
     defaultVariants: {

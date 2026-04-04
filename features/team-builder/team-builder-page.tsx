@@ -90,12 +90,12 @@ if (typeof globalThis !== "undefined") {
 }
 
 export function TeamBuilderPage() {
-  const [mode, setMode] = useState<TeamMode>("dungeon");
+  const [mode, setMode] = useState<TeamMode | null>(null);
   const [activeTab, setActiveTab] = useState<(typeof leftTabs)[number]>("Roster");
   const [editorTab, setEditorTab] = useState<(typeof editorTabs)[number]>("Identity");
   const [bossId, setBossId] = useState(bossPresets[0]?.id ?? "");
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(createInitialTeamMembers("dungeon"));
-  const [selectedMemberId, setSelectedMemberId] = useState("member-1");
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState("");
   const [mountBaseHitOverride, setMountBaseHitOverride] = useState(1000000);
   const [critAssumption, setCritAssumption] = useState(0.5);
   const [caAssumption, setCaAssumption] = useState(0.5);
@@ -156,6 +156,7 @@ export function TeamBuilderPage() {
       daily_ids: powerLoadout.daily_ids,
       feature_ids: powerLoadout.feature_ids,
       role: classItem?.role_focus[0] ?? "support",
+      label: classItem?.name ? `${classItem.name} Slot` : `Empty Slot ${memberId.replace("member-", "")}`,
     });
   }
 
@@ -208,31 +209,71 @@ export function TeamBuilderPage() {
     })),
   };
 
+  if (!mode) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-sky-200/80">Team Builder Start</p>
+            <CardTitle className="text-[32px]">Choose Dungeon or Trial</CardTitle>
+            <CardDescription>
+              Dungeon creates 5 empty slots. Trial creates 10 empty slots split into Group A and Group B. After that, click a slot to configure class, artifact, purple debuff, and encounter selections.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => updateTeamMode("dungeon")}
+              className="border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.1))] p-8 text-left transition hover:border-sky-200/40"
+            >
+              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">5 slots</p>
+              <p className="mt-3 text-2xl font-semibold text-stone-100">Dungeon</p>
+              <p className="mt-4 text-sm leading-7 text-stone-400">
+                Single party layout for fast 5-player planning with empty member slots.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => updateTeamMode("trial")}
+              className="border border-white/10 bg-[linear-gradient(180deg,rgba(255,200,221,0.16),rgba(162,210,255,0.1))] p-8 text-left transition hover:border-pink-200/40"
+            >
+              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">10 slots</p>
+              <p className="mt-3 text-2xl font-semibold text-stone-100">Trial</p>
+              <p className="mt-4 text-sm leading-7 text-stone-400">
+                Two groups of five with empty slots so the full composition starts from scratch.
+              </p>
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden">
         <CardContent className="space-y-6 p-7 min-[1900px]:p-8">
           <div className="grid gap-5 min-[1500px]:grid-cols-[minmax(0,1.35fr)_360px]">
             <div className="max-w-4xl">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-fuchsia-200/80">Core feature</p>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-sky-200/80">Core feature</p>
               <h2 className="mt-2 text-[38px] font-semibold tracking-[-0.035em] text-stone-50 min-[1900px]:text-[46px]">Team Builder</h2>
               <p className="mt-4 max-w-3xl text-base leading-8 text-stone-400">
                 Build a dungeon shell for 5 players or a trial shell for 10 players in two groups of five. The layout now favors readable cards and breathable spacing instead of compressing the planner into one dense strip.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 min-[1500px]:grid-cols-1">
-              <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.42),rgba(17,0,28,0.82))] p-5">
+              <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.08))] p-5">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Boss preset</p>
                 <p className="mt-3 text-base font-medium text-stone-100">{boss.name}</p>
               </div>
-              <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.42),rgba(17,0,28,0.82))] p-5">
+              <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(255,200,221,0.14),rgba(162,210,255,0.08))] p-5">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Selected carry</p>
                 <p className="mt-3 text-base font-medium text-stone-100">{carry?.label ?? "Pending"}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.28),rgba(17,0,28,0.72))] p-4 min-[1900px]:p-5">
+          <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.12),rgba(189,224,254,0.06))] p-4 min-[1900px]:p-5">
             <div className="grid gap-3 min-[1500px]:grid-cols-[auto_auto_minmax(240px,1fr)_minmax(240px,1fr)_auto]">
             <div className="flex flex-wrap gap-2">
               <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
@@ -295,10 +336,10 @@ export function TeamBuilderPage() {
                     type="button"
                     key={item.key}
                     onClick={() => activeTab === "Roster" && setSelectedMemberId(item.key)}
-                    className={`block w-full rounded-[22px] border p-5 text-left transition ${
+                    className={`block w-full border p-5 text-left transition ${
                       item.key === selectedMemberId
-                        ? "border-fuchsia-300/16 bg-[linear-gradient(180deg,rgba(79,1,71,0.44),rgba(17,0,28,0.82))]"
-                        : "border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.3),rgba(17,0,28,0.78))] hover:border-white/12"
+                        ? "border-sky-200/30 bg-[linear-gradient(180deg,rgba(162,210,255,0.18),rgba(205,180,219,0.12))]"
+                        : "border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] hover:border-white/12"
                     }`}
                   >
                     <p className="text-sm font-medium text-stone-100">{item.title}</p>
@@ -354,8 +395,8 @@ export function TeamBuilderPage() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="max-w-2xl">
                     <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-fuchsia-200" />
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-fuchsia-200/80">Member Config Panel</p>
+                      <Target className="h-4 w-4 text-sky-100" />
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">Member Config Panel</p>
                     </div>
                     <CardTitle className="mt-2 text-[28px]">{selectedMember.label}</CardTitle>
                     <CardDescription>
@@ -400,11 +441,11 @@ export function TeamBuilderPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] px-5 py-4">
+              <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.12),rgba(189,224,254,0.08))] px-5 py-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Total debuff sources</p>
                 <p className="mt-2 text-2xl font-semibold text-stone-100">{bossDebuffSourceCount}</p>
               </div>
-              <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] px-5 py-4">
+              <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(255,200,221,0.12),rgba(162,210,255,0.08))] px-5 py-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Resolved combined percent</p>
                 <p className="mt-2 text-2xl font-semibold text-stone-100">{formatPercent(bossDebuffResolvedPercent)}</p>
               </div>
@@ -430,7 +471,7 @@ export function TeamBuilderPage() {
           />
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-2 text-violet-200">
+              <div className="flex items-center gap-2 text-sky-100">
                 <Users className="h-4 w-4" />
                 <p className="text-xs uppercase tracking-[0.22em]">Carry DPS State</p>
               </div>
@@ -608,7 +649,7 @@ function GroupSection({
     <section className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-stone-100">
-          <Swords className="h-4 w-4 text-fuchsia-200" />
+          <Swords className="h-4 w-4 text-sky-100" />
           <p className="text-sm font-medium">{title}</p>
         </div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">{members.length} members</p>
@@ -651,28 +692,28 @@ function MemberCard({
     <button
       type="button"
       onClick={() => onSelect(member.id)}
-      className={`rounded-[28px] border p-6 text-left transition ${
+      className={`border p-6 text-left transition ${
         isSelected
-          ? "border-fuchsia-300/16 bg-[linear-gradient(180deg,rgba(79,1,71,0.42),rgba(17,0,28,0.92))]"
-          : "border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.28),rgba(17,0,28,0.84))] hover:border-white/14"
+          ? "border-sky-200/30 bg-[linear-gradient(180deg,rgba(162,210,255,0.16),rgba(205,180,219,0.12))]"
+          : "border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] hover:border-white/14"
       }`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-white/8 bg-white/[0.04] text-sm font-medium text-stone-300">
+          <div className="flex h-14 w-14 items-center justify-center border border-white/8 bg-white/[0.04] text-sm font-medium text-stone-300">
             {member.group}-{member.slot}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-lg font-semibold text-stone-50">{member.label}</p>
+              <p className="text-lg font-semibold text-stone-50">{member.class_id ? member.label : `Empty Slot ${member.slot}`}</p>
               {member.is_carry ? <Badge variant="teal">Carry</Badge> : <Badge variant="muted">{member.role}</Badge>}
             </div>
             <p className="mt-2 text-sm text-stone-400">
-              {classItem?.name ?? "Class pending"} {member.paragon ? `/ ${member.paragon}` : ""}
+              {classItem?.name ?? "Class not selected"} {member.paragon ? `/ ${member.paragon}` : ""}
             </p>
           </div>
         </div>
-        <div className="hidden rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.26),rgba(17,0,28,0.78))] px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-stone-500 md:block">
+        <div className="hidden border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-stone-500 md:block">
           {member.race || "Race pending"}
         </div>
       </div>
@@ -705,7 +746,7 @@ function MemberCard({
 
 function LoadoutCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.26),rgba(17,0,28,0.78))] p-4">
+    <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-4">
       <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">{label}</p>
       <p className="mt-2 text-sm leading-6 text-stone-200">{value}</p>
     </div>
@@ -752,6 +793,7 @@ function renderEditorTab(
               value={selectedMember.class_id}
               onChange={(event) => handleClassChange(selectedMember.id, event.target.value)}
             >
+              <option value="">Select class</option>
               {classes.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -795,6 +837,7 @@ function renderEditorTab(
               value={selectedMember.enhancement_id}
               onChange={(event) => updateMember(selectedMember.id, { enhancement_id: event.target.value })}
             >
+              <option value="">Select debuff enhancement</option>
               {companionEnhancements.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -807,6 +850,7 @@ function renderEditorTab(
               value={selectedMember.artifact_id}
               onChange={(event) => updateMember(selectedMember.id, { artifact_id: event.target.value })}
             >
+              <option value="">Select artifact</option>
               {artifacts.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -842,7 +886,7 @@ function renderEditorTab(
                 })
               }
             >
-              <option value="">None</option>
+              <option value="">{className ? "Select encounter" : "Select class first"}</option>
               {classEncounters.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -863,7 +907,7 @@ function renderEditorTab(
                 })
               }
             >
-              <option value="">None</option>
+              <option value="">{className ? "Select encounter" : "Select class first"}</option>
               {classEncounters.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -884,7 +928,7 @@ function renderEditorTab(
                 })
               }
             >
-              <option value="">None</option>
+              <option value="">{className ? "Select encounter" : "Select class first"}</option>
               {classEncounters.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -901,7 +945,7 @@ function renderEditorTab(
                 })
               }
             >
-              <option value="">None</option>
+              <option value="">{className ? "Select feature" : "Select class first"}</option>
               {classFeatures.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -918,7 +962,7 @@ function renderEditorTab(
                 })
               }
             >
-              <option value="">None</option>
+              <option value="">{className ? "Select feature" : "Select class first"}</option>
               {classFeatures.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -950,7 +994,7 @@ function renderEditorTab(
               ))}
             </Select>
           </Field>
-          <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.3),rgba(17,0,28,0.76))] p-5 md:col-span-2 xl:col-span-3">
+          <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-5 md:col-span-2 xl:col-span-3">
             <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Auto-slot rule</p>
             <p className="mt-2 text-sm leading-6 text-stone-300">
               Changing class auto-fills the currently seeded encounter and feature loadout for that class. You can override each slot manually after that.
@@ -985,7 +1029,7 @@ function renderEditorTab(
               ))}
             </Select>
           </Field>
-          <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.3),rgba(17,0,28,0.76))] p-5">
+          <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.08),rgba(189,224,254,0.06))] p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Support note</p>
             <p className="mt-2 text-sm leading-6 text-stone-300">
               Companion records remain source-aware. Unresolved live values stay in the model instead of being guessed.

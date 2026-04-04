@@ -1,28 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --dark-amethyst: #3a015c;
-  --deep-purple: #4f0147;
-  --midnight-violet: #35012c;
-  --midnight-violet-2: #290025;
-  --midnight-violet-3: #11001c;
-  --background: var(--midnight-violet-3);
-  --foreground: #f6eef9;
-  --panel: rgba(58, 1, 92, 0.2);
-  --panel-2: rgba(41, 0, 37, 0.78);
+  --thistle: #cdb4db;
+  --pastel-petal: #ffc8dd;
+  --baby-pink: #ffafcc;
+  --icy-blue: #bde0fe;
+  --sky-blue: #a2d2ff;
+  --background: #10131a;
+  --foreground: #eef6ff;
+  --panel: rgba(205, 180, 219, 0.12);
+  --panel-2: rgba(162, 210, 255, 0.12);
   --border: rgba(255, 255, 255, 0.08);
-  --muted: #b39bb6;
-  --teal: #d59cff;
-  --green: #8bcf9d;
-  --red: #ff8db3;
-  --purple: #f0a8ff;
-  --orange: #ffbb8a;
-  --gold: #ffd47a;
-  --blue: #b9b5ff;
-  --radius-chip: 12px;
-  --radius-card: 28px;
-  --radius-panel: 34px;
-  --shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.42);
+  --muted: #b5c3d1;
+  --teal: var(--sky-blue);
+  --green: #c7f0d8;
+  --red: var(--baby-pink);
+  --purple: var(--thistle);
+  --orange: var(--pastel-petal);
+  --gold: #ffe0a8;
+  --blue: var(--icy-blue);
+  --radius-chip: 0px;
+  --radius-card: 0px;
+  --radius-panel: 0px;
+  --shadow-panel: 0 20px 60px rgba(0, 0, 0, 0.18);
 }
 
 @theme inline {
@@ -33,6 +33,7 @@
 
 * {
   box-sizing: border-box;
+  border-radius: 0 !important;
 }
 
 html {
@@ -42,14 +43,14 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(79, 1, 71, 0.4), transparent 26%),
-    radial-gradient(circle at 82% 14%, rgba(58, 1, 92, 0.3), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(53, 1, 44, 0.28), transparent 32%),
+    radial-gradient(circle at top left, rgba(205, 180, 219, 0.24), transparent 24%),
+    radial-gradient(circle at 82% 14%, rgba(255, 200, 221, 0.22), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(162, 210, 255, 0.22), transparent 30%),
     linear-gradient(
       180deg,
-      var(--midnight-violet-3) 0%,
-      var(--midnight-violet-2) 36%,
-      var(--midnight-violet) 100%
+      #0f1117 0%,
+      #151a24 38%,
+      #1b2230 100%
     );
   color: var(--foreground);
   font-feature-settings: "ss01" 1, "cv01" 1, "cv02" 1;
@@ -69,10 +70,10 @@ textarea {
 
 input::placeholder,
 textarea::placeholder {
-  color: #9e88a5;
+  color: #8fa2b7;
 }
 
 ::selection {
-  background: rgba(213, 156, 255, 0.32);
-  color: white;
+  background: rgba(162, 210, 255, 0.45);
+  color: #10131a;
 }

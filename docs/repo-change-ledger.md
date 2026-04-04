@@ -595,3 +595,72 @@ Result:
 
 - Only a small subset of class powers are currently seeded because the docs do not yet verify full encounter lists for every class.
 - Auto-slotting currently uses source-backed partial seeds and leaves unresolved live values un-invented.
+
+## Pass 6 - Empty Team Builder start flow and pastel shell reset
+
+### Global styling reset
+
+Files:
+
+- `app/globals.css`
+- `components/ui/card.tsx`
+- `components/ui/button.tsx`
+- `components/ui/badge.tsx`
+- `components/ui/input.tsx`
+- `components/ui/select.tsx`
+- `components/ui/textarea.tsx`
+- `components/summary-panel.tsx`
+- `components/layout/app-shell.tsx`
+
+Changes:
+
+- Removed all border radius globally by forcing square corners through the base stylesheet.
+- Switched the visual system to the new pastel palette:
+  - `#cdb4db`
+  - `#ffc8dd`
+  - `#ffafcc`
+  - `#bde0fe`
+  - `#a2d2ff`
+- Updated shared surfaces, controls, badges, shell accents, and gradients to use the new color direction instead of the prior violet theme.
+
+Why:
+
+- The user explicitly asked to remove all border radius and replace the previous palette with the new pastel set.
+
+### Empty Team Builder initialization
+
+Files:
+
+- `data/game-data.ts`
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Changed Team Builder initialization so it no longer starts with seeded members already filled in.
+- The Team Builder now opens in a mode-prompt state and asks the user to choose:
+  - Dungeon -> 5 empty slots
+  - Trial -> 10 empty slots
+- Updated `createInitialTeamMembers()` to create truly empty slots for class, artifact, enhancement, encounter powers, mount selections, and carry state.
+- Kept click-to-configure flow so each empty slot can then be filled through the member editor.
+- Kept class-based encounter/feature slotting available once a class is chosen.
+
+Why:
+
+- The user explicitly asked for empty 5-slot / 10-slot builder setup instead of pre-populated team members.
+- The requested workflow starts with mode choice, then slot click, then member configuration.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the empty-builder and global-style reset.
+
+### Remaining follow-up
+
+- Many route-level components still contain square-corner utility classes in markup even though the global stylesheet already flattens them.
+- The Team Builder still uses source-aware partial power seeds where the docs do not yet verify full live class loadouts.

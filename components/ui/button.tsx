@@ -4,16 +4,16 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-[18px] border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-300/40 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200/60 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         primary:
-          "border-fuchsia-300/18 bg-[linear-gradient(180deg,rgba(79,1,71,0.78),rgba(58,1,92,0.82))] text-fuchsia-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-[linear-gradient(180deg,rgba(90,5,84,0.88),rgba(66,4,99,0.92))]",
+          "border-sky-200/40 bg-[linear-gradient(180deg,rgba(162,210,255,0.28),rgba(189,224,254,0.2))] text-slate-950 hover:bg-[linear-gradient(180deg,rgba(162,210,255,0.38),rgba(189,224,254,0.28))]",
         secondary:
-          "border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.55),rgba(17,0,28,0.82))] text-stone-100 hover:border-white/12 hover:bg-[linear-gradient(180deg,rgba(62,7,53,0.7),rgba(22,2,32,0.9))]",
+          "border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.08))] text-stone-100 hover:border-white/16 hover:bg-[linear-gradient(180deg,rgba(205,180,219,0.22),rgba(189,224,254,0.14))]",
         ghost: "border-transparent bg-transparent text-stone-300 hover:bg-white/6",
-        danger: "border-rose-300/25 bg-rose-300/12 text-rose-100 hover:bg-rose-300/16",
+        danger: "border-pink-200/40 bg-[linear-gradient(180deg,rgba(255,175,204,0.24),rgba(255,200,221,0.18))] text-slate-950 hover:bg-[linear-gradient(180deg,rgba(255,175,204,0.34),rgba(255,200,221,0.24))]",
       },
       size: {
         sm: "h-10 px-4",

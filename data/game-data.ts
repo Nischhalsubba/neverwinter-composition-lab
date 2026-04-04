@@ -1065,48 +1065,28 @@ export function createInitialTeamMembers(mode: "dungeon" | "trial"): TeamMember[
     const slot = index + 1;
     const group = slot <= 5 ? "A" : "B";
 
-    const defaultCompanion =
-      slot === 1 ? "comp-sardina" : slot === 2 ? "comp-tutor" : slot === 3 ? "comp-drizzt" : "comp-portobello";
-    const defaultArtifact =
-      slot === 1 ? "artifact-halaster" : slot === 2 ? "artifact-charm" : "artifact-lantern";
-    const defaultEnhancement =
-      slot === 2 ? "enh-armor-break" : slot === 3 ? "enh-dulled-senses" : slot === 4 ? "enh-vulnerability" : "enh-slowed-reactions";
-
-    const classId =
-      slot === 1
-        ? "class-rogue"
-        : slot === 2
-          ? "class-bard"
-          : slot === 3
-            ? "class-cleric"
-            : slot === 4
-              ? "class-paladin"
-              : "class-ranger";
-    const powerLoadout = getDefaultPowerLoadoutForClass(classId);
-
     return {
       id: `member-${slot}`,
       group,
       slot,
-      label: slot === 1 ? "Carry Candidate" : `Member ${slot}`,
-      class_id: classId,
+      label: `Empty Slot ${slot}`,
+      class_id: "",
       paragon: "",
       race: "",
-      role: slot === 1 ? "dps" : slot === 3 ? "healer" : slot === 4 ? "tank" : "support",
-      encounter_ids: powerLoadout.encounter_ids,
-      daily_ids: powerLoadout.daily_ids,
-      feature_ids: powerLoadout.feature_ids,
-      artifact_id: defaultArtifact,
-      companion_id: defaultCompanion,
-      enhancement_id: defaultEnhancement,
-      companion_bonus_id: "bonus-batiri",
-      mount_id: slot === 1 ? "mount-slab-vecna" : slot === 2 ? "mount-uni" : "mount-red-dragon",
-      mount_combat_power_id:
-        slot === 1 ? "combat-slab-vecna" : slot === 2 ? "combat-uni-party" : "combat-red-dragon",
-      mount_equip_power_id: slot === 4 ? "equip-zodar" : "",
-      insignia_bonus_ids: ["insignia-warlord", "insignia-shepherd", "insignia-gladiator"],
+      role: "support",
+      encounter_ids: [],
+      daily_ids: [],
+      feature_ids: [],
+      artifact_id: "",
+      companion_id: "",
+      enhancement_id: "",
+      companion_bonus_id: "",
+      mount_id: "",
+      mount_combat_power_id: "",
+      mount_equip_power_id: "",
+      insignia_bonus_ids: ["", "", ""],
       notes: "",
-      is_carry: slot === 1,
+      is_carry: false,
       personal_overrides: {},
     };
   });

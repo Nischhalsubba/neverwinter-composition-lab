@@ -14,7 +14,7 @@ export function SummaryPanel({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2 text-fuchsia-200">
+        <div className="flex items-center gap-2 text-sky-100">
           <Icon className="h-4 w-4" />
           <p className="text-xs uppercase tracking-[0.22em]">{title}</p>
         </div>
