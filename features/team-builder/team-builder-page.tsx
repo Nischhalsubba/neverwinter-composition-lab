@@ -27,13 +27,16 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   artifacts,
+  artifactRecommendationsById,
   bossPresets,
   classes,
   companionBonuses,
   companionEnhancements,
   companionEnhancementSnapshots,
+  companionRecommendationsById,
   companions,
   createInitialTeamMembers,
+  enhancementRecommendationsById,
   getDefaultPowerLoadoutForClass,
   getRoleForClassParagon,
   insigniaBonuses,
@@ -269,8 +272,13 @@ export function TeamBuilderPage() {
     updateMember(memberId, { encounter_ids: nextEncounters });
   }
 
-  function openPicker(memberId: string, kind: PickerKind) {
+  function focusMember(memberId: string) {
     setSelectedMemberId(memberId);
+    setEditorTab("Identity");
+  }
+
+  function openPicker(memberId: string, kind: PickerKind) {
+    focusMember(memberId);
     setPickerState({ memberId, kind });
     setPickerQuery("");
     setPickerFilter("all");
@@ -444,7 +452,7 @@ export function TeamBuilderPage() {
                   <button
                     type="button"
                     key={item.key}
-                    onClick={() => activeTab === "Roster" && setSelectedMemberId(item.key)}
+                    onClick={() => activeTab === "Roster" && focusMember(item.key)}
                     className={`block w-full border p-5 text-left transition ${
                       item.key === selectedMemberId
                         ? "border-sky-200/30 bg-[linear-gradient(180deg,rgba(162,210,255,0.18),rgba(205,180,219,0.12))]"
@@ -481,19 +489,19 @@ export function TeamBuilderPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-10">
-              <GroupSection
-                title="Group A"
-                members={teamMembers.filter((member) => member.group === "A")}
-                selectedMemberId={selectedMemberId}
-                onSelect={setSelectedMemberId}
-                onOpenPicker={openPicker}
-              />
+                <GroupSection
+                  title="Group A"
+                  members={teamMembers.filter((member) => member.group === "A")}
+                  selectedMemberId={selectedMemberId}
+                  onSelect={focusMember}
+                  onOpenPicker={openPicker}
+                />
               {mode === "trial" ? (
                 <GroupSection
                   title="Group B"
                   members={teamMembers.filter((member) => member.group === "B")}
                   selectedMemberId={selectedMemberId}
-                  onSelect={setSelectedMemberId}
+                  onSelect={focusMember}
                   onOpenPicker={openPicker}
                 />
               ) : null}
@@ -511,7 +519,7 @@ export function TeamBuilderPage() {
                     </div>
                     <CardTitle className="mt-2 text-[28px]">{selectedMember.label}</CardTitle>
                     <CardDescription>
-                      The editor is now segmented so identity, loadout, support layers, and notes do not collapse into one long wall of fields.
+                      Select class and paragon first, then adjust the auto-slotted support, buff, and debuff powers for this member.
                     </CardDescription>
                   </div>
                   {(() => {
@@ -595,6 +603,14 @@ export function TeamBuilderPage() {
                       {selectedMember.is_carry ? "Selected carry DPS" : "Mark as carry DPS"}
                     </Button>
                   </div>
+                  {!selectedMember.class_id ? (
+                    <div className="border border-white/8 bg-[linear-gradient(180deg,rgba(255,200,221,0.14),rgba(189,224,254,0.08))] p-4 md:col-span-2 xl:col-span-4">
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Start here</p>
+                      <p className="mt-2 text-sm leading-6 text-stone-300">
+                        Pick a class first. The builder will then open the paragon list and auto-slot the current support-oriented encounter, daily, and feature defaults for that class path.
+                      </p>
+                    </div>
+                  ) : null}
                   <Field label="Role">
                     <Select
                       value={selectedMember.role}
@@ -1518,7 +1534,7 @@ function SelectionOverlay({
               </p>
               <h3 className="mt-2 text-2xl font-semibold text-stone-50">{getPickerHeading(kind)}</h3>
               <p className="mt-2 text-sm leading-7 text-stone-400">
-                Team Builder now uses popup pickers for the high-impact equipment fields so selection stays fast even when the imported list is large.
+                Search, filter, and choose from the imported local data. Recommended sheet-backed entries are tagged directly in the list.
               </p>
             </div>
             <button
@@ -1655,34 +1671,56 @@ function getPickerHeading(kind: PickerKind) {
 
 function getPickerItems(kind: PickerKind): PickerItem[] {
   if (kind === "artifact") {
-    return artifacts.map((item) => ({
-      id: item.id,
-      name: item.name,
-      subtitle: `${item.category} / ${item.team_or_personal}`,
-      description: item.notes,
-      imageUrl: item.image_url,
-      sourceUrl: item.source_url,
-      filters: ["all", item.category, item.team_or_personal, item.effect_ids.length ? "mapped" : "source-only"],
-      badges: [
-        { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
-        { label: item.category, variant: "gold" },
-      ],
-    }));
+    return artifacts.map((item) => {
+      const recommendation = artifactRecommendationsById[item.id];
+
+      return {
+        id: item.id,
+        name: item.name,
+        subtitle: `${item.category} / ${item.team_or_personal}`,
+        description: item.notes,
+        imageUrl: item.image_url,
+        sourceUrl: item.source_url,
+        filters: [
+          "all",
+          item.category,
+          item.team_or_personal,
+          item.effect_ids.length ? "mapped" : "source-only",
+          recommendation?.trial || recommendation?.dungeon ? "recommended" : "not-recommended",
+        ],
+        badges: [
+          { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
+          { label: item.category, variant: "gold" },
+          ...(recommendation?.trial ? [{ label: `Trial #${recommendation.trial.rank}`, variant: "blue" as const }] : []),
+          ...(recommendation?.dungeon ? [{ label: `Dungeon #${recommendation.dungeon.rank}`, variant: "purple" as const }] : []),
+        ],
+      };
+    });
   }
 
   if (kind === "companion") {
-    return companions.map((item) => ({
-      id: item.id,
-      name: item.name,
-      subtitle: `${item.role_tag} / ${item.archetype}`,
-      description: item.notes,
-      sourceUrl: item.source_url,
-      filters: ["all", item.role_tag, item.effect_ids.length ? "mapped" : "source-only"],
-      badges: [
-        { label: item.role_tag, variant: "purple" },
-        { label: item.verification_status.replaceAll("_", " "), variant: "blue" },
-      ],
-    }));
+    return companions.map((item) => {
+      const recommendation = companionRecommendationsById[item.id];
+
+      return {
+        id: item.id,
+        name: item.name,
+        subtitle: `${item.role_tag} / ${item.archetype}`,
+        description: item.notes,
+        sourceUrl: item.source_url,
+        filters: [
+          "all",
+          item.role_tag,
+          item.effect_ids.length ? "mapped" : "source-only",
+          recommendation ? "recommended" : "not-recommended",
+        ],
+        badges: [
+          { label: item.role_tag, variant: "purple" },
+          { label: item.verification_status.replaceAll("_", " "), variant: "blue" },
+          ...(recommendation ? [{ label: `Support #${recommendation.rank}`, variant: "teal" as const }] : []),
+        ],
+      };
+    });
   }
 
   if (kind === "mount") {
@@ -1709,24 +1747,34 @@ function getPickerItems(kind: PickerKind): PickerItem[] {
     companionEnhancementSnapshots.map((item) => [item.name, item.text]),
   );
 
-  return companionEnhancements.map((item) => ({
-    id: item.id,
-    name: item.name,
-    subtitle: "Purple debuff / enhancement",
-    description: enhancementText.get(item.name) ?? item.notes,
-    sourceUrl: item.source_url,
-    filters: ["all", item.effect_ids.length > 0 ? "mapped" : "source-only"],
-    badges: [
-      { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
-      { label: item.effect_ids.length > 0 ? "mapped effect" : "source only", variant: item.effect_ids.length > 0 ? "red" : "muted" },
-    ],
-  }));
+  return companionEnhancements.map((item) => {
+    const recommendation = enhancementRecommendationsById[item.id];
+
+    return {
+      id: item.id,
+      name: item.name,
+      subtitle: "Purple debuff / enhancement",
+      description: enhancementText.get(item.name) ?? item.notes,
+      sourceUrl: item.source_url,
+      filters: [
+        "all",
+        item.effect_ids.length > 0 ? "mapped" : "source-only",
+        recommendation ? "recommended" : "not-recommended",
+      ],
+      badges: [
+        { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
+        { label: item.effect_ids.length > 0 ? "mapped effect" : "source only", variant: item.effect_ids.length > 0 ? "red" : "muted" },
+        ...(recommendation ? [{ label: `Rank #${recommendation.rank}`, variant: "purple" as const }] : []),
+      ],
+    };
+  });
 }
 
 function getPickerFilters(kind: PickerKind) {
   if (kind === "artifact") {
     return [
       { value: "all", label: "All" },
+      { value: "recommended", label: "Recommended" },
       { value: "debuff", label: "Debuff" },
       { value: "support", label: "Support" },
       { value: "utility", label: "Utility" },
@@ -1738,6 +1786,7 @@ function getPickerFilters(kind: PickerKind) {
   if (kind === "companion") {
     return [
       { value: "all", label: "All" },
+      { value: "recommended", label: "Recommended" },
       { value: "support", label: "Support" },
       { value: "st", label: "Damage" },
       { value: "augment", label: "Augment" },
@@ -1760,6 +1809,7 @@ function getPickerFilters(kind: PickerKind) {
 
   return [
     { value: "all", label: "All" },
+    { value: "recommended", label: "Recommended" },
     { value: "mapped", label: "Mapped" },
     { value: "source-only", label: "Source Only" },
   ];

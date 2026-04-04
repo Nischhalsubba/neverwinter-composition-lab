@@ -14,6 +14,17 @@ import {
   nwHubCompanionsRaw,
 } from "@/data/nw-hub/companions";
 import {
+  artifactRankingSheetSourceUrl,
+  artifactRankingSheetSourceVersion,
+  dungeonArtifactRankingRows,
+  trialArtifactRankingRows,
+} from "@/data/google-sheet/artifact-rankings";
+import {
+  companionEnhancementRankingRows,
+  companionEnhancementSheetSourceUrl,
+  companionEnhancementSheetSourceVersion,
+} from "@/data/google-sheet/companion-enhancements";
+import {
   mountEquipBonusRows,
   mountSheetSourceUrl,
   mountSheetSourceVersion,
@@ -21,6 +32,11 @@ import {
   mountSupportDungeonRows,
   mountSupportTrialRows,
 } from "@/data/google-sheet/mounts";
+import {
+  recommendedSupportCompanionRows,
+  supportCompanionSheetSourceUrl,
+  supportCompanionSheetSourceVersion,
+} from "@/data/google-sheet/support-companions";
 import {
   nwHubCompanionEnhancementsRaw,
 } from "@/data/nw-hub/companion-enhancements";
@@ -60,6 +76,29 @@ function makeEntityId(prefix: string, value: string) {
 
 function uniqueValues<T>(items: T[]) {
   return Array.from(new Set(items));
+}
+
+function normalizeLookup(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function getAliasLabels(value: string) {
+  return value
+    .split("/")
+    .map((item) => normalizeLookup(item))
+    .filter(Boolean);
+}
+
+function matchesRecommendationLabel(entityName: string, label: string) {
+  const normalizedEntityName = normalizeLookup(entityName);
+
+  return getAliasLabels(label).some((alias) => {
+    return (
+      normalizedEntityName === alias ||
+      normalizedEntityName.includes(alias) ||
+      alias.includes(normalizedEntityName)
+    );
+  });
 }
 
 function normalizeRole(value: string): TeamRole {
@@ -265,7 +304,7 @@ const seededEffectCatalog: EffectDefinition[] = [
     name: "Armor Break Defense Reduction",
     effect_category: "boss_debuff",
     stat: "defense_reduction",
-    value: null,
+    value: 0.09,
     stack_rule: "unknown",
     scope: "boss",
     source_type: "wiki_reference",
@@ -280,7 +319,7 @@ const seededEffectCatalog: EffectDefinition[] = [
     name: "Dulled Senses Awareness Reduction",
     effect_category: "boss_debuff",
     stat: "awareness_reduction",
-    value: null,
+    value: 0.09,
     stack_rule: "unknown",
     scope: "boss",
     source_type: "wiki_reference",
@@ -295,7 +334,7 @@ const seededEffectCatalog: EffectDefinition[] = [
     name: "Vulnerability Crit Avoid Reduction",
     effect_category: "boss_debuff",
     stat: "critical_avoidance_reduction",
-    value: null,
+    value: 0.09,
     stack_rule: "unknown",
     scope: "boss",
     source_type: "wiki_reference",
@@ -310,7 +349,7 @@ const seededEffectCatalog: EffectDefinition[] = [
     name: "Slowed Reactions Deflect Reduction",
     effect_category: "boss_debuff",
     stat: "deflect_reduction",
-    value: null,
+    value: 0.09,
     stack_rule: "unknown",
     scope: "boss",
     source_type: "wiki_reference",
@@ -1055,6 +1094,10 @@ const seededCompanionValueMap: Record<
   },
 };
 
+function getSupportCompanionRecommendation(name: string) {
+  return recommendedSupportCompanionRows.find((row) => matchesRecommendationLabel(name, row.name)) ?? null;
+}
+
 function getCompanionRoleTag(type: string, playerBonusName: string): Companion["role_tag"] {
   if (type.toLowerCase() === "augment") {
     return "augment";
@@ -1075,6 +1118,7 @@ function getCompanionRoleTag(type: string, playerBonusName: string): Companion["
 export const companions: Companion[] = nwHubCompanionsRaw.map((item) => {
   const seeded = seededCompanionValueMap[item.name];
   const roles = companionRoleMap.get(item.playerBonusName) ?? [];
+  const recommendation = getSupportCompanionRecommendation(item.name);
 
   return {
     id: makeEntityId("comp", item.name),
@@ -1084,15 +1128,27 @@ export const companions: Companion[] = nwHubCompanionsRaw.map((item) => {
     st_dps: seeded?.st_dps ?? null,
     max_hit: seeded?.max_hit ?? null,
     effect_ids: seeded?.effect_ids ?? [],
-    source_type: seeded?.source_type ?? "community_reference",
-    source_url: seeded?.source_url ?? item.source_url,
-    source_version: seeded?.source_version ?? nwHubSourceVersion,
+    source_type: recommendation ? "user_sheet" : (seeded?.source_type ?? "community_reference"),
+    source_url: recommendation ? supportCompanionSheetSourceUrl : (seeded?.source_url ?? item.source_url),
+    source_version: recommendation ? supportCompanionSheetSourceVersion : (seeded?.source_version ?? nwHubSourceVersion),
     verification_status: seeded?.verification_status ?? "verified",
-    notes:
+    notes: [
+      recommendation
+        ? `Recommended support companion #${recommendation.rank}. Benefit: ${recommendation.benefit}. Rough damage boost ${recommendation.roughDamageBoost?.toFixed(2) ?? "pending"}%.`
+        : null,
       seeded?.notes ??
-      `Player bonus: ${item.playerBonusName}. Enhancement: ${item.enhancementPower}. Imported from the local NW Hub companion list snapshot.`,
+        `Player bonus: ${item.playerBonusName}. Enhancement: ${item.enhancementPower}. Imported from the local NW Hub companion list snapshot.`,
+      recommendation?.notes ?? null,
+    ]
+      .filter(Boolean)
+      .join(" "),
   };
 });
+
+export const recommendedSupportCompanions = recommendedSupportCompanionRows.map((row) => ({
+  ...row,
+  companionIds: companions.filter((item) => matchesRecommendationLabel(item.name, row.name)).map((item) => item.id),
+}));
 
 const companionEnhancementEffectMap: Record<string, string[]> = {
   "Armor Break": ["effect-armor-break-defense"],
@@ -1101,16 +1157,36 @@ const companionEnhancementEffectMap: Record<string, string[]> = {
   "Slowed Reactions": ["effect-slowed-reactions-deflect"],
 };
 
-export const companionEnhancements: CompanionEnhancement[] = nwHubCompanionEnhancementsRaw.map((item) => ({
-  id: makeEntityId("enh", item.name),
-  name: item.name,
-  effect_ids: companionEnhancementEffectMap[item.name] ?? [],
-  source_type: "community_reference",
-  source_url: item.source_url,
-  source_version: nwHubSourceVersion,
-  verification_status: "verified",
-  notes:
-    "Directly extracted from NW Hub companion enhancement data on 2026-04-04. Effect IDs are attached only for the currently supported boss-debuff categories.",
+const enhancementRecommendationByName = new Map(
+  companionEnhancementRankingRows.map((row) => [normalizeLookup(row.name), row]),
+);
+
+export const companionEnhancements: CompanionEnhancement[] = nwHubCompanionEnhancementsRaw.map((item) => {
+  const recommendation = enhancementRecommendationByName.get(normalizeLookup(item.name));
+
+  return {
+    id: makeEntityId("enh", item.name),
+    name: item.name,
+    effect_ids: companionEnhancementEffectMap[item.name] ?? [],
+    source_type: recommendation ? "user_sheet" : "community_reference",
+    source_url: recommendation ? companionEnhancementSheetSourceUrl : item.source_url,
+    source_version: recommendation ? companionEnhancementSheetSourceVersion : nwHubSourceVersion,
+    verification_status: "verified",
+    notes: [
+      recommendation
+        ? `Recommended enhancement #${recommendation.rank}. Companion source: ${recommendation.companion}. Benefit: ${recommendation.benefit}. Damage boost: ${recommendation.damageBoost == null ? "survivability / unresolved" : `${recommendation.damageBoost.toFixed(2)}%`}.`
+        : null,
+      "Directly extracted from NW Hub companion enhancement data on 2026-04-04. Effect IDs are attached only for the currently supported boss-debuff categories.",
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+});
+
+export const recommendedCompanionEnhancements = companionEnhancementRankingRows.map((row) => ({
+  ...row,
+  enhancementId:
+    companionEnhancements.find((item) => normalizeLookup(item.name) === normalizeLookup(row.name))?.id ?? null,
 }));
 
 export const companionBonuses: CompanionBonus[] = nwHubCompanionPowersRaw.map((item) => ({
@@ -1167,13 +1243,72 @@ export const artifacts: Artifact[] = nwHubArtifactsRaw.map((item, index) => ({
   team_or_personal: artifactEffectMap[item.name]?.length ? "team" : "personal",
   effect_ids: artifactEffectMap[item.name] ?? [],
   image_url: item.image_url,
-  source_type: "community_reference",
-  source_url: item.source_url,
-  source_version: nwHubSourceVersion,
+  source_type:
+    trialArtifactRankingRows.some((row) => matchesRecommendationLabel(item.name, row.label)) ||
+    dungeonArtifactRankingRows.some((row) => matchesRecommendationLabel(item.name, row.label))
+      ? "user_sheet"
+      : "community_reference",
+  source_url:
+    trialArtifactRankingRows.some((row) => matchesRecommendationLabel(item.name, row.label)) ||
+    dungeonArtifactRankingRows.some((row) => matchesRecommendationLabel(item.name, row.label))
+      ? artifactRankingSheetSourceUrl
+      : item.source_url,
+  source_version:
+    trialArtifactRankingRows.some((row) => matchesRecommendationLabel(item.name, row.label)) ||
+    dungeonArtifactRankingRows.some((row) => matchesRecommendationLabel(item.name, row.label))
+      ? artifactRankingSheetSourceVersion
+      : nwHubSourceVersion,
   verification_status: "verified",
-  notes:
+  notes: [
+    (() => {
+      const trialRow = trialArtifactRankingRows.find((row) => matchesRecommendationLabel(item.name, row.label));
+      return trialRow
+        ? `Trial recommended artifact #${trialRow.rank}. Damage boost ${trialRow.damageBoost.toFixed(2)}% over ${trialRow.duration}. ${trialRow.notes || ""}`.trim()
+        : null;
+    })(),
+    (() => {
+      const dungeonRow = dungeonArtifactRankingRows.find((row) => matchesRecommendationLabel(item.name, row.label));
+      return dungeonRow
+        ? `Dungeon recommended artifact #${dungeonRow.rank}. Damage boost ${dungeonRow.damageBoost.toFixed(2)}% over ${dungeonRow.duration}. ${dungeonRow.notes || ""}`.trim()
+        : null;
+    })(),
     "Directly extracted from NW Hub artifact data on 2026-04-04. Full rank and stat data remain available in the NW Hub snapshot files under data/nw-hub.",
+  ]
+    .filter(Boolean)
+    .join(" "),
 }));
+
+export const artifactTrialRecommendations = trialArtifactRankingRows.map((row) => ({
+  ...row,
+  artifactIds: artifacts.filter((item) => matchesRecommendationLabel(item.name, row.label)).map((item) => item.id),
+}));
+
+export const artifactDungeonRecommendations = dungeonArtifactRankingRows.map((row) => ({
+  ...row,
+  artifactIds: artifacts.filter((item) => matchesRecommendationLabel(item.name, row.label)).map((item) => item.id),
+}));
+
+export const artifactRecommendationsById = Object.fromEntries(
+  artifacts.map((artifact) => [
+    artifact.id,
+    {
+      trial: trialArtifactRankingRows.find((row) => matchesRecommendationLabel(artifact.name, row.label)) ?? null,
+      dungeon:
+        dungeonArtifactRankingRows.find((row) => matchesRecommendationLabel(artifact.name, row.label)) ?? null,
+    },
+  ]),
+);
+
+export const companionRecommendationsById = Object.fromEntries(
+  companions.map((companion) => [companion.id, getSupportCompanionRecommendation(companion.name)]),
+);
+
+export const enhancementRecommendationsById = Object.fromEntries(
+  companionEnhancements.map((enhancement) => [
+    enhancement.id,
+    enhancementRecommendationByName.get(normalizeLookup(enhancement.name)) ?? null,
+  ]),
+);
 
 export const artifactSnapshots = nwHubArtifactsRaw;
 export const companionSnapshots = nwHubCompanionsRaw;

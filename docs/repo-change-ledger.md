@@ -1140,3 +1140,68 @@ Checks run:
 Result:
 
 - Both passed after the navigation collapse and Team Builder setup/role redesign.
+
+## Pass 13 - Sheet-backed enhancement, artifact, and support companion recommendations
+
+Date:
+
+- 2026-04-04
+
+Files:
+
+- `data/game-data.ts`
+- `data/google-sheet/companion-enhancements.ts`
+- `data/google-sheet/artifact-rankings.ts`
+- `data/google-sheet/support-companions.ts`
+- `features/team-builder/team-builder-page.tsx`
+- `app/artifacts/page.tsx`
+- `app/companions/page.tsx`
+
+Changes:
+
+- Added Google Sheet-backed recommendation overlays for:
+  - companion enhancements
+  - artifacts
+  - support companions
+- Updated the internal enhancement effect values for the four currently supported debuff enhancement stats to use the sheet-backed `-9%` values instead of leaving them unresolved.
+- Added exported recommendation indexes in `data/game-data.ts` so the UI can look up:
+  - artifact trial rank
+  - artifact dungeon rank
+  - support companion rank
+  - enhancement rank
+- Updated artifact records so their notes now carry imported trial and dungeon ranking context, including recovered damage-boost percentages and durations.
+- Updated support companion records so their notes now carry imported support ranking context and rough damage-boost guidance.
+- Updated enhancement records so their notes now carry imported enhancement ranking context, source companion, and recovered damage-boost guidance where available.
+- Updated Team Builder pickers so:
+  - artifact popup includes a `Recommended` filter and rank badges
+  - companion popup includes a `Recommended` filter and rank badges
+  - enhancement popup includes a `Recommended` filter and rank badges
+- Forced slot selection back to the `Identity` setup tab so class and paragon fields are immediately reachable when selecting a member.
+- Added a clearer setup hint on unconfigured slots so the user knows the class selection triggers auto-slotting for encounter, daily, and feature defaults.
+- Replaced the artifact page with a recommendation-first table that exposes:
+  - recommended artifact state
+  - trial rank
+  - dungeon rank
+  - recovered damage boost
+  - notes
+- Reworked the companions page so it now includes:
+  - recommended support companion rankings
+  - support benefit summaries
+  - enhancement ranking overlays
+
+Why:
+
+- The user explicitly asked to update the app from three Google Sheet tabs and to make those rankings visible in the product instead of leaving them buried in source data.
+- The user also explicitly said they still could not reliably reach class/paragon setup from a slot, so slot selection was made to reset back to the setup-oriented editor tab.
+- Ranking data needed to stay source-aware and patch-aware, so the implementation keeps the underlying NW Hub snapshots while layering the sheet recommendations on top instead of flattening everything into a single guessed source.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after integrating the recommendation overlays and Team Builder picker updates.

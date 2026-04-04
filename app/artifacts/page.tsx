@@ -4,64 +4,97 @@ import { ContentPage } from "@/components/content-page";
 import { SourceBadge } from "@/components/source-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { artifactSnapshots } from "@/data/game-data";
+import { artifactRecommendationsById, artifacts } from "@/data/game-data";
 
 export default function Page() {
+  const rankedArtifacts = [...artifacts].sort((left, right) => {
+    const leftTrial = artifactRecommendationsById[left.id]?.trial?.rank ?? 999;
+    const rightTrial = artifactRecommendationsById[right.id]?.trial?.rank ?? 999;
+    return leftTrial - rightTrial || left.name.localeCompare(right.name);
+  });
+
   return (
     <ContentPage
       eyebrow="Artifact Library"
-      title="NW Hub artifact snapshot with icons, power text, and rank data"
-      description="This page now lists the full locally stored NW Hub artifact snapshot captured on April 4, 2026, including icon images, activation text, and mythic rank values."
+      title="Artifact rankings with trial and dungeon recommendations"
+      description="Artifacts now show the imported Google Sheet recommendation ranks alongside the local NW Hub snapshot. Trial and dungeon rankings remain separate so the builder stays mode-aware."
     >
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {artifactSnapshots.map((artifact) => {
-          const rankEntries = Object.entries(artifact.ranks);
-          const topRankEntry = rankEntries[rankEntries.length - 1];
-          const topRankLabel = topRankEntry?.[0];
-          const topRank = topRankEntry?.[1];
+      <Card>
+        <CardHeader>
+          <CardTitle>Recommended artifacts</CardTitle>
+          <CardDescription>
+            Trial and dungeon rankings are imported from the Google Sheet tab and matched against the local artifact dataset.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <SourceBadge
+            source_type="user_sheet"
+            source_url="https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=1200006036#gid=1200006036"
+            source_version="aragon-artifact-sheet-2026-01-25"
+            verification_status="verified"
+            notes="Trial and dungeon recommendation ranks were extracted from the artifact tab and merged into the local artifact records."
+          />
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-white/10 text-xs uppercase tracking-[0.18em] text-stone-500">
+                  <th className="px-4 py-3">Artifact</th>
+                  <th className="px-4 py-3">Recommended Artifact</th>
+                  <th className="px-4 py-3">Trial Rank</th>
+                  <th className="px-4 py-3">Dungeon Rank</th>
+                  <th className="px-4 py-3">Damage Boost</th>
+                  <th className="px-4 py-3">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rankedArtifacts.map((artifact) => {
+                  const recommendation = artifactRecommendationsById[artifact.id];
+                  const trial = recommendation?.trial;
+                  const dungeon = recommendation?.dungeon;
 
-          return (
-            <Card key={artifact.name}>
-              <CardHeader>
-                <div className="flex items-start gap-4">
-                  {artifact.image_url ? (
-                    <Image
-                      src={artifact.image_url}
-                      alt={artifact.name}
-                      width={56}
-                      height={56}
-                      className="border border-[rgba(205,180,219,0.55)] bg-[rgba(255,200,221,0.18)]"
-                    />
-                  ) : null}
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="gold">{artifact.quality}</Badge>
-                      {topRank ? <Badge variant="blue">{topRankLabel} IL {topRank.itemLevel}</Badge> : null}
-                    </div>
-                    <CardTitle>{artifact.name}</CardTitle>
-                    <CardDescription>{artifact.powertext}</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <SourceBadge
-                  source_type="community_reference"
-                  source_url={artifact.source_url}
-                  source_version="nw-hub-2026-04-04"
-                  verification_status="verified"
-                  notes="Direct NW Hub artifact snapshot."
-                />
-                {topRank ? (
-                  <div className="grid gap-2 text-sm text-[rgba(205,180,219,0.92)]">
-                    <p>{topRankLabel} combined rating: {topRank.combinedRating}</p>
-                    <p>{topRankLabel} stats: {Object.entries(topRank.stats).map(([key, value]) => `${key} ${value}`).join(", ")}</p>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  return (
+                    <tr key={artifact.id} className="border-b border-white/8 align-top">
+                      <td className="px-4 py-4">
+                        <div className="flex items-start gap-3">
+                          {artifact.image_url ? (
+                            <Image
+                              src={artifact.image_url}
+                              alt={artifact.name}
+                              width={48}
+                              height={48}
+                              className="border border-white/10 bg-white/[0.04]"
+                            />
+                          ) : null}
+                          <div>
+                            <p className="font-medium text-stone-100">{artifact.name}</p>
+                            <p className="mt-1 text-sm text-stone-400">{artifact.category}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex flex-wrap gap-2">
+                          {trial ? <Badge variant="blue">Trial</Badge> : null}
+                          {dungeon ? <Badge variant="purple">Dungeon</Badge> : null}
+                          {!trial && !dungeon ? <Badge variant="muted">Not ranked</Badge> : null}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-stone-200">{trial ? `#${trial.rank}` : "-"}</td>
+                      <td className="px-4 py-4 text-sm text-stone-200">{dungeon ? `#${dungeon.rank}` : "-"}</td>
+                      <td className="px-4 py-4 text-sm text-stone-200">
+                        <div className="space-y-1">
+                          <p>{trial ? `Trial ${trial.damageBoost.toFixed(2)}%` : "Trial -"}</p>
+                          <p>{dungeon ? `Dungeon ${dungeon.damageBoost.toFixed(2)}%` : "Dungeon -"}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm leading-6 text-stone-400">{artifact.notes}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </ContentPage>
   );
 }
