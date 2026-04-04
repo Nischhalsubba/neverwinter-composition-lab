@@ -1,4 +1,4 @@
-# Neverwinter Endgame Hub — Frontend Design Specification
+# Neverwinter Endgame Hub - Frontend Design Specification
 
 ## 1. Purpose
 
@@ -29,7 +29,7 @@ This file should be used by:
 
 This document is intentionally focused on **design and frontend structure**, not backend logic.
 
----
+
 
 # 2. Product design goals
 
@@ -55,7 +55,7 @@ The UI should help players answer:
 - What is the final carry / mount damage result?
 - What content matters for endgame in 2026?
 
----
+
 
 # 3. Core design principles
 
@@ -88,7 +88,7 @@ The product can hold lots of information, but it should still feel:
 
 ## 3.4 Always expose contribution
 Every player card should answer:
-**“What does this member contribute to the team?”**
+**"What does this member contribute to the team?"**
 
 ## 3.5 Separate browse mode from build mode
 Do not mix encyclopedic browsing and detailed team editing into one messy surface.
@@ -104,7 +104,7 @@ Always show:
 - notes
 - patch or version labels when relevant
 
----
+
 
 # 4. Recommended total page count
 
@@ -149,7 +149,7 @@ For MVP, build these first:
 
 That is enough to make the app feel real and useful.
 
----
+
 
 # 5. Sidebar navigation
 
@@ -199,13 +199,13 @@ Each item should have:
 - good spacing and hit target size
 
 ## 5.4 Sidebar style rules
-- width: 280–320px expanded
-- width: 72–88px collapsed
+- width: 280-320px expanded
+- width: 72-88px collapsed
 - dark elevated panel
 - subtle border and shadow
 - section grouping if needed
 
----
+
 
 # 6. Top bar
 
@@ -238,7 +238,7 @@ Include:
 - view toggle (grid/list)
 - compare toggle where relevant
 
----
+
 
 # 7. Global layout system
 
@@ -251,13 +251,13 @@ Use a three-zone shell:
 
 ## 7.2 Desktop width behavior
 Suggested:
-- left sidebar: 280–340px
-- right panel: 320–420px
+- left sidebar: 280-340px
+- right panel: 320-420px
 - main content: fluid and dominant
 
 ## 7.3 Layout patterns by page type
 
-### Pattern A — Dashboard / Home
+### Pattern A - Dashboard / Home
 - hero / welcome banner
 - quick actions
 - content cards
@@ -265,23 +265,23 @@ Suggested:
 - ranked lists
 - latest verified values
 
-### Pattern B — Team Builder
+### Pattern B - Team Builder
 - left: roster or entity tabs
 - center: team canvas + member editor
 - right: summaries / calculator
 
-### Pattern C — Explorer pages
+### Pattern C - Explorer pages
 - left: filters
 - center: content grid/list
 - right: detail inspector or compare panel
 
-### Pattern D — Detail pages
+### Pattern D - Detail pages
 - top hero/info bar
 - sticky overview
 - tab sections
 - source / patch notes / related items
 
----
+
 
 # 8. Design tokens
 
@@ -338,9 +338,9 @@ Use only lightly, if needed:
 - Dense label: 11 minimum
 
 ### Font-weight guidance
-- 600–700 for headings
-- 500–600 for labels
-- 400–500 for body
+- 600-700 for headings
+- 500-600 for labels
+- 400-500 for body
 
 ## 8.3 Spacing
 Use a consistent scale:
@@ -356,13 +356,13 @@ Use a consistent scale:
 - 64
 
 Recommended:
-- card padding: 16–24
-- section gap: 24–40
-- page gutter: 24–32 desktop
+- card padding: 16-24
+- section gap: 24-40
+- page gutter: 24-32 desktop
 
 ## 8.4 Radius
 - chips: 12
-- buttons: 12–16
+- buttons: 12-16
 - cards: 20
 - drawers/modals: 24
 
@@ -374,7 +374,7 @@ Dark UI should rely more on:
 - glow accents
 than strong heavy shadows.
 
----
+
 
 # 9. Page-by-page design specification
 
@@ -408,7 +408,7 @@ Quick orientation and launch point.
 - quick action tiles
 - source/verification badges
 
----
+
 
 # 9.2 Team Builder
 
@@ -495,7 +495,7 @@ Examples:
 - Personal Buffs
 - Notes
 
----
+
 
 # 9.3 Buff & Debuff Explorer
 
@@ -542,7 +542,7 @@ Central effect library.
 - source badge
 - verification badge
 
----
+
 
 # 9.4 Classes page
 
@@ -573,7 +573,7 @@ Endgame class explorer.
 - recommended items
 - related support packages
 
----
+
 
 # 9.5 Companions page
 
@@ -614,7 +614,7 @@ Companion rankings and browsing.
 - support use cases
 - source history
 
----
+
 
 # 9.6 Mounts page
 
@@ -652,7 +652,7 @@ Mount library and combat power explorer.
 - use in carry setup
 - source / patch / version info
 
----
+
 
 # 9.7 Artifacts page
 
@@ -691,7 +691,7 @@ Artifact library and rankings.
 - patch notes
 - usage recommendations
 
----
+
 
 # 9.8 Dungeons page
 
@@ -713,7 +713,7 @@ Artifact library and rankings.
 - rewards
 - patch changes
 
----
+
 
 # 9.9 Trials page
 
@@ -735,7 +735,7 @@ Artifact library and rankings.
 - rewards
 - patch changes
 
----
+
 
 # 9.10 Events page
 
@@ -755,7 +755,7 @@ Timed and special content.
 - key rewards
 - endgame relevance
 
----
+
 
 # 9.11 Patch Tracker
 
@@ -785,7 +785,7 @@ Readable patch history.
 - module tag
 - category tags
 - short summary
-- “affected systems” chips
+- "affected systems" chips
 
 ## Patch detail sections
 - high-level summary
@@ -794,7 +794,7 @@ Readable patch history.
 - affected entities
 - source links
 
----
+
 
 # 9.12 Endgame Guide
 
@@ -820,7 +820,7 @@ High-value educational section.
 - recommendation blocks
 - compare lists
 
----
+
 
 # 9.13 Glossary
 
@@ -851,7 +851,7 @@ Explain terms clearly.
 - searchable
 - side quick index
 
----
+
 
 # 10. Component inventory
 
@@ -909,7 +909,7 @@ Explain terms clearly.
 - Duplicate warning panel
 - Missing effect panel
 
----
+
 
 # 11. Frontend interaction rules
 
@@ -942,7 +942,7 @@ Should support later:
 - mount vs mount
 - team vs team
 
----
+
 
 # 12. Responsive behavior
 
@@ -965,7 +965,7 @@ Should support later:
 
 Do not try to force the full desktop Team Builder into one tiny screen.
 
----
+
 
 # 13. Content presentation rules
 
@@ -988,10 +988,10 @@ Use short labels:
 ## Long text handling
 - use accordions
 - use detail drawers
-- use “read more”
+- use "read more"
 - avoid dense paragraphs inside cards
 
----
+
 
 # 14. Data display rules
 
@@ -1001,7 +1001,7 @@ Use short labels:
 - highlight important percentages
 
 ## Lists
-- use ranked lists for “best” or “strongest”
+- use ranked lists for "best" or "strongest"
 - use grouped lists for categories
 - use cards for browsing
 - use tables only when comparison truly needs it
@@ -1014,7 +1014,7 @@ Every tooltip should try to answer:
 - does it stack?
 - where is it from?
 
----
+
 
 # 15. States and empty-state design
 
@@ -1040,7 +1040,7 @@ Each empty state should include:
 - short explanation
 - next action if possible
 
----
+
 
 # 16. Accessibility and readability rules
 
@@ -1051,7 +1051,7 @@ Each empty state should include:
 - use keyboard-friendly controls
 - provide alt text or descriptive labels for meaningful images
 
----
+
 
 # 17. Motion guidelines
 
@@ -1070,7 +1070,7 @@ Avoid:
 - large animated UI elements
 - motion that slows reading
 
----
+
 
 # 18. Image usage rules
 
@@ -1090,7 +1090,7 @@ Rules:
 - keep image corners aligned with card system
 - do not let images dominate text hierarchy
 
----
+
 
 # 19. Frontend implementation suggestions
 
@@ -1111,7 +1111,7 @@ Rules:
 - drawer/modal components
 - page-level templates
 
----
+
 
 # 20. Build order for frontend
 
@@ -1144,7 +1144,7 @@ Rules:
 - image library polish
 - advanced table/list toggles
 
----
+
 
 # 21. Final design benchmark
 
@@ -1161,8 +1161,9 @@ A serious endgame player should open the app and immediately understand:
 - what each teammate contributes
 - what the final team output is
 
----
+
 
 # 22. One-sentence frontend direction
 
 Design a premium dark-mode Neverwinter endgame web app with a clean three-panel structure, image-first browsing, transparent stat summaries, and a polished team-builder experience centered around buffs, debuffs, carry optimization, and endgame knowledge discovery.
+

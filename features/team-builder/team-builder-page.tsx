@@ -186,6 +186,19 @@ export function TeamBuilderPage() {
                 </option>
               ))}
             </Select>
+            <Select value={carry?.id ?? ""} onChange={(event) => updateCarry(event.target.value)} className="w-[220px]">
+              {teamMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  Carry: {member.label}
+                </option>
+              ))}
+            </Select>
+            <Button variant="secondary">Save Build</Button>
+            <Button variant="secondary">Load Build</Button>
+            <Button variant="secondary">Share Build</Button>
+            <Button variant="danger" onClick={() => updateTeamMode(mode)}>
+              Reset
+            </Button>
           </div>
         </CardContent>
       </Card>
