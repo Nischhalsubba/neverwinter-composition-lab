@@ -28,9 +28,11 @@ import {
   companionEnhancements,
   companions,
   createInitialTeamMembers,
+  getDefaultPowerLoadoutForClass,
   insigniaBonuses,
   mountCombatPowers,
   mountEquipPowers,
+  powers,
 } from "@/data/game-data";
 import { calculateMountHit, summarizeTeam } from "@/lib/effect-engine";
 import type { EffectStat, TeamMember, TeamMode } from "@/lib/types";
@@ -48,6 +50,18 @@ const effectStats: EffectStat[] = [
   "accuracy",
   "forte",
 ];
+
+const raceOptions = [
+  "Human",
+  "Wood Elf",
+  "Moon Elf",
+  "Drow",
+  "Half-Orc",
+  "Tiefling",
+  "Dragonborn",
+  "Aasimar",
+  "Menzoberranzan Renegade",
+] as const;
 
 const entityEffectMap: Record<string, string[]> = {
   "comp-tutor": ["effect-tutor-ca", "effect-tutor-coverage"],
@@ -93,6 +107,14 @@ export function TeamBuilderPage() {
   const selectedMember = teamMembers.find((member) => member.id === selectedMemberId) ?? teamMembers[0];
   const teamState = useMemo(() => summarizeTeam(teamMembers, boss), [boss, teamMembers]);
   const carry = teamState.carry;
+  const bossDebuffSourceCount = useMemo(
+    () => teamState.bossSummary.reduce((sum, line) => sum + line.contributions.length + line.unresolved.length, 0),
+    [teamState.bossSummary],
+  );
+  const bossDebuffResolvedPercent = useMemo(
+    () => teamState.bossSummary.reduce((sum, line) => sum + line.total, 0),
+    [teamState.bossSummary],
+  );
 
   const mountCalc = useMemo(
     () =>
@@ -122,6 +144,19 @@ export function TeamBuilderPage() {
     setTeamMembers((members) =>
       members.map((member) => (member.id === memberId ? { ...member, ...patch } : member)),
     );
+  }
+
+  function handleClassChange(memberId: string, classId: string) {
+    const classItem = classes.find((item) => item.id === classId);
+    const powerLoadout = getDefaultPowerLoadoutForClass(classId);
+
+    updateMember(memberId, {
+      class_id: classId,
+      encounter_ids: powerLoadout.encounter_ids,
+      daily_ids: powerLoadout.daily_ids,
+      feature_ids: powerLoadout.feature_ids,
+      role: classItem?.role_focus[0] ?? "support",
+    });
   }
 
   function updateCarry(memberId: string) {
@@ -347,12 +382,34 @@ export function TeamBuilderPage() {
                   ))}
                 </div>
               </CardHeader>
-              <CardContent>{renderEditorTab(editorTab, selectedMember, updateMember, updateCarry)}</CardContent>
+              <CardContent>{renderEditorTab(editorTab, selectedMember, updateMember, updateCarry, handleClassChange)}</CardContent>
             </Card>
           ) : null}
         </div>
 
         <div className="grid gap-6 xl:col-span-2 xl:grid-cols-2 min-[1950px]:col-span-1 min-[1950px]:grid-cols-1">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2 text-rose-200">
+                <Layers3 className="h-4 w-4" />
+                <p className="text-xs uppercase tracking-[0.22em]">Boss debuff total</p>
+              </div>
+              <CardTitle>{bossDebuffSourceCount} applied or tracked sources</CardTitle>
+              <CardDescription>
+                Display aggregate for planning only. Internal debuff math still stays split by debuff type.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] px-5 py-4">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Total debuff sources</p>
+                <p className="mt-2 text-2xl font-semibold text-stone-100">{bossDebuffSourceCount}</p>
+              </div>
+              <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.34),rgba(17,0,28,0.82))] px-5 py-4">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Resolved combined percent</p>
+                <p className="mt-2 text-2xl font-semibold text-stone-100">{formatPercent(bossDebuffResolvedPercent)}</p>
+              </div>
+            </CardContent>
+          </Card>
           <SummaryPanel
             icon={Layers3}
             title="Boss Debuff Summary"
@@ -583,6 +640,12 @@ function MemberCard({
   const artifact = artifacts.find((item) => item.id === member.artifact_id);
   const mountPower = mountCombatPowers.find((item) => item.id === member.mount_combat_power_id);
   const classItem = classes.find((item) => item.id === member.class_id);
+  const encounterNames = member.encounter_ids
+    .map((id) => powers.find((item) => item.id === id)?.name)
+    .filter(Boolean);
+  const featureNames = member.feature_ids
+    .map((id) => powers.find((item) => item.id === id)?.name)
+    .filter(Boolean);
 
   return (
     <button
@@ -625,6 +688,16 @@ function MemberCard({
         {artifact?.category ? <Badge variant="gold">{artifact.category}</Badge> : null}
         {mountPower?.damage_type ? <Badge variant="orange">{mountPower.damage_type}</Badge> : null}
         {member.role === "support" ? <Badge variant="blue">Support contribution</Badge> : null}
+        {encounterNames.map((name) => (
+          <Badge key={name} variant="red">
+            {name}
+          </Badge>
+        ))}
+        {featureNames.map((name) => (
+          <Badge key={name} variant="teal">
+            {name}
+          </Badge>
+        ))}
       </div>
     </button>
   );
@@ -644,11 +717,30 @@ function renderEditorTab(
   selectedMember: TeamMember,
   updateMember: (memberId: string, patch: Partial<TeamMember>) => void,
   updateCarry: (memberId: string) => void,
+  handleClassChange: (memberId: string, classId: string) => void,
 ) {
+  const className = classes.find((item) => item.id === selectedMember.class_id)?.name;
+  const classEncounters = powers.filter(
+    (power) => power.class_name === className && power.power_type === "encounter",
+  );
+  const classFeatures = powers.filter(
+    (power) => power.class_name === className && power.power_type === "feature",
+  );
+
   switch (editorTab) {
     case "Identity":
       return (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Field label="Slot Context">
+            <Select
+              value={`${selectedMember.group}-${selectedMember.slot}`}
+              disabled
+            >
+              <option value={`${selectedMember.group}-${selectedMember.slot}`}>
+                Group {selectedMember.group} / Slot {selectedMember.slot}
+              </option>
+            </Select>
+          </Field>
           <Field label="Label">
             <Input
               value={selectedMember.label}
@@ -658,7 +750,7 @@ function renderEditorTab(
           <Field label="Class">
             <Select
               value={selectedMember.class_id}
-              onChange={(event) => updateMember(selectedMember.id, { class_id: event.target.value })}
+              onChange={(event) => handleClassChange(selectedMember.id, event.target.value)}
             >
               {classes.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -686,11 +778,41 @@ function renderEditorTab(
             />
           </Field>
           <Field label="Race">
-            <Input
-              placeholder="Optional race"
+            <Select
               value={selectedMember.race}
               onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}
-            />
+            >
+              <option value="">Select race</option>
+              {raceOptions.map((race) => (
+                <option key={race} value={race}>
+                  {race}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Purple Debuff / Enhancement">
+            <Select
+              value={selectedMember.enhancement_id}
+              onChange={(event) => updateMember(selectedMember.id, { enhancement_id: event.target.value })}
+            >
+              {companionEnhancements.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Artifact">
+            <Select
+              value={selectedMember.artifact_id}
+              onChange={(event) => updateMember(selectedMember.id, { artifact_id: event.target.value })}
+            >
+              {artifacts.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
           </Field>
           <div className="space-y-2">
             <span className="text-xs uppercase tracking-[0.18em] text-stone-500">Carry state</span>
@@ -707,12 +829,97 @@ function renderEditorTab(
     case "Loadout":
       return (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <Field label="Artifact">
+          <Field label="Encounter 1">
             <Select
-              value={selectedMember.artifact_id}
-              onChange={(event) => updateMember(selectedMember.id, { artifact_id: event.target.value })}
+              value={selectedMember.encounter_ids[0] ?? ""}
+              onChange={(event) =>
+                updateMember(selectedMember.id, {
+                  encounter_ids: [
+                    event.target.value,
+                    selectedMember.encounter_ids[1] ?? "",
+                    selectedMember.encounter_ids[2] ?? "",
+                  ].filter(Boolean),
+                })
+              }
             >
-              {artifacts.map((item) => (
+              <option value="">None</option>
+              {classEncounters.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Encounter 2">
+            <Select
+              value={selectedMember.encounter_ids[1] ?? ""}
+              onChange={(event) =>
+                updateMember(selectedMember.id, {
+                  encounter_ids: [
+                    selectedMember.encounter_ids[0] ?? "",
+                    event.target.value,
+                    selectedMember.encounter_ids[2] ?? "",
+                  ].filter(Boolean),
+                })
+              }
+            >
+              <option value="">None</option>
+              {classEncounters.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Encounter 3">
+            <Select
+              value={selectedMember.encounter_ids[2] ?? ""}
+              onChange={(event) =>
+                updateMember(selectedMember.id, {
+                  encounter_ids: [
+                    selectedMember.encounter_ids[0] ?? "",
+                    selectedMember.encounter_ids[1] ?? "",
+                    event.target.value,
+                  ].filter(Boolean),
+                })
+              }
+            >
+              <option value="">None</option>
+              {classEncounters.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Feature 1">
+            <Select
+              value={selectedMember.feature_ids[0] ?? ""}
+              onChange={(event) =>
+                updateMember(selectedMember.id, {
+                  feature_ids: [event.target.value, selectedMember.feature_ids[1] ?? ""].filter(Boolean),
+                })
+              }
+            >
+              <option value="">None</option>
+              {classFeatures.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Feature 2">
+            <Select
+              value={selectedMember.feature_ids[1] ?? ""}
+              onChange={(event) =>
+                updateMember(selectedMember.id, {
+                  feature_ids: [selectedMember.feature_ids[0] ?? "", event.target.value].filter(Boolean),
+                })
+              }
+            >
+              <option value="">None</option>
+              {classFeatures.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -743,6 +950,12 @@ function renderEditorTab(
               ))}
             </Select>
           </Field>
+          <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(53,1,44,0.3),rgba(17,0,28,0.76))] p-5 md:col-span-2 xl:col-span-3">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Auto-slot rule</p>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              Changing class auto-fills the currently seeded encounter and feature loadout for that class. You can override each slot manually after that.
+            </p>
+          </div>
         </div>
       );
     case "Companion":

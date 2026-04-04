@@ -526,3 +526,72 @@ Result:
 
 - Some non-Team-Builder pages still use the earlier content density and can be widened in a later pass.
 - The shell still has static utility actions rather than fully wired interactions.
+
+## Pass 5 - Team Builder setup flow and boss debuff aggregate
+
+### Data-layer power presets
+
+Files:
+
+- `data/game-data.ts`
+
+Changes:
+
+- Expanded the local power seed list with source-backed class powers already referenced in the docs:
+  - `Pack Tactics`
+  - `Mystic Aura / Runic Aura`
+  - `Ray of Enfeeblement`
+  - `Prophecy of Doom`
+- Added `classPowerPresets` and `getDefaultPowerLoadoutForClass()` so class selection can auto-fill seeded encounter/feature slots.
+- Updated initial team member creation to use these default class power presets.
+
+Why:
+
+- The user asked for class selection to auto-slot the debuff/buff encounters the class has, while still allowing manual edits later.
+- These presets had to live in the typed local data layer rather than as component-only logic.
+
+### Team Builder selection flow
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Added boss debuff aggregate display showing:
+  - total tracked/applied boss debuff sources
+  - resolved combined percent for planning display
+- Added `handleClassChange()` so choosing a class auto-fills the current seeded encounter/feature loadout.
+- Moved the high-priority member setup fields together in the Identity tab:
+  - class
+  - race
+  - purple debuff / enhancement
+  - artifact
+- Reworked the Loadout tab to expose overrideable class power slots for:
+  - encounter 1
+  - encounter 2
+  - encounter 3
+  - feature 1
+  - feature 2
+- Added visible power badges on member cards so auto-slotted powers are obvious in the team canvas.
+
+Why:
+
+- The user wanted the Team Builder flow to start from dungeon/trial mode and then quickly select race, purple debuff, artifact, and class.
+- The user also wanted the app to show the total number of boss debuffs and total percent on the boss.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the Team Builder setup-flow update.
+
+### Remaining follow-up
+
+- Only a small subset of class powers are currently seeded because the docs do not yet verify full encounter lists for every class.
+- Auto-slotting currently uses source-backed partial seeds and leaves unresolved live values un-invented.

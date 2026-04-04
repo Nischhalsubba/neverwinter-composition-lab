@@ -359,7 +359,7 @@ export const classes: GameClass[] = [
 
 export const powers: PowerDefinition[] = [
   {
-    id: "power-pack-tactics",
+    id: "power-pack-tactics-ranger",
     name: "Pack Tactics",
     class_name: "Ranger",
     power_type: "feature",
@@ -371,7 +371,31 @@ export const powers: PowerDefinition[] = [
     notes: "Mentioned repeatedly in connected build docs but no exact value was recovered.",
   },
   {
-    id: "power-mystic-aura",
+    id: "power-mystic-aura-ranger",
+    name: "Mystic Aura / Runic Aura",
+    class_name: "Ranger",
+    power_type: "feature",
+    effect_ids: [],
+    source_type: "connected_build_doc",
+    source_url: "https://neverwinter_final_ai_master_context.md",
+    source_version: moduleVersion,
+    verification_status: "partially_recovered",
+    notes: "Observed in the ranger build seed as a recurring support optimization note.",
+  },
+  {
+    id: "power-pack-tactics-wizard",
+    name: "Pack Tactics",
+    class_name: "Wizard",
+    power_type: "feature",
+    effect_ids: [],
+    source_type: "connected_build_doc",
+    source_url: "https://neverwinter_final_ai_master_context.md",
+    source_version: moduleVersion,
+    verification_status: "partially_recovered",
+    notes: "Observed in the wizard build seed support optimization notes.",
+  },
+  {
+    id: "power-mystic-aura-wizard",
     name: "Mystic Aura",
     class_name: "Wizard",
     power_type: "feature",
@@ -382,7 +406,62 @@ export const powers: PowerDefinition[] = [
     verification_status: "partially_recovered",
     notes: "Included as a structured seed with unresolved exact value.",
   },
+  {
+    id: "power-ray-of-enfeeblement",
+    name: "Ray of Enfeeblement",
+    class_name: "Wizard",
+    power_type: "encounter",
+    effect_ids: [],
+    source_type: "official_archive",
+    source_url: "https://www.arcgames.com/en/games/neverwinter/news/tag/nw-patch-notes",
+    source_version: moduleVersion,
+    verification_status: "partially_recovered",
+    notes: "Historical patch notes explicitly mention debuff behavior and stacking corrections. Exact live value should remain unresolved.",
+  },
+  {
+    id: "power-prophecy-of-doom",
+    name: "Prophecy of Doom",
+    class_name: "Cleric",
+    power_type: "encounter",
+    effect_ids: [],
+    source_type: "official_archive",
+    source_url: "https://www.arcgames.com/en/games/neverwinter/news/tag/nw-patch-notes",
+    source_version: moduleVersion,
+    verification_status: "partially_recovered",
+    notes: "Source registry confirms this power interacts with buffs and debuffs on the caster. Exact live value remains unresolved.",
+  },
 ];
+
+export const classPowerPresets: Record<
+  string,
+  Pick<TeamMember, "encounter_ids" | "daily_ids" | "feature_ids">
+> = {
+  "class-ranger": {
+    encounter_ids: [],
+    daily_ids: [],
+    feature_ids: ["power-pack-tactics-ranger", "power-mystic-aura-ranger"],
+  },
+  "class-cleric": {
+    encounter_ids: ["power-prophecy-of-doom"],
+    daily_ids: [],
+    feature_ids: [],
+  },
+  "class-wizard": {
+    encounter_ids: ["power-ray-of-enfeeblement"],
+    daily_ids: [],
+    feature_ids: ["power-pack-tactics-wizard", "power-mystic-aura-wizard"],
+  },
+};
+
+export function getDefaultPowerLoadoutForClass(classId: string) {
+  return (
+    classPowerPresets[classId] ?? {
+      encounter_ids: [],
+      daily_ids: [],
+      feature_ids: [],
+    }
+  );
+}
 
 export const companions: Companion[] = [
   {
@@ -993,27 +1072,30 @@ export function createInitialTeamMembers(mode: "dungeon" | "trial"): TeamMember[
     const defaultEnhancement =
       slot === 2 ? "enh-armor-break" : slot === 3 ? "enh-dulled-senses" : slot === 4 ? "enh-vulnerability" : "enh-slowed-reactions";
 
+    const classId =
+      slot === 1
+        ? "class-rogue"
+        : slot === 2
+          ? "class-bard"
+          : slot === 3
+            ? "class-cleric"
+            : slot === 4
+              ? "class-paladin"
+              : "class-ranger";
+    const powerLoadout = getDefaultPowerLoadoutForClass(classId);
+
     return {
       id: `member-${slot}`,
       group,
       slot,
       label: slot === 1 ? "Carry Candidate" : `Member ${slot}`,
-      class_id:
-        slot === 1
-          ? "class-rogue"
-          : slot === 2
-            ? "class-bard"
-            : slot === 3
-              ? "class-cleric"
-              : slot === 4
-                ? "class-paladin"
-                : "class-ranger",
+      class_id: classId,
       paragon: "",
       race: "",
       role: slot === 1 ? "dps" : slot === 3 ? "healer" : slot === 4 ? "tank" : "support",
-      encounter_ids: [],
-      daily_ids: [],
-      feature_ids: [],
+      encounter_ids: powerLoadout.encounter_ids,
+      daily_ids: powerLoadout.daily_ids,
+      feature_ids: powerLoadout.feature_ids,
       artifact_id: defaultArtifact,
       companion_id: defaultCompanion,
       enhancement_id: defaultEnhancement,
