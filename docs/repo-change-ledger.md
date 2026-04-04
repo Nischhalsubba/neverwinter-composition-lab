@@ -950,3 +950,67 @@ Changes:
 Why:
 
 - This keeps the app aligned with the repo rule not to invent Neverwinter values that have not been verified or ingested.
+
+## Pass 10 - Mount sheet ingestion and popup list-layout rewrite
+
+### Mount data moved to Aragon sheet source
+
+Files:
+
+- `data/game-data.ts`
+
+Changes:
+
+- Replaced the earlier tiny mount seed with mount data sourced from the Google Sheet at:
+  `https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=2133630453#gid=2133630453`
+- Added sheet-backed mount combat power entries for:
+  - trial / dungeon support mounts
+  - ST damage mount powers
+- Added sheet-backed mount equip power entries for the listed equip bonuses.
+- Added supported mount effect mappings for the sheet rows where the data exposed modelable values in existing effect categories such as:
+  - incoming damage
+  - defense reduction
+  - crit avoidance reduction
+  - damage bonus
+  - combat advantage
+  - accuracy
+  - deflect reduction
+- Preserved unresolved mechanics in notes instead of inventing new unsupported internal stat categories.
+
+Why:
+
+- The user explicitly instructed the app to use the Google Sheet mount information instead of the previous mount seed.
+- This keeps mount data source-aware and patch-aware while improving the usefulness of the Team Builder mount picker and mount summaries.
+
+### Popup UI rewrite
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Replaced the popup multi-card grid body with a stable list-row layout.
+- Changed each popup result into a row with:
+  - image cell
+  - title / subtitle / badges block
+  - constrained description block
+  - action block
+- Removed equal-height grid behavior for popup results because it was causing long artifact / companion / enhancement descriptions to visually stack and overlap.
+- Kept search and filter bars at the top of the popup while making the body easier to scan for very large datasets.
+
+Why:
+
+- The screenshots showed severe overlap and unreadable text in the artifact, companion, and enhancement popups.
+- The previous card-grid popup was not appropriate for very large, text-heavy datasets.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the mount-sheet ingestion and popup list-layout rewrite.

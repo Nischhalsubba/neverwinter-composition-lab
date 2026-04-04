@@ -1503,43 +1503,45 @@ function SelectionOverlay({
               ))}
             </div>
           </div>
-          <div className="grid auto-rows-fr gap-4 overflow-y-auto p-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="space-y-3 overflow-y-auto p-6">
             {items.length > 0 ? (
               items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex h-full min-h-[280px] flex-col border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.08))] p-5"
+                  className="grid gap-4 border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.08))] p-4 lg:grid-cols-[84px_minmax(0,1.3fr)_minmax(0,0.9fr)_132px] lg:items-center"
                 >
                   <div className="flex items-start gap-4">
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
                         alt={item.name}
-                        width={64}
-                        height={64}
-                        className="h-16 w-16 border border-white/10 bg-[rgba(255,255,255,0.05)] object-cover"
+                        width={72}
+                        height={72}
+                        className="h-[72px] w-[72px] border border-white/10 bg-[rgba(255,255,255,0.05)] object-cover"
                       />
                     ) : (
-                      <div className="flex h-16 w-16 items-center justify-center border border-white/10 bg-[rgba(255,255,255,0.05)]">
+                      <div className="flex h-[72px] w-[72px] items-center justify-center border border-white/10 bg-[rgba(255,255,255,0.05)]">
                         <ImageOff className="h-5 w-5 text-stone-500" />
                       </div>
                     )}
-                    <div className="min-w-0 flex-1">
-                      <p className="text-base font-semibold text-stone-50">{item.name}</p>
-                      {item.subtitle ? <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{item.subtitle}</p> : null}
-                    </div>
                   </div>
-                  {item.badges?.length ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {item.badges.map((badge) => (
-                        <Badge key={`${item.id}-${badge.label}`} variant={badge.variant}>
-                          {badge.label}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : null}
-                  <p className="mt-4 flex-1 text-sm leading-7 text-stone-300">{item.description}</p>
-                  <div className="mt-5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold text-stone-50">{item.name}</p>
+                    {item.subtitle ? <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{item.subtitle}</p> : null}
+                    {item.badges?.length ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {item.badges.map((badge) => (
+                          <Badge key={`${item.id}-${badge.label}`} variant={badge.variant}>
+                            {badge.label}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="max-h-[5.5rem] overflow-hidden text-sm leading-6 text-stone-300">{item.description}</p>
+                  </div>
+                  <div className="flex flex-row items-center justify-between gap-3 lg:flex-col lg:items-stretch">
                     <Button variant="primary" onClick={() => onSelect(item.id)}>
                       Select
                     </Button>
@@ -1548,7 +1550,7 @@ function SelectionOverlay({
                         href={item.sourceUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-sky-100/90"
+                        className="inline-flex items-center justify-center gap-2 text-xs uppercase tracking-[0.16em] text-sky-100/90 lg:justify-start"
                       >
                         Source
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -1558,7 +1560,7 @@ function SelectionOverlay({
                 </div>
               ))
             ) : (
-              <div className="md:col-span-2 xl:col-span-3">
+              <div>
                 <EmptyState
                   title="No matching entries"
                   description="Try a broader search term. The picker only shows local typed data that has already been imported into the repo."
