@@ -11,6 +11,9 @@ import {
   nwHubClassMetaRaw,
 } from "@/data/nw-hub/classes";
 import {
+  nwHubCompanionsRaw,
+} from "@/data/nw-hub/companions";
+import {
   nwHubCompanionEnhancementsRaw,
 } from "@/data/nw-hub/companion-enhancements";
 import {
@@ -625,98 +628,114 @@ export function getDefaultPowerLoadoutForClass(classId: string, paragonPath?: st
   };
 }
 
-export const companions: Companion[] = [
-  {
-    id: "comp-tutor",
-    name: "Tutor",
-    role_tag: "support",
-    archetype: "Carry support",
+const companionRoleMap = new Map<string, string[]>(
+  nwHubCompanionPowersRaw.map((item) => [item.name, [...item.roles]]),
+);
+
+const seededCompanionValueMap: Record<
+  string,
+  { st_dps: number | null; max_hit: number | null; effect_ids: string[]; notes: string; verification_status: Companion["verification_status"]; source_type: Companion["source_type"]; source_url: string; source_version: string }
+> = {
+  Tutor: {
     st_dps: 130617,
     max_hit: 340432,
     effect_ids: ["effect-tutor-ca", "effect-tutor-coverage"],
     source_type: "user_sheet",
-    source_url:
-      "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
+    source_url: "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
     source_version: moduleVersion,
     verification_status: "partially_recovered",
     notes: "ST ranking value recovered directly; support effect comes from connected seed notes.",
   },
-  {
-    id: "comp-drizzt",
-    name: "Drizzt Do'Urden",
-    role_tag: "support",
-    archetype: "Team damage support",
+  "Drizzt Do'Urden": {
     st_dps: 48642,
     max_hit: 69128,
     effect_ids: ["effect-drizzt-damage"],
     source_type: "user_sheet",
-    source_url:
-      "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
+    source_url: "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
     source_version: moduleVersion,
     verification_status: "partially_recovered",
     notes: "Support value seeded from the docs, ST figure from the recovered ranking table.",
   },
-  {
-    id: "comp-portobello",
-    name: "Portobello DaVinci",
-    role_tag: "support",
-    archetype: "Power and CA support",
+  "Portobello DaVinci": {
     st_dps: 57399,
     max_hit: 345825,
     effect_ids: ["effect-portobello-power", "effect-portobello-ca"],
     source_type: "user_sheet",
-    source_url:
-      "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit",
+    source_url: "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit",
     source_version: moduleVersion,
     verification_status: "partially_recovered",
     notes: "Support values were explicitly called out in the docs.",
   },
-  {
-    id: "comp-sardina",
-    name: "Sardina the Tressym",
-    role_tag: "st",
-    archetype: "Single target summon",
+  "Sardina the Tressym": {
     st_dps: 179561,
     max_hit: null,
     effect_ids: [],
     source_type: "user_sheet",
-    source_url:
-      "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
+    source_url: "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
     source_version: moduleVersion,
     verification_status: "verified",
     notes: "Top recovered ST ranking from the Aragon sheet.",
   },
-  {
-    id: "comp-blaspheme",
-    name: "Blaspheme Assassin",
-    role_tag: "st",
-    archetype: "Single target summon",
+  "Blaspheme Assassin": {
     st_dps: 164299,
     max_hit: null,
     effect_ids: [],
     source_type: "user_sheet",
-    source_url:
-      "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
+    source_url: "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
     source_version: moduleVersion,
     verification_status: "verified",
     notes: "Recovered directly from the ST ranking proof.",
   },
-  {
-    id: "comp-lysaera",
-    name: "Lysaera",
-    role_tag: "st",
-    archetype: "Single target summon",
+  Lysaera: {
     st_dps: 160581,
     max_hit: null,
     effect_ids: [],
     source_type: "user_sheet",
-    source_url:
-      "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
+    source_url: "https://docs.google.com/spreadsheets/d/1WOB5SMx4ZpyShWnhkpyiZK2jGl8eGmcJH3q-4QX57f8/edit?gid=999278265",
     source_version: moduleVersion,
     verification_status: "verified",
     notes: "Recovered directly from the ST ranking proof.",
   },
-];
+};
+
+function getCompanionRoleTag(type: string, playerBonusName: string): Companion["role_tag"] {
+  if (type.toLowerCase() === "augment") {
+    return "augment";
+  }
+
+  const roles = companionRoleMap.get(playerBonusName) ?? [];
+  if (roles.includes("Utility") || roles.includes("Defense")) {
+    return "support";
+  }
+
+  if (roles.includes("Offense")) {
+    return "st";
+  }
+
+  return "support";
+}
+
+export const companions: Companion[] = nwHubCompanionsRaw.map((item) => {
+  const seeded = seededCompanionValueMap[item.name];
+  const roles = companionRoleMap.get(item.playerBonusName) ?? [];
+
+  return {
+    id: makeEntityId("comp", item.name),
+    name: item.name,
+    role_tag: getCompanionRoleTag(item.type, item.playerBonusName),
+    archetype: `${item.type} / ${roles.length ? roles.join(", ") : "mixed roles"}`,
+    st_dps: seeded?.st_dps ?? null,
+    max_hit: seeded?.max_hit ?? null,
+    effect_ids: seeded?.effect_ids ?? [],
+    source_type: seeded?.source_type ?? "community_reference",
+    source_url: seeded?.source_url ?? item.source_url,
+    source_version: seeded?.source_version ?? nwHubSourceVersion,
+    verification_status: seeded?.verification_status ?? "verified",
+    notes:
+      seeded?.notes ??
+      `Player bonus: ${item.playerBonusName}. Enhancement: ${item.enhancementPower}. Imported from the local NW Hub companion list snapshot.`,
+  };
+});
 
 const companionEnhancementEffectMap: Record<string, string[]> = {
   "Armor Break": ["effect-armor-break-defense"],
@@ -800,6 +819,7 @@ export const artifacts: Artifact[] = nwHubArtifactsRaw.map((item, index) => ({
 }));
 
 export const artifactSnapshots = nwHubArtifactsRaw;
+export const companionSnapshots = nwHubCompanionsRaw;
 export const companionEnhancementSnapshots = nwHubCompanionEnhancementsRaw;
 export const companionPowerSnapshots = nwHubCompanionPowersRaw;
 export const classSnapshots = nwHubClassMetaRaw;

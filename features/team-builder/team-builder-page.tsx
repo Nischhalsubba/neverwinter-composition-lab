@@ -86,6 +86,7 @@ interface PickerItem {
   subtitle?: string;
   imageUrl?: string;
   sourceUrl?: string;
+  filters?: string[];
   badges?: Array<{ label: string; variant: BadgeVariant }>;
 }
 
@@ -139,6 +140,7 @@ export function TeamBuilderPage() {
   const [includeBoss, setIncludeBoss] = useState(true);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
+  const [pickerFilter, setPickerFilter] = useState("all");
 
   const boss = bossPresets.find((item) => item.id === bossId) ?? bossPresets[0];
   const selectedMember = teamMembers.find((member) => member.id === selectedMemberId) ?? teamMembers[0];
@@ -176,9 +178,12 @@ export function TeamBuilderPage() {
 
     return getPickerItems(pickerState.kind).filter((item) => {
       const haystack = `${item.name} ${item.subtitle ?? ""} ${item.description}`.toLowerCase();
-      return haystack.includes(pickerQuery.toLowerCase());
+      const queryMatches = haystack.includes(pickerQuery.toLowerCase());
+      const filterMatches = pickerFilter === "all" || item.filters?.includes(pickerFilter);
+      return queryMatches && filterMatches;
     });
-  }, [pickerQuery, pickerState]);
+  }, [pickerFilter, pickerQuery, pickerState]);
+  const pickerFilters = useMemo(() => (pickerState ? getPickerFilters(pickerState.kind) : []), [pickerState]);
 
   function updateTeamMode(nextMode: TeamMode) {
     setMode(nextMode);
@@ -222,11 +227,13 @@ export function TeamBuilderPage() {
     setSelectedMemberId(memberId);
     setPickerState({ memberId, kind });
     setPickerQuery("");
+    setPickerFilter("all");
   }
 
   function closePicker() {
     setPickerState(null);
     setPickerQuery("");
+    setPickerFilter("all");
   }
 
   function applyPickerSelection(itemId: string) {
@@ -400,8 +407,10 @@ export function TeamBuilderPage() {
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)] min-[1950px]:grid-cols-[320px_minmax(0,1fr)_360px]">
         <Card className="h-fit xl:sticky xl:top-5">
           <CardHeader>
-            <CardTitle>Library Sidebar</CardTitle>
-            <CardDescription>Browse data separately from the active build so the main canvas keeps its space.</CardDescription>
+            <CardTitle>Roster & Reference</CardTitle>
+            <CardDescription>
+              Keep the active composition on the right. Use this rail to jump between slots or browse reference data without losing the selected member.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="grid grid-cols-2 gap-2">
@@ -512,7 +521,96 @@ export function TeamBuilderPage() {
                   ))}
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 border border-white/8 bg-[linear-gradient(180deg,rgba(205,180,219,0.1),rgba(189,224,254,0.08))] p-5 md:grid-cols-2 xl:grid-cols-4">
+                  <Field label="Class">
+                    <Select
+                      value={selectedMember.class_id}
+                      onChange={(event) => handleClassChange(selectedMember.id, event.target.value)}
+                    >
+                      <option value="">Select class</option>
+                      {classes.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Paragon">
+                    <Select
+                      value={selectedMember.paragon}
+                      onChange={(event) => {
+                        const paragon = event.target.value;
+                        const nextLoadout = getDefaultPowerLoadoutForClass(selectedMember.class_id, paragon);
+                        updateMember(selectedMember.id, {
+                          paragon,
+                          role: getRoleForClassParagon(selectedMember.class_id, paragon),
+                          encounter_ids: nextLoadout.encounter_ids,
+                          daily_ids: nextLoadout.daily_ids,
+                          feature_ids: nextLoadout.feature_ids,
+                        });
+                      }}
+                    >
+                      <option value="">{selectedMember.class_id ? "Select paragon" : "Select class first"}</option>
+                      {(classes.find((item) => item.id === selectedMember.class_id)?.paragon_options ?? []).map((paragon) => (
+                        <option key={paragon} value={paragon}>
+                          {paragon}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Race">
+                    <Select
+                      value={selectedMember.race}
+                      onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}
+                    >
+                      <option value="">Select race</option>
+                      {raceOptions.map((race) => (
+                        <option key={race} value={race}>
+                          {race}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <div className="space-y-2">
+                    <span className="text-xs uppercase tracking-[0.18em] text-stone-500">Carry state</span>
+                    <Button
+                      className="w-full"
+                      variant={selectedMember.is_carry ? "primary" : "secondary"}
+                      onClick={() => updateCarry(selectedMember.id)}
+                    >
+                      {selectedMember.is_carry ? "Selected carry DPS" : "Mark as carry DPS"}
+                    </Button>
+                  </div>
+                  <Field label="Artifact">
+                    <PickerField
+                      title={artifacts.find((item) => item.id === selectedMember.artifact_id)?.name ?? "Select artifact"}
+                      subtitle="Full artifact list with filters"
+                      onClick={() => openPicker(selectedMember.id, "artifact")}
+                    />
+                  </Field>
+                  <Field label="Companion">
+                    <PickerField
+                      title={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Select companion"}
+                      subtitle="Full companion list with filters"
+                      onClick={() => openPicker(selectedMember.id, "companion")}
+                    />
+                  </Field>
+                  <Field label="Enhancement">
+                    <PickerField
+                      title={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Select enhancement"}
+                      subtitle="Purple debuff / enhancement"
+                      onClick={() => openPicker(selectedMember.id, "enhancement")}
+                    />
+                  </Field>
+                  <Field label="Mount">
+                    <PickerField
+                      title={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Select mount power"}
+                      subtitle="Mount combat powers with filters"
+                      onClick={() => openPicker(selectedMember.id, "mount")}
+                    />
+                  </Field>
+                </div>
                 {renderEditorTab(
                   editorTab,
                   selectedMember,
@@ -733,8 +831,11 @@ export function TeamBuilderPage() {
           member={pickerMember}
           kind={pickerState.kind}
           query={pickerQuery}
+          activeFilter={pickerFilter}
+          filters={pickerFilters}
           items={pickerItems}
           onQueryChange={setPickerQuery}
+          onFilterChange={setPickerFilter}
           onClose={closePicker}
           onSelect={applyPickerSelection}
         />
@@ -1338,23 +1439,29 @@ function SelectionOverlay({
   member,
   kind,
   query,
+  activeFilter,
+  filters,
   items,
   onQueryChange,
+  onFilterChange,
   onClose,
   onSelect,
 }: {
   member: TeamMember;
   kind: PickerKind;
   query: string;
+  activeFilter: string;
+  filters: Array<{ value: string; label: string }>;
   items: PickerItem[];
   onQueryChange: (value: string) => void;
+  onFilterChange: (value: string) => void;
   onClose: () => void;
   onSelect: (id: string) => void;
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-[rgba(16,19,26,0.78)] backdrop-blur-sm">
-      <div className="mx-auto flex h-full max-w-6xl items-center justify-center px-5 py-8">
-        <div className="flex max-h-full w-full flex-col border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.22),rgba(255,200,221,0.14),rgba(189,224,254,0.1))] shadow-[0_36px_90px_rgba(0,0,0,0.35)]">
+      <div className="mx-auto flex h-full max-w-[1400px] items-center justify-center px-5 py-8">
+        <div className="flex max-h-full w-full flex-col overflow-hidden border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.22),rgba(255,200,221,0.14),rgba(189,224,254,0.1))] shadow-[0_36px_90px_rgba(0,0,0,0.35)]">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
             <div className="max-w-3xl">
               <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">
@@ -1373,7 +1480,7 @@ function SelectionOverlay({
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="border-b border-white/10 px-6 py-4">
+          <div className="space-y-4 border-b border-white/10 px-6 py-4">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-100/80" />
               <Input
@@ -1383,15 +1490,25 @@ function SelectionOverlay({
                 className="pl-11"
               />
             </div>
+            <div className="flex flex-wrap gap-2">
+              {filters.map((filter) => (
+                <Button
+                  key={filter.value}
+                  size="sm"
+                  variant={activeFilter === filter.value ? "primary" : "secondary"}
+                  onClick={() => onFilterChange(filter.value)}
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
           </div>
-          <div className="grid gap-4 overflow-y-auto p-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid auto-rows-fr gap-4 overflow-y-auto p-6 md:grid-cols-2 xl:grid-cols-3">
             {items.length > 0 ? (
               items.map((item) => (
-                <button
+                <div
                   key={item.id}
-                  type="button"
-                  onClick={() => onSelect(item.id)}
-                  className="flex min-h-[220px] flex-col border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.08))] p-5 text-left transition hover:border-sky-200/40 hover:bg-[linear-gradient(180deg,rgba(205,180,219,0.24),rgba(189,224,254,0.14))]"
+                  className="flex h-full min-h-[280px] flex-col border border-white/10 bg-[linear-gradient(180deg,rgba(205,180,219,0.14),rgba(189,224,254,0.08))] p-5"
                 >
                   <div className="flex items-start gap-4">
                     {item.imageUrl ? (
@@ -1422,19 +1539,23 @@ function SelectionOverlay({
                     </div>
                   ) : null}
                   <p className="mt-4 flex-1 text-sm leading-7 text-stone-300">{item.description}</p>
-                  {item.sourceUrl ? (
-                    <a
-                      href={item.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(event) => event.stopPropagation()}
-                      className="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-sky-100/90"
-                    >
-                      Source
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  ) : null}
-                </button>
+                  <div className="mt-5 flex items-center justify-between gap-3">
+                    <Button variant="primary" onClick={() => onSelect(item.id)}>
+                      Select
+                    </Button>
+                    {item.sourceUrl ? (
+                      <a
+                        href={item.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-sky-100/90"
+                      >
+                        Source
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
               ))
             ) : (
               <div className="md:col-span-2 xl:col-span-3">
@@ -1490,6 +1611,7 @@ function getPickerItems(kind: PickerKind): PickerItem[] {
       description: item.notes,
       imageUrl: item.image_url,
       sourceUrl: item.source_url,
+      filters: ["all", item.category, item.team_or_personal, item.effect_ids.length ? "mapped" : "source-only"],
       badges: [
         { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
         { label: item.category, variant: "gold" },
@@ -1504,6 +1626,7 @@ function getPickerItems(kind: PickerKind): PickerItem[] {
       subtitle: `${item.role_tag} / ${item.archetype}`,
       description: item.notes,
       sourceUrl: item.source_url,
+      filters: ["all", item.role_tag, item.effect_ids.length ? "mapped" : "source-only"],
       badges: [
         { label: item.role_tag, variant: "purple" },
         { label: item.verification_status.replaceAll("_", " "), variant: "blue" },
@@ -1518,6 +1641,12 @@ function getPickerItems(kind: PickerKind): PickerItem[] {
       subtitle: item.damage_type,
       description: item.notes,
       sourceUrl: item.source_url,
+      filters: [
+        "all",
+        item.damage_type,
+        item.effect_ids.length ? "debuff-capable" : "source-only",
+        item.affected_by_team_buffs ? "team-scaled" : "owner-scaled",
+      ],
       badges: [
         { label: item.damage_type, variant: "orange" },
         { label: item.verification_status.replaceAll("_", " "), variant: "blue" },
@@ -1535,10 +1664,53 @@ function getPickerItems(kind: PickerKind): PickerItem[] {
     subtitle: "Purple debuff / enhancement",
     description: enhancementText.get(item.name) ?? item.notes,
     sourceUrl: item.source_url,
+    filters: ["all", item.effect_ids.length > 0 ? "mapped" : "source-only"],
     badges: [
       { label: item.verification_status.replaceAll("_", " "), variant: "teal" },
       { label: item.effect_ids.length > 0 ? "mapped effect" : "source only", variant: item.effect_ids.length > 0 ? "red" : "muted" },
     ],
   }));
+}
+
+function getPickerFilters(kind: PickerKind) {
+  if (kind === "artifact") {
+    return [
+      { value: "all", label: "All" },
+      { value: "debuff", label: "Debuff" },
+      { value: "support", label: "Support" },
+      { value: "utility", label: "Utility" },
+      { value: "personal_burst", label: "Burst" },
+      { value: "mapped", label: "Mapped" },
+    ];
+  }
+
+  if (kind === "companion") {
+    return [
+      { value: "all", label: "All" },
+      { value: "support", label: "Support" },
+      { value: "st", label: "Damage" },
+      { value: "augment", label: "Augment" },
+      { value: "source-only", label: "Source Only" },
+      { value: "mapped", label: "Mapped" },
+    ];
+  }
+
+  if (kind === "mount") {
+    return [
+      { value: "all", label: "All" },
+      { value: "debuff-capable", label: "Debuff" },
+      { value: "team-scaled", label: "Team Scaled" },
+      { value: "owner-scaled", label: "Owner Scaled" },
+      { value: "physical", label: "Physical" },
+      { value: "mixed", label: "Mixed" },
+      { value: "utility", label: "Utility" },
+    ];
+  }
+
+  return [
+    { value: "all", label: "All" },
+    { value: "mapped", label: "Mapped" },
+    { value: "source-only", label: "Source Only" },
+  ];
 }
 

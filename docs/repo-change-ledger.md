@@ -860,3 +860,93 @@ Why:
 
 - The user asked to prioritize a working Team Builder immediately.
 - This preserves the source-aware rule and avoids inventing unverified game entries that are not yet present in the local typed model.
+
+## Pass 9 - Popup filter system and Team Builder quick-setup redesign
+
+### Full companion popup dataset
+
+Files:
+
+- `data/game-data.ts`
+
+Changes:
+
+- Promoted the `companions` export from the earlier small curated subset to the full locally stored NW Hub companion list snapshot.
+- Added role inference for companions from imported companion-bonus roles.
+- Preserved the previously seeded source-aware effect mappings and ST ranking values for the known support / ranking companions:
+  - Tutor
+  - Drizzt Do'Urden
+  - Portobello DaVinci
+  - Sardina the Tressym
+  - Blaspheme Assassin
+  - Lysaera
+- Added `companionSnapshots` export for the imported full companion list.
+
+Why:
+
+- The user explicitly asked for the companion popup to list all companions instead of only the earlier small seed set.
+- Moving the core `companions` export to the full list keeps Team Builder, picker overlays, and selected-member summaries aligned on one dataset.
+
+### Popup layout repair and filtering
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Removed the invalid nested interactive popup card structure that wrapped a clickable source link inside a clickable result button.
+- Reworked popup cards so each result now has:
+  - a non-interactive card shell
+  - a dedicated `Select` action
+  - a separate source link
+- Widened the popup shell and improved overflow handling so long descriptions no longer collide visually.
+- Added popup filter bars for each picker type:
+  - artifacts
+  - companions
+  - mounts
+  - enhancements
+- Added filter tokens for popup items so filtering is not limited to a text search.
+
+Why:
+
+- The popup overlap bug shown by the user came from unstable card layout and invalid nested click targets.
+- The user explicitly asked for filters on each popup and for the popups to be fixed globally.
+
+### Team Builder ease-of-use redesign
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Reframed the left rail as `Roster & Reference` instead of a generic library-only sidebar.
+- Added a new quick-setup block at the top of the selected-member editor so the main workflow is now:
+  - select slot
+  - choose class / paragon / race
+  - choose artifact / companion / enhancement / mount
+  - then refine powers and notes in the lower tabs
+- Kept the existing detailed tabs for loadout, personal buffs, and notes, but moved the high-frequency setup fields into the first visible panel.
+
+Why:
+
+- The user asked for the Team Builder to be redesigned and rethought for ease of use.
+- The earlier flow required too much tab switching before the core member setup could be completed.
+
+### Scope note
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `data/game-data.ts`
+
+Changes:
+
+- Artifact popup remains comprehensive from the imported NW Hub artifact list.
+- Companion popup is now comprehensive from the imported NW Hub companion list.
+- Mount popup now supports filtering and better selection flow, but still reflects the current local source-aware mount dataset rather than an invented full-game mount master list.
+
+Why:
+
+- This keeps the app aligned with the repo rule not to invent Neverwinter values that have not been verified or ingested.
