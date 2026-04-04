@@ -375,3 +375,71 @@ When making future changes:
 3. Explain what changed in code terms.
 4. Explain why the change was necessary.
 5. Call out anything intentionally left pending.
+
+## Pass 3 - Layout redesign and readability repair
+
+### Shell redesign
+
+Files:
+
+- `components/layout/app-shell.tsx`
+- `components/ui/card.tsx`
+- `app/globals.css`
+
+Changes:
+
+- Reworked the global shell to reduce visual clutter.
+- Simplified the top bar hierarchy so the page title and search lead, instead of large chrome blocks competing with the content.
+- Tightened the sidebar presentation and made the utility section feel secondary instead of equally loud.
+- Reduced card border/shadow intensity to make panels feel cleaner and less heavy.
+- Added minor typography polish in global styles.
+
+Why:
+
+- The previous shell was visually dense and was taking too much attention away from the main workflow.
+- The user explicitly reported layout/design problems and asked for a redesign.
+
+### Team Builder redesign
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Rebuilt the Team Builder header into a clearer hero + controls layout.
+- Replaced the cramped multi-column mini-card group layout with larger two-column member cards.
+- Changed the center area from a compressed card wall into a clearer team canvas.
+- Converted the member configuration area from one long continuous form into segmented editor tabs:
+  - Identity
+  - Loadout
+  - Companion
+  - Mount
+  - Personal Buffs
+  - Notes
+- Kept the right summary rail but made the overall page hierarchy more readable.
+- Removed leftover duplicated editor markup from the old implementation.
+- Rewrote the file as clean UTF-8 after a bad byte sequence broke the build.
+
+Why:
+
+- The previous Team Builder canvas was too narrow and produced unreadable member cards.
+- The previous editor was too long and visually exhausting.
+- The redesign was needed to make the page match the product’s “premium, readable, calm density” goal.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the redesign and UTF-8 cleanup.
+
+### Remaining follow-up
+
+- The Team Builder still uses seeded data rather than full live-verified entity depth.
+- The shell still does not implement the fully collapsible sidebar/drawer behavior from the frontend spec.
+- The summary rail still uses static card blocks rather than advanced compare/inspector interactions.

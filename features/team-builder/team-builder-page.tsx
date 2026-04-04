@@ -1,8 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Calculator, Layers3, ShieldPlus, Swords, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  Calculator,
+  Layers3,
+  ShieldPlus,
+  Swords,
+  Target,
+  Users,
+} from "lucide-react";
 
+import { EmptyState } from "@/components/empty-state";
 import { SummaryPanel } from "@/components/summary-panel";
 import { SourceBadge } from "@/components/source-badge";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +37,7 @@ import type { EffectStat, TeamMember, TeamMode } from "@/lib/types";
 import { formatPercent, titleCase } from "@/lib/utils";
 
 const leftTabs = ["Roster", "Classes", "Companions", "Artifacts", "Mounts", "Powers", "Effects"] as const;
+const editorTabs = ["Identity", "Loadout", "Companion", "Mount", "Personal Buffs", "Notes"] as const;
 
 const effectStats: EffectStat[] = [
   "damage_bonus",
@@ -68,6 +78,7 @@ if (typeof globalThis !== "undefined") {
 export function TeamBuilderPage() {
   const [mode, setMode] = useState<TeamMode>("dungeon");
   const [activeTab, setActiveTab] = useState<(typeof leftTabs)[number]>("Roster");
+  const [editorTab, setEditorTab] = useState<(typeof editorTabs)[number]>("Identity");
   const [bossId, setBossId] = useState(bossPresets[0]?.id ?? "");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(createInitialTeamMembers("dungeon"));
   const [selectedMemberId, setSelectedMemberId] = useState("member-1");
@@ -104,6 +115,7 @@ export function TeamBuilderPage() {
     const nextMembers = createInitialTeamMembers(nextMode);
     setTeamMembers(nextMembers);
     setSelectedMemberId(nextMembers[0]?.id ?? "");
+    setEditorTab("Identity");
   }
 
   function updateMember(memberId: string, patch: Partial<TeamMember>) {
@@ -162,54 +174,71 @@ export function TeamBuilderPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
-          <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-teal-200/80">Core feature</p>
-            <CardTitle className="mt-1 text-2xl">Team Builder</CardTitle>
-            <CardDescription className="mt-2 max-w-3xl">
-              Dungeon mode supports 5 players. Trial mode supports 10 players split into Group A and Group B. All unresolved values stay source-aware instead of being flattened away.
-            </CardDescription>
+    <div className="space-y-5">
+      <Card className="overflow-hidden">
+        <CardContent className="space-y-5 p-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-teal-200/80">Core feature</p>
+              <h2 className="mt-2 text-[34px] font-semibold tracking-[-0.03em] text-stone-50">Team Builder</h2>
+              <p className="mt-3 text-sm leading-7 text-stone-400">
+                Build a dungeon shell for 5 players or a trial shell for 10 players in two groups of five. The layout is being simplified so the composition is readable before the math panels compete for attention.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:w-[520px]">
+              <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Boss preset</p>
+                <p className="mt-2 text-sm font-medium text-stone-100">{boss.name}</p>
+              </div>
+              <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Selected carry</p>
+                <p className="mt-2 text-sm font-medium text-stone-100">{carry?.label ?? "Pending"}</p>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
-              Dungeon
+
+          <div className="grid gap-3 xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)_auto]">
+            <div className="flex gap-2">
+              <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
+                Dungeon
+              </Button>
+              <Button variant={mode === "trial" ? "primary" : "secondary"} onClick={() => updateTeamMode("trial")}>
+                Trial
+              </Button>
+            </div>
+            <Button variant="secondary" onClick={() => updateTeamMode(mode)}>
+              Reset Layout
             </Button>
-            <Button variant={mode === "trial" ? "primary" : "secondary"} onClick={() => updateTeamMode("trial")}>
-              Trial
-            </Button>
-            <Select value={bossId} onChange={(event) => setBossId(event.target.value)} className="w-[240px]">
+            <Select value={bossId} onChange={(event) => setBossId(event.target.value)}>
               {bossPresets.map((preset) => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name}
                 </option>
               ))}
             </Select>
-            <Select value={carry?.id ?? ""} onChange={(event) => updateCarry(event.target.value)} className="w-[220px]">
+            <Select value={carry?.id ?? ""} onChange={(event) => updateCarry(event.target.value)}>
               {teamMembers.map((member) => (
                 <option key={member.id} value={member.id}>
                   Carry: {member.label}
                 </option>
               ))}
             </Select>
-            <Button variant="secondary">Save Build</Button>
-            <Button variant="secondary">Load Build</Button>
-            <Button variant="secondary">Share Build</Button>
-            <Button variant="danger" onClick={() => updateTeamMode(mode)}>
-              Reset
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary">Save</Button>
+              <Button variant="secondary">Load</Button>
+              <Button variant="secondary">Share</Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)_360px]">
+      <div className="grid gap-5 2xl:grid-cols-[300px_minmax(0,1fr)_340px]">
         <Card className="h-fit">
           <CardHeader>
             <CardTitle>Library Sidebar</CardTitle>
-            <CardDescription>Reusable left-navigation and selector panel pattern.</CardDescription>
+            <CardDescription>Browse mode stays separate from detailed composition editing.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
               {leftTabs.map((tab) => (
                 <Button
@@ -225,16 +254,26 @@ export function TeamBuilderPage() {
             <div className="space-y-3">
               {leftPanelCards[activeTab].length > 0 ? (
                 leftPanelCards[activeTab].map((item) => (
-                  <div key={item.key} className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                  <button
+                    type="button"
+                    key={item.key}
+                    onClick={() => activeTab === "Roster" && setSelectedMemberId(item.key)}
+                    className={`block w-full rounded-2xl border p-4 text-left transition ${
+                      item.key === selectedMemberId
+                        ? "border-teal-300/30 bg-teal-300/8"
+                        : "border-white/8 bg-black/20 hover:border-white/12"
+                    }`}
+                  >
                     <p className="text-sm font-medium text-stone-100">{item.title}</p>
                     <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{item.meta}</p>
                     <p className="mt-3 text-sm leading-6 text-stone-400">{item.note}</p>
-                  </div>
+                  </button>
                 ))
               ) : (
-                <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 text-sm leading-6 text-stone-400">
-                  No structured entries for this tab yet. The page is still patch-aware and ready for future verified ingestion.
-                </div>
+                <EmptyState
+                  title="No structured entries yet"
+                  description="This browse view is reserved for future verified data instead of guessed values."
+                />
               )}
             </div>
           </CardContent>
@@ -242,19 +281,25 @@ export function TeamBuilderPage() {
 
         <div className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Center Team Layout</CardTitle>
-              <CardDescription>Member cards stay contribution-focused and image-ready.</CardDescription>
+            <CardHeader className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <CardTitle>Team Canvas</CardTitle>
+                <CardDescription>Selected members stay large enough to read at a glance.</CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="teal">{mode === "trial" ? "Trial layout" : "Dungeon layout"}</Badge>
+                <Badge variant="muted">{teamMembers.length} members</Badge>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <GroupLayout
+            <CardContent className="space-y-8">
+              <GroupSection
                 title="Group A"
                 members={teamMembers.filter((member) => member.group === "A")}
                 selectedMemberId={selectedMemberId}
                 onSelect={setSelectedMemberId}
               />
               {mode === "trial" ? (
-                <GroupLayout
+                <GroupSection
                   title="Group B"
                   members={teamMembers.filter((member) => member.group === "B")}
                   selectedMemberId={selectedMemberId}
@@ -266,213 +311,39 @@ export function TeamBuilderPage() {
 
           {selectedMember ? (
             <Card>
-              <CardHeader>
-                <CardTitle>Member Configuration Panel</CardTitle>
-                <CardDescription>
-                  Every member supports class, role, loadout, artifact, companion, mount, insignias, notes, and carry state.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
-                <Field label="Label">
-                  <Input
-                    value={selectedMember.label}
-                    onChange={(event) => updateMember(selectedMember.id, { label: event.target.value })}
-                  />
-                </Field>
-                <Field label="Carry Flag">
-                  <Button
-                    className="w-full"
-                    variant={selectedMember.is_carry ? "primary" : "secondary"}
-                    onClick={() => updateCarry(selectedMember.id)}
-                  >
-                    {selectedMember.is_carry ? "Selected carry DPS" : "Mark as carry DPS"}
-                  </Button>
-                </Field>
-                <Field label="Class">
-                  <Select
-                    value={selectedMember.class_id}
-                    onChange={(event) => updateMember(selectedMember.id, { class_id: event.target.value })}
-                  >
-                    {classes.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Role">
-                  <Select
-                    value={selectedMember.role}
-                    onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
-                  >
-                    <option value="dps">DPS</option>
-                    <option value="support">Support</option>
-                    <option value="healer">Healer</option>
-                    <option value="tank">Tank</option>
-                  </Select>
-                </Field>
-                <Field label="Paragon / Path">
-                  <Input
-                    placeholder="Enter verified or working path"
-                    value={selectedMember.paragon}
-                    onChange={(event) => updateMember(selectedMember.id, { paragon: event.target.value })}
-                  />
-                </Field>
-                <Field label="Race">
-                  <Input
-                    placeholder="Optional race"
-                    value={selectedMember.race}
-                    onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}
-                  />
-                </Field>
-                <Field label="Artifact">
-                  <Select
-                    value={selectedMember.artifact_id}
-                    onChange={(event) => updateMember(selectedMember.id, { artifact_id: event.target.value })}
-                  >
-                    {artifacts.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Companion">
-                  <Select
-                    value={selectedMember.companion_id}
-                    onChange={(event) => updateMember(selectedMember.id, { companion_id: event.target.value })}
-                  >
-                    {companions.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Enhancement">
-                  <Select
-                    value={selectedMember.enhancement_id}
-                    onChange={(event) => updateMember(selectedMember.id, { enhancement_id: event.target.value })}
-                  >
-                    {companionEnhancements.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Companion Bonus">
-                  <Select
-                    value={selectedMember.companion_bonus_id}
-                    onChange={(event) => updateMember(selectedMember.id, { companion_bonus_id: event.target.value })}
-                  >
-                    {companionBonuses.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Mount Combat Power">
-                  <Select
-                    value={selectedMember.mount_combat_power_id}
-                    onChange={(event) => updateMember(selectedMember.id, { mount_combat_power_id: event.target.value })}
-                  >
-                    {mountCombatPowers.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Mount Equip Power">
-                  <Select
-                    value={selectedMember.mount_equip_power_id}
-                    onChange={(event) => updateMember(selectedMember.id, { mount_equip_power_id: event.target.value })}
-                  >
-                    <option value="">None</option>
-                    {mountEquipPowers.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Insignia Bonus 1">
-                  <Select
-                    value={selectedMember.insignia_bonus_ids[0] ?? ""}
-                    onChange={(event) =>
-                      updateMember(selectedMember.id, {
-                        insignia_bonus_ids: [event.target.value, selectedMember.insignia_bonus_ids[1] ?? "", selectedMember.insignia_bonus_ids[2] ?? ""],
-                      })
-                    }
-                  >
-                    {insigniaBonuses.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Insignia Bonus 2">
-                  <Select
-                    value={selectedMember.insignia_bonus_ids[1] ?? ""}
-                    onChange={(event) =>
-                      updateMember(selectedMember.id, {
-                        insignia_bonus_ids: [selectedMember.insignia_bonus_ids[0] ?? "", event.target.value, selectedMember.insignia_bonus_ids[2] ?? ""],
-                      })
-                    }
-                  >
-                    {insigniaBonuses.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Insignia Bonus 3">
-                  <Select
-                    value={selectedMember.insignia_bonus_ids[2] ?? ""}
-                    onChange={(event) =>
-                      updateMember(selectedMember.id, {
-                        insignia_bonus_ids: [selectedMember.insignia_bonus_ids[0] ?? "", selectedMember.insignia_bonus_ids[1] ?? "", event.target.value],
-                      })
-                    }
-                  >
-                    {insigniaBonuses.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                {effectStats.map((stat) => (
-                  <Field key={stat} label={`Personal ${titleCase(stat)}`}>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={selectedMember.personal_overrides[stat] ?? ""}
-                      onChange={(event) =>
-                        updateMember(selectedMember.id, {
-                          personal_overrides: {
-                            ...selectedMember.personal_overrides,
-                            [stat]: event.target.value === "" ? undefined : Number(event.target.value),
-                          },
-                        })
-                      }
-                    />
-                  </Field>
-                ))}
-                <div className="md:col-span-2">
-                  <Field label="Notes">
-                    <Textarea
-                      placeholder="Rotation assumptions, uptime notes, unresolved live values..."
-                      value={selectedMember.notes}
-                      onChange={(event) => updateMember(selectedMember.id, { notes: event.target.value })}
-                    />
-                  </Field>
+              <CardHeader className="space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-teal-200" />
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-teal-200/80">Member Config Panel</p>
+                    </div>
+                    <CardTitle className="mt-2 text-2xl">{selectedMember.label}</CardTitle>
+                    <CardDescription>
+                      The editor is now segmented so identity, loadout, support layers, and notes do not collapse into one long wall of fields.
+                    </CardDescription>
+                  </div>
+                  {(() => {
+                    const sourceItem =
+                      companions.find((item) => item.id === selectedMember.companion_id) ??
+                      artifacts.find((item) => item.id === selectedMember.artifact_id);
+                    return sourceItem ? <SourceBadge {...sourceItem} /> : null;
+                  })()}
                 </div>
-              </CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {editorTabs.map((tab) => (
+                    <Button
+                      key={tab}
+                      size="sm"
+                      variant={editorTab === tab ? "primary" : "secondary"}
+                      onClick={() => setEditorTab(tab)}
+                    >
+                      {tab}
+                    </Button>
+                  ))}
+                </div>
+              </CardHeader>
+              <CardContent>{renderEditorTab(editorTab, selectedMember, updateMember, updateCarry)}</CardContent>
             </Card>
           ) : null}
         </div>
@@ -658,7 +529,7 @@ export function TeamBuilderPage() {
   );
 }
 
-function GroupLayout({
+function GroupSection({
   title,
   members,
   selectedMemberId,
@@ -670,58 +541,351 @@ function GroupLayout({
   onSelect: (memberId: string) => void;
 }) {
   return (
-    <div className="space-y-3">
+    <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-stone-200">
+        <div className="flex items-center gap-2 text-stone-100">
           <Swords className="h-4 w-4 text-teal-200" />
           <p className="text-sm font-medium">{title}</p>
         </div>
-        <p className="text-xs uppercase tracking-[0.18em] text-stone-500">{members.length} members</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">{members.length} members</p>
       </div>
-      <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-5">
-        {members.map((member) => {
-          const companion = companions.find((item) => item.id === member.companion_id);
-          const artifact = artifacts.find((item) => item.id === member.artifact_id);
-          const mountPower = mountCombatPowers.find((item) => item.id === member.mount_combat_power_id);
-          const classItem = classes.find((item) => item.id === member.class_id);
+      <div className="grid gap-4 lg:grid-cols-2">
+        {members.map((member) => (
+          <MemberCard
+            key={member.id}
+            member={member}
+            isSelected={member.id === selectedMemberId}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
 
-          return (
-            <button
-              type="button"
-              key={member.id}
-              onClick={() => onSelect(member.id)}
-              className={`rounded-[24px] border p-4 text-left transition ${
-                selectedMemberId === member.id
-                  ? "border-teal-300/40 bg-teal-300/8"
-                  : "border-white/8 bg-black/20 hover:border-white/14"
-              }`}
-            >
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-stone-500">
-                    {member.group}-{member.slot}
-                  </p>
-                  <p className="mt-1 text-base font-medium text-stone-100">{member.label}</p>
-                </div>
-                {member.is_carry ? <Badge variant="teal">Carry</Badge> : <Badge variant="muted">{member.role}</Badge>}
-              </div>
-              <div className="space-y-2 text-sm text-stone-400">
-                <p>{classItem?.name ?? "Class pending"}</p>
-                <p>{companion?.name ?? "Companion missing"}</p>
-                <p>{artifact?.name ?? "Artifact missing"}</p>
-                <p>{mountPower?.name ?? "Mount missing"}</p>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {companion?.role_tag ? <Badge variant="purple">{companion.role_tag}</Badge> : null}
-                {artifact?.category ? <Badge variant="gold">{artifact.category}</Badge> : null}
-                {mountPower?.damage_type ? <Badge variant="orange">{mountPower.damage_type}</Badge> : null}
-              </div>
-            </button>
-          );
-        })}
+function MemberCard({
+  member,
+  isSelected,
+  onSelect,
+}: {
+  member: TeamMember;
+  isSelected: boolean;
+  onSelect: (memberId: string) => void;
+}) {
+  const companion = companions.find((item) => item.id === member.companion_id);
+  const artifact = artifacts.find((item) => item.id === member.artifact_id);
+  const mountPower = mountCombatPowers.find((item) => item.id === member.mount_combat_power_id);
+  const classItem = classes.find((item) => item.id === member.class_id);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(member.id)}
+      className={`rounded-[26px] border p-5 text-left transition ${
+        isSelected
+          ? "border-teal-300/32 bg-[linear-gradient(180deg,rgba(26,60,63,0.26),rgba(12,17,22,0.96))]"
+          : "border-white/8 bg-black/20 hover:border-white/14"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.04] text-sm font-medium text-stone-300">
+            {member.group}-{member.slot}
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-lg font-semibold text-stone-50">{member.label}</p>
+              {member.is_carry ? <Badge variant="teal">Carry</Badge> : <Badge variant="muted">{member.role}</Badge>}
+            </div>
+            <p className="mt-2 text-sm text-stone-400">
+              {classItem?.name ?? "Class pending"} {member.paragon ? `• ${member.paragon}` : ""}
+            </p>
+          </div>
+        </div>
+        <div className="hidden rounded-2xl border border-white/8 bg-black/20 px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-stone-500 md:block">
+          {member.race || "Race pending"}
+        </div>
       </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <LoadoutCell label="Artifact" value={artifact?.name ?? "Missing artifact"} />
+        <LoadoutCell label="Companion" value={companion?.name ?? "Missing companion"} />
+        <LoadoutCell label="Mount" value={mountPower?.name ?? "Missing mount"} />
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        {companion?.role_tag ? <Badge variant="purple">{companion.role_tag}</Badge> : null}
+        {artifact?.category ? <Badge variant="gold">{artifact.category}</Badge> : null}
+        {mountPower?.damage_type ? <Badge variant="orange">{mountPower.damage_type}</Badge> : null}
+        {member.role === "support" ? <Badge variant="blue">Support contribution</Badge> : null}
+      </div>
+    </button>
+  );
+}
+
+function LoadoutCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">{label}</p>
+      <p className="mt-2 text-sm leading-6 text-stone-200">{value}</p>
     </div>
   );
+}
+
+function renderEditorTab(
+  editorTab: (typeof editorTabs)[number],
+  selectedMember: TeamMember,
+  updateMember: (memberId: string, patch: Partial<TeamMember>) => void,
+  updateCarry: (memberId: string) => void,
+) {
+  switch (editorTab) {
+    case "Identity":
+      return (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Field label="Label">
+            <Input
+              value={selectedMember.label}
+              onChange={(event) => updateMember(selectedMember.id, { label: event.target.value })}
+            />
+          </Field>
+          <Field label="Class">
+            <Select
+              value={selectedMember.class_id}
+              onChange={(event) => updateMember(selectedMember.id, { class_id: event.target.value })}
+            >
+              {classes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Role">
+            <Select
+              value={selectedMember.role}
+              onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
+            >
+              <option value="dps">DPS</option>
+              <option value="support">Support</option>
+              <option value="healer">Healer</option>
+              <option value="tank">Tank</option>
+            </Select>
+          </Field>
+          <Field label="Paragon / Path">
+            <Input
+              placeholder="Verified or working path"
+              value={selectedMember.paragon}
+              onChange={(event) => updateMember(selectedMember.id, { paragon: event.target.value })}
+            />
+          </Field>
+          <Field label="Race">
+            <Input
+              placeholder="Optional race"
+              value={selectedMember.race}
+              onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}
+            />
+          </Field>
+          <div className="space-y-2">
+            <span className="text-xs uppercase tracking-[0.18em] text-stone-500">Carry state</span>
+            <Button
+              className="w-full"
+              variant={selectedMember.is_carry ? "primary" : "secondary"}
+              onClick={() => updateCarry(selectedMember.id)}
+            >
+              {selectedMember.is_carry ? "Selected carry DPS" : "Mark as carry DPS"}
+            </Button>
+          </div>
+        </div>
+      );
+    case "Loadout":
+      return (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Field label="Artifact">
+            <Select
+              value={selectedMember.artifact_id}
+              onChange={(event) => updateMember(selectedMember.id, { artifact_id: event.target.value })}
+            >
+              {artifacts.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Companion Bonus">
+            <Select
+              value={selectedMember.companion_bonus_id}
+              onChange={(event) => updateMember(selectedMember.id, { companion_bonus_id: event.target.value })}
+            >
+              {companionBonuses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Mount Combat Power">
+            <Select
+              value={selectedMember.mount_combat_power_id}
+              onChange={(event) => updateMember(selectedMember.id, { mount_combat_power_id: event.target.value })}
+            >
+              {mountCombatPowers.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+      );
+    case "Companion":
+      return (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Field label="Companion">
+            <Select
+              value={selectedMember.companion_id}
+              onChange={(event) => updateMember(selectedMember.id, { companion_id: event.target.value })}
+            >
+              {companions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Enhancement">
+            <Select
+              value={selectedMember.enhancement_id}
+              onChange={(event) => updateMember(selectedMember.id, { enhancement_id: event.target.value })}
+            >
+              {companionEnhancements.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Support note</p>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              Companion records remain source-aware. Unresolved live values stay in the model instead of being guessed.
+            </p>
+          </div>
+        </div>
+      );
+    case "Mount":
+      return (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Field label="Mount Equip Power">
+            <Select
+              value={selectedMember.mount_equip_power_id}
+              onChange={(event) => updateMember(selectedMember.id, { mount_equip_power_id: event.target.value })}
+            >
+              <option value="">None</option>
+              {mountEquipPowers.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Insignia Bonus 1">
+            <Select
+              value={selectedMember.insignia_bonus_ids[0] ?? ""}
+              onChange={(event) =>
+                updateMember(selectedMember.id, {
+                  insignia_bonus_ids: [
+                    event.target.value,
+                    selectedMember.insignia_bonus_ids[1] ?? "",
+                    selectedMember.insignia_bonus_ids[2] ?? "",
+                  ],
+                })
+              }
+            >
+              {insigniaBonuses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Insignia Bonus 2">
+            <Select
+              value={selectedMember.insignia_bonus_ids[1] ?? ""}
+              onChange={(event) =>
+                updateMember(selectedMember.id, {
+                  insignia_bonus_ids: [
+                    selectedMember.insignia_bonus_ids[0] ?? "",
+                    event.target.value,
+                    selectedMember.insignia_bonus_ids[2] ?? "",
+                  ],
+                })
+              }
+            >
+              {insigniaBonuses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Insignia Bonus 3">
+            <Select
+              value={selectedMember.insignia_bonus_ids[2] ?? ""}
+              onChange={(event) =>
+                updateMember(selectedMember.id, {
+                  insignia_bonus_ids: [
+                    selectedMember.insignia_bonus_ids[0] ?? "",
+                    selectedMember.insignia_bonus_ids[1] ?? "",
+                    event.target.value,
+                  ],
+                })
+              }
+            >
+              {insigniaBonuses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+      );
+    case "Personal Buffs":
+      return (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {effectStats.map((stat) => (
+            <Field key={stat} label={`Personal ${titleCase(stat)}`}>
+              <Input
+                type="number"
+                step="0.01"
+                value={selectedMember.personal_overrides[stat] ?? ""}
+                onChange={(event) =>
+                  updateMember(selectedMember.id, {
+                    personal_overrides: {
+                      ...selectedMember.personal_overrides,
+                      [stat]: event.target.value === "" ? undefined : Number(event.target.value),
+                    },
+                  })
+                }
+              />
+            </Field>
+          ))}
+        </div>
+      );
+    case "Notes":
+      return (
+        <Field label="Notes">
+          <Textarea
+            placeholder="Rotation assumptions, uptime notes, unresolved live values..."
+            value={selectedMember.notes}
+            onChange={(event) => updateMember(selectedMember.id, { notes: event.target.value })}
+          />
+        </Field>
+      );
+    default:
+      return null;
+  }
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -732,3 +896,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
