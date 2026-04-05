@@ -27,11 +27,11 @@ function ShellLink({
       href={href}
       className={`flex items-center gap-4 border-l-2 px-6 py-3 text-[11px] uppercase tracking-[0.18em] transition ${
         active
-          ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--sky-blue)] shadow-[0_0_0_1px_var(--foreground)_inset]"
+          ? "border-[var(--foreground)] bg-[var(--foreground)] text-white shadow-[0_0_0_1px_var(--foreground)_inset]"
           : "border-transparent text-[var(--foreground)]/72 hover:bg-[var(--panel)] hover:text-[var(--foreground)]"
       }`}
     >
-      <Icon className={`h-4 w-4 ${active ? "text-[var(--sky-blue)]" : "text-[var(--foreground)]/58"}`} />
+      <Icon className={`h-4 w-4 ${active ? "text-white" : "text-[var(--foreground)]/58"}`} />
       <span>{label}</span>
     </Link>
   );
@@ -98,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 href="/"
                 className={`border px-3 py-2 text-xs uppercase tracking-[0.14em] transition ${
                   pathname === "/"
-                    ? "border-[var(--foreground)] bg-[var(--foreground)] font-semibold text-[var(--sky-blue)] shadow-[0_0_0_1px_var(--foreground)_inset]"
+                    ? "border-[var(--foreground)] bg-[var(--foreground)] font-semibold text-white shadow-[0_0_0_1px_var(--foreground)_inset]"
                     : "border-transparent text-[var(--foreground)]/66 hover:border-[var(--pastel-petal)] hover:bg-[var(--panel)] hover:text-[var(--foreground)]"
                 }`}
               >
@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 href="/team-builder"
                 className={`border px-3 py-2 text-xs uppercase tracking-[0.14em] transition ${
                   pathname === "/team-builder"
-                    ? "border-[var(--foreground)] bg-[var(--foreground)] font-semibold text-[var(--sky-blue)] shadow-[0_0_0_1px_var(--foreground)_inset]"
+                    ? "border-[var(--foreground)] bg-[var(--foreground)] font-semibold text-white shadow-[0_0_0_1px_var(--foreground)_inset]"
                     : "border-transparent text-[var(--foreground)]/66 hover:border-[var(--pastel-petal)] hover:bg-[var(--panel)] hover:text-[var(--foreground)]"
                 }`}
               >
@@ -132,7 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 type="submit"
                 aria-label="Run search"
-                className="flex h-8 min-w-[112px] items-center justify-center gap-2 border border-[var(--thistle)] bg-[var(--thistle)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--sky-blue)] transition hover:border-[var(--pastel-petal)] hover:bg-[var(--pastel-petal)]"
+                className="flex h-8 min-w-[112px] items-center justify-center gap-2 border border-[var(--thistle)] bg-[var(--thistle)] px-3 text-[10px] uppercase tracking-[0.18em] text-white transition hover:border-[var(--pastel-petal)] hover:bg-[var(--pastel-petal)] hover:text-white"
               >
                 Search
                 <ArrowRight className="h-3.5 w-3.5" />

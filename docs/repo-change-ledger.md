@@ -2219,6 +2219,33 @@ Result:
 - `npm run build` passed.
 - `npm run lint` reports no production app errors; only existing warnings from temporary scratch files remain.
 
+## Pass 28 - Switched dark-blue active states to white inner text
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `components/layout/app-shell.tsx`
+- `components/ui/button.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Updated the shell active-state treatment so dark blue filled nav items now use white text and white icons.
+- Updated the top navigation active state to use white text inside the filled dark blue tab.
+- Updated the primary button variant to use white text on dark blue fills.
+- Updated the header search submit button to use white text on the filled dark blue state.
+
+Why:
+
+- The user explicitly wanted the inner content of blue active states to be white for clarity and contrast.
+
+Notes:
+
+- This pass only changes the filled dark-blue active states and primary CTA treatment. It does not change the broader palette or the role-setup logic from the previous pass.
+
 ## Pass 27 - Fixed active-state contrast and preserved standard trial role counts in auto setup
 
 Date:
