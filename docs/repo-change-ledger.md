@@ -1945,3 +1945,58 @@ Result:
 
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
+## Pass 25 - Reflowed Team Builder into a full-width top-first composition layout
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `components/layout/app-shell.tsx`
+- `components/content-page.tsx`
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Removed the remaining shell width cap for the app layout so the UI can use the full viewport width instead of stopping at a desktop max-width too early.
+- Updated page padding in the shell and content pages to scale more naturally by breakpoint rather than depending on a narrower centered container.
+- Reworked Team Builder into a single full-width flow instead of a main column plus summary sidebar.
+- Kept `Group A` and `Group B` at the top of the Team Builder so the roster view stays the first thing the user sees.
+- Moved the summaries into a dedicated lower summary section.
+- Rebuilt that summary section into the layout the user asked for:
+  - `Saved Builds` spans full width at the top of the summary block
+  - `Boss Debuffs` and `Team Buffs` render as a 2-column row
+  - `Carry Summary` and `Mount Hit Calculator` render as a 2-column row below
+- Preserved responsive wrapping so the summary section collapses to one column on smaller widths instead of creating broken or cramped layouts.
+
+Why:
+
+- The previous Team Builder still behaved like a sidebar-driven page, which kept important summary cards competing for the same upper viewport space as the main roster.
+- The user explicitly wanted:
+  - Group A and Group B on top
+  - two-column summary rows below
+  - full viewport usage
+- This pass makes the layout hierarchy clearer:
+  - controls
+  - groups
+  - selected slot and loadout
+  - summaries
+
+Notes:
+
+- A few older text-encoding artifacts still remain in Team Builder strings and should be normalized in a later cleanup pass, but they do not affect functionality.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.

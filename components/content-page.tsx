@@ -21,7 +21,7 @@ export function ContentPage({
   metadata?: SourceMetadata;
 }) {
   return (
-    <div className="grid gap-8 px-5 py-8 md:px-8 xl:py-10 3xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid w-full gap-8 px-4 py-8 md:px-6 xl:px-8 xl:py-10 3xl:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0 space-y-8">
         <Card className="bg-[rgba(255,255,255,0.015)]">
           <CardHeader className="space-y-5 p-8">

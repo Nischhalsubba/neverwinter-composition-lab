@@ -926,7 +926,7 @@ export function TeamBuilderPage() {
 
   if (!mode) {
     return (
-      <div className="mx-auto max-w-[var(--layout-max)] space-y-8 px-5 py-8 md:px-8 xl:py-10">
+      <div className="w-full space-y-8 px-4 py-8 md:px-6 xl:px-8 2xl:px-10 xl:py-10">
         <Card>
           <CardHeader>
             <p className="text-[10px] uppercase tracking-[0.22em] text-white/58">Professional architect</p>
@@ -961,7 +961,7 @@ export function TeamBuilderPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[var(--layout-max)] space-y-8 px-5 py-8 md:px-8 xl:py-10">
+    <div className="w-full space-y-8 px-4 py-8 md:px-6 xl:px-8 2xl:px-10 xl:py-10">
       <section className="border-b border-[var(--border)] pb-6">
         <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-end 2xl:justify-between">
           <div className="space-y-3">
@@ -1036,7 +1036,7 @@ export function TeamBuilderPage() {
           </CardContent>
         </Card>
 
-      <div className="grid gap-8 3xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="space-y-8">
         <div className="space-y-8">
           <div className={`grid gap-6 ${mode === "trial" ? "2xl:grid-cols-2" : "2xl:grid-cols-[minmax(0,1fr)_360px]"}`}>
             <ArchitectGroupCard
@@ -1491,8 +1491,8 @@ export function TeamBuilderPage() {
         </div>
       </div>
 
-        <div className="order-first space-y-6 3xl:order-none 3xl:sticky 3xl:top-28 3xl:self-start">
-          <Card>
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card className="xl:col-span-2">
             <CardHeader>
               <CardTitle>Saved Builds</CardTitle>
               <CardDescription>Builds are stored locally in this browser so you can save and reload working setups.</CardDescription>

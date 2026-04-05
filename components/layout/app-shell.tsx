@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-[var(--background)] text-white">
       <header className="fixed inset-x-0 top-0 z-40 h-[72px] border-b border-[var(--border)] bg-[var(--background)]">
-        <div className="mx-auto flex h-full max-w-[var(--layout-max)] items-center justify-between px-5 md:px-8">
+        <div className="flex h-full w-full items-center justify-between px-4 md:px-6 xl:px-8 2xl:px-10">
           <div className="flex items-center gap-10">
             <Link href="/" className="text-xl font-semibold uppercase tracking-[-0.05em] text-white">
               Neverwinter Lab
@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <div className="mx-auto grid min-h-screen max-w-[var(--layout-max)] grid-cols-1 pt-[72px] lg:grid-cols-[248px_minmax(0,1fr)]">
+      <div className="grid min-h-screen w-full grid-cols-1 pt-[72px] lg:grid-cols-[248px_minmax(0,1fr)]">
         <aside className="hidden min-h-[calc(100vh-72px)] border-r border-[var(--border)] bg-[rgba(255,255,255,0.015)] lg:flex lg:flex-col">
           <div className="border-b border-[var(--border)] px-6 py-6">
             <div className="flex items-center gap-4">
