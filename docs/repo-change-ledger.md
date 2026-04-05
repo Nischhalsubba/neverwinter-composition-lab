@@ -2469,6 +2469,66 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 31 - Tightened the remaining surface styling to the approved five-color palette
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/globals.css`
+- `components/ui/button.tsx`
+- `components/ui/badge.tsx`
+- `components/ui/card.tsx`
+- `components/content-page.tsx`
+- `components/loading-state.tsx`
+- `components/layout/app-shell.tsx`
+- `app/buffs-debuffs/page.tsx`
+- `app/companions/page.tsx`
+- `app/mounts/page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Replaced the remaining generic white/black surface overlays and shell fills with palette-driven surfaces built from:
+  - `#CDB4DB`
+  - `#FFC8DD`
+  - `#FFAFCC`
+  - `#BDE0FE`
+  - `#A2D2FF`
+- Normalized shared button and badge variants so their fills and borders now come only from the approved palette tokens.
+- Moved shared card shadow styling away from generic black-heavy shadows toward a lighter palette-based shadow treatment.
+- Replaced the remaining low-value route card backgrounds in:
+  - buffs and debuffs
+  - companions
+  - mounts
+  with the shared palette surface token.
+- Updated the shell background overlays and desktop rail surface so the app chrome no longer drifts back into generic white overlays.
+
+Why:
+
+- The user explicitly called out that the app was still using colors outside the approved palette.
+- The earlier theme cleanup fixed the main tokens, but several route cards and shell overlays were still relying on generic white/black utility fills.
+- This pass pulls those remaining surfaces back into the same visual system so the app reads as one designed product instead of a partially themed prototype.
+
+Notes:
+
+- Black and white are still retained for core readability and contrast in text and base dark-mode structure.
+- The palette restriction in this pass is focused on frontend surfaces, borders, fills, and UI chrome rather than eliminating readable text contrast.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 28 - Upgraded build export to formatted Excel and locked Team Builder into a true 2-column layout
 
 Date:

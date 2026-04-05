@@ -21,7 +21,7 @@ export default function Page() {
           </CardHeader>
           <CardContent className="space-y-3">
             {mounts.map((mount) => (
-              <div key={mount.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
+              <div key={mount.id} className="border border-[var(--border)] bg-[var(--surface)] p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link href={`/reference/mounts/${mount.id}`} className="text-sm font-medium text-white hover:text-white/84">
                     {mount.name}
@@ -43,7 +43,7 @@ export default function Page() {
           </CardHeader>
           <CardContent className="space-y-3">
             {mountCombatPowers.map((power) => (
-              <div key={power.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
+              <div key={power.id} className="border border-[var(--border)] bg-[var(--surface)] p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link href={`/reference/mounts/${power.id}`} className="text-sm font-medium text-white hover:text-white/84">
                     {power.name}

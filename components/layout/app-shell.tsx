@@ -134,7 +134,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="min-h-screen w-full pt-[72px] lg:pl-[248px]">
         {mobileMenuOpen ? (
-          <div className="fixed inset-0 top-[72px] z-30 bg-[rgba(0,0,0,0.72)] lg:hidden" onClick={() => setMobileMenuOpen(false)}>
+          <div className="fixed inset-0 top-[72px] z-30 bg-[rgba(205,180,219,0.32)] lg:hidden" onClick={() => setMobileMenuOpen(false)}>
             <aside
               className="h-full w-[88vw] max-w-[360px] overflow-y-auto border-r border-[var(--border)] bg-[var(--background)]"
               onClick={(event) => event.stopPropagation()}
@@ -199,7 +199,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         ) : null}
 
-        <aside className="hidden lg:fixed lg:inset-y-[72px] lg:left-0 lg:flex lg:w-[248px] lg:flex-col lg:overflow-hidden lg:border-r lg:border-[var(--border)] lg:bg-[rgba(255,255,255,0.015)]">
+        <aside className="hidden lg:fixed lg:inset-y-[72px] lg:left-0 lg:flex lg:w-[248px] lg:flex-col lg:overflow-hidden lg:border-r lg:border-[var(--border)] lg:bg-[var(--surface)]">
           <div className="border-b border-[var(--border)] px-6 py-6">
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[var(--panel)]">

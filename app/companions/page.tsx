@@ -44,7 +44,7 @@ export default function Page() {
               {recommendedCompanions.map((companion) => {
                 const recommendation = companionRecommendationsById[companion.id];
                 return (
-                  <div key={companion.id} className="border border-white/10 bg-white/[0.03] p-4">
+                  <div key={companion.id} className="border border-[var(--border)] bg-[var(--surface)] p-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <Link href={`/reference/companions/${companion.id}`} className="text-sm font-medium text-white hover:text-white/84">
                         {companion.name}
@@ -79,7 +79,7 @@ export default function Page() {
               />
               <div className="grid gap-3">
                 {companionPowerSnapshots.slice(0, 48).map((item) => (
-                  <div key={item.name} className="border border-white/10 bg-white/[0.03] p-4">
+                  <div key={item.name} className="border border-[var(--border)] bg-[var(--surface)] p-4">
                     <div className="flex flex-wrap gap-2">
                       {item.roles.map((role) => (
                         <Badge key={role} variant="blue">
@@ -116,7 +116,7 @@ export default function Page() {
                 {companionEnhancementSnapshots.map((item) => {
                   const recommendation = Object.values(enhancementRecommendationsById).find((entry) => entry?.name === item.name);
                   return (
-                    <div key={item.name} className="border border-white/10 bg-white/[0.03] p-4">
+                    <div key={item.name} className="border border-[var(--border)] bg-[var(--surface)] p-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link href={`/reference/enhancements/${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`} className="text-sm font-medium text-white hover:text-white/84">
                           {item.name}

@@ -23,7 +23,7 @@ export function ContentPage({
   return (
     <div className="grid w-full gap-8 px-4 py-8 md:px-6 xl:px-8 xl:py-10 3xl:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0 space-y-8">
-        <Card className="bg-[rgba(255,255,255,0.015)]">
+        <Card className="bg-[var(--surface)]">
           <CardHeader className="space-y-5 p-8">
             <div className="flex flex-wrap items-center gap-3">
               <Badge variant="teal">{eyebrow}</Badge>

@@ -11,9 +11,9 @@ const buttonVariants = cva(
         primary:
           "border-[var(--sky-blue)] bg-[var(--sky-blue)] text-black hover:bg-[var(--icy-blue)]",
         secondary:
-          "border-[var(--thistle)] bg-[rgba(205,180,219,0.18)] text-white hover:bg-[rgba(205,180,219,0.28)]",
+          "border-[var(--thistle)] bg-[rgba(205,180,219,0.18)] text-black hover:bg-[rgba(205,180,219,0.28)]",
         ghost:
-          "border-[var(--pastel-petal)] bg-transparent text-white hover:bg-[rgba(255,200,221,0.16)]",
+          "border-[var(--pastel-petal)] bg-transparent text-black hover:bg-[rgba(255,200,221,0.16)]",
         danger:
           "border-[var(--baby-pink)] bg-[var(--baby-pink)] text-black hover:bg-[var(--pastel-petal)]",
       },

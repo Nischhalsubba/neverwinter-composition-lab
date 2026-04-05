@@ -7,7 +7,7 @@
   --icy-blue: #bde0fe;
   --sky-blue: #a2d2ff;
   --layout-max: 1920px;
-  --background: #050508;
+  --background: #000000;
   --foreground: #ffffff;
   --surface: rgba(205, 180, 219, 0.08);
   --surface-2: rgba(162, 210, 255, 0.08);
@@ -26,7 +26,7 @@
   --radius-chip: 0px;
   --radius-card: 0px;
   --radius-panel: 0px;
-  --shadow-panel: 0 16px 40px rgba(0, 0, 0, 0.3);
+  --shadow-panel: 0 16px 40px rgba(162, 210, 255, 0.18);
 }
 
 @theme inline {
