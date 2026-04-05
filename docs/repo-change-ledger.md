@@ -2026,6 +2026,76 @@ Result:
 - `npm run build` passed.
 - `npm run lint` passed for production app code and still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 27 - Added build export/import and moved active slot tools into a fixed right rail
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `lib/team-build-storage.ts`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Added a versioned shared build payload format in `lib/team-build-storage.ts`:
+  - schema id: `neverwinter-composition-lab-build`
+  - version: `1`
+  - includes mode, trial preset, boss preset, build name, and all team members
+- Added exact-build JSON export from Team Builder using that shared payload format.
+- Added JSON import support so a shared exported build can be loaded directly into the app and saved into local saved builds.
+- Added Excel-friendly CSV export from Team Builder:
+  - one row per team member
+  - includes build metadata plus all selected slot ids and loadout ids
+  - intended to open cleanly in Excel or Sheets
+- Added top-bar Team Builder actions for:
+  - `Save build`
+  - `Export CSV`
+  - `Export JSON`
+  - `Import build`
+- Added inline import error handling so invalid files do not fail silently.
+- Reworked the Team Builder layout so the active slot workflow is no longer buried in the main page:
+  - the older in-page selected-slot and power-loadout blocks were hidden
+  - a new fixed right rail now shows:
+    - selected slot setup
+    - per-slot resolved boss / team / personal effects
+    - power loadout controls
+- Made the right rail fit inside the viewport height and become internally scrollable when needed.
+- Widened the left-side inspector drawer from `440px` to `520px` to reduce control cramping.
+- Changed the lower summary area to the requested 4-column layout for:
+  - Boss Debuffs
+  - Team Buffs
+  - Carry Summary
+  - Mount Hit Calculator
+
+Why:
+
+- The user wanted a practical way to share builds with friends and reopen them exactly inside the app.
+- CSV satisfies the spreadsheet/export requirement without adding a backend or a new package.
+- JSON provides the exact universal import/export format for full-fidelity setup exchange.
+- The active slot tools were too easy to miss in the scrolling main flow, so moving them into a fixed right rail keeps them visible while the user reviews Group A and Group B.
+- The wider left drawer reduces compression in the expanded slot editor.
+
+Notes:
+
+- CSV export is for Excel/Sheets compatibility.
+- JSON import/export is the canonical exact-share format between users of this app.
+- Lint warnings remain limited to temporary scratch files under `tmp_*`, not the production app files updated in this pass.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 25 - Reflowed Team Builder into a full-width top-first composition layout
 
 Date:

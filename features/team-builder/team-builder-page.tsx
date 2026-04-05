@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
-import { Calculator, ExternalLink, ImageOff, Save, Search, Swords, Target, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Calculator, Download, ExternalLink, ImageOff, Import, Save, Search, Swords, Target, Trash2, X } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { SummaryPanel } from "@/components/summary-panel";
@@ -34,7 +34,14 @@ import {
 } from "@/data/game-data";
 import { sanitizeUiText } from "@/lib/display-text";
 import { calculateMountHit, collectMemberEffects, summarizeTeam } from "@/lib/effect-engine";
-import { deleteSavedBuild, readSavedBuilds, type SavedTeamBuild, upsertSavedBuild } from "@/lib/team-build-storage";
+import {
+  createSharedBuildPayload,
+  deleteSavedBuild,
+  parseSharedBuildPayload,
+  readSavedBuilds,
+  type SavedTeamBuild,
+  upsertSavedBuild,
+} from "@/lib/team-build-storage";
 import type { EffectDefinition, TeamMember, TeamMode } from "@/lib/types";
 import { formatPercent, titleCase } from "@/lib/utils";
 
@@ -497,7 +504,91 @@ function getPickerLabel(kind: PickerKind) {
   }
 }
 
+function escapeCsvValue(value: string | number | boolean | null | undefined) {
+  const text = String(value ?? "");
+  if (text.includes(",") || text.includes('"') || text.includes("\n")) {
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+
+  return text;
+}
+
+function downloadTextFile(filename: string, content: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function buildExportCsv(
+  build: Pick<SavedTeamBuild, "name" | "mode" | "trialPreset" | "bossId" | "teamMembers">,
+) {
+  const headers = [
+    "Build Name",
+    "Mode",
+    "Trial Preset",
+    "Boss Id",
+    "Group",
+    "Slot",
+    "Player Name",
+    "Class Id",
+    "Paragon",
+    "Race",
+    "Role",
+    "Artifact Id",
+    "Companion Id",
+    "Enhancement Id",
+    "Companion Bonus Id",
+    "Mount Id",
+    "Mount Combat Power Id",
+    "Mount Equip Power Id",
+    "Insignia Bonus Ids",
+    "Encounter Ids",
+    "Daily Ids",
+    "Feature Ids",
+    "Carry",
+    "Notes",
+  ];
+
+  const rows = build.teamMembers.map((member) =>
+    [
+      build.name,
+      build.mode,
+      build.trialPreset,
+      build.bossId,
+      member.group,
+      member.slot,
+      member.label,
+      member.class_id,
+      member.paragon,
+      member.race,
+      member.role,
+      member.artifact_id,
+      member.companion_id,
+      member.enhancement_id,
+      member.companion_bonus_id,
+      member.mount_id,
+      member.mount_combat_power_id,
+      member.mount_equip_power_id,
+      member.insignia_bonus_ids.join("|"),
+      member.encounter_ids.join("|"),
+      member.daily_ids.join("|"),
+      member.feature_ids.join("|"),
+      member.is_carry,
+      member.notes,
+    ]
+      .map(escapeCsvValue)
+      .join(","),
+  );
+
+  return [headers.map(escapeCsvValue).join(","), ...rows].join("\n");
+}
+
 export function TeamBuilderPage() {
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const [mode, setMode] = useState<TeamMode | null>(null);
   const [trialPreset, setTrialPreset] = useState<TrialCompositionPreset>("standard");
   const [bossId, setBossId] = useState(bossPresets[0]?.id ?? "");
@@ -511,6 +602,7 @@ export function TeamBuilderPage() {
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
   const [pickerFilter, setPickerFilter] = useState("all");
+  const [importError, setImportError] = useState("");
   const [mountBaseHitOverride, setMountBaseHitOverride] = useState(1000000);
   const [critAssumption, setCritAssumption] = useState(0.5);
   const [caAssumption, setCaAssumption] = useState(0.5);
@@ -638,15 +730,20 @@ export function TeamBuilderPage() {
     setBuildName(savedBuild.name);
   }
 
-  function loadSavedBuild(build: SavedTeamBuild) {
+  function applyLoadedBuild(build: Pick<SavedTeamBuild, "name" | "mode" | "trialPreset" | "bossId" | "teamMembers">, savedId = "") {
     setMode(build.mode);
     setTrialPreset(build.trialPreset);
     setBossId(build.bossId);
     setTeamMembers(build.teamMembers);
     setSelectedMemberId(build.teamMembers[0]?.id ?? "");
-    setActiveSavedBuildId(build.id);
+    setActiveSavedBuildId(savedId);
     setBuildName(build.name);
     setInspectorOpen(false);
+    setImportError("");
+  }
+
+  function loadSavedBuild(build: SavedTeamBuild) {
+    applyLoadedBuild(build, build.id);
   }
 
   function removeSavedBuild(buildId: string) {
@@ -657,6 +754,68 @@ export function TeamBuilderPage() {
       setActiveSavedBuildId("");
       setBuildName("");
     }
+  }
+
+  function exportCurrentBuildJson() {
+    if (!mode) {
+      return;
+    }
+
+    const payload = createSharedBuildPayload({
+      name: buildName.trim() || `${mode === "trial" ? "Trial" : "Dungeon"} build`,
+      mode,
+      trialPreset,
+      bossId,
+      teamMembers,
+    });
+
+    downloadTextFile(
+      `${payload.build.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "team-build"}.nwlab.json`,
+      JSON.stringify(payload, null, 2),
+      "application/json",
+    );
+  }
+
+  function exportCurrentBuildCsv() {
+    if (!mode) {
+      return;
+    }
+
+    const name = buildName.trim() || `${mode === "trial" ? "Trial" : "Dungeon"} build`;
+    const csv = buildExportCsv({
+      name,
+      mode,
+      trialPreset,
+      bossId,
+      teamMembers,
+    });
+
+    downloadTextFile(
+      `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "team-build"}.csv`,
+      csv,
+      "text/csv;charset=utf-8",
+    );
+  }
+
+  async function importBuildFile(file: File) {
+    const raw = await file.text();
+    const payload = parseSharedBuildPayload(raw);
+
+    if (!payload) {
+      setImportError("Import failed. Use a Neverwinter Lab shared JSON build export.");
+      return;
+    }
+
+    const importedBuild = upsertSavedBuild({
+      name: payload.build.name,
+      mode: payload.build.mode,
+      trialPreset: payload.build.trialPreset,
+      bossId: payload.build.bossId,
+      teamMembers: payload.build.teamMembers,
+    });
+
+    setSavedBuilds(readSavedBuilds());
+    applyLoadedBuild(importedBuild, importedBuild.id);
   }
 
   function updateMember(memberId: string, patch: Partial<TeamMember>) {
@@ -961,7 +1120,7 @@ export function TeamBuilderPage() {
   }
 
   return (
-    <div className="w-full space-y-8 px-4 py-8 md:px-6 xl:px-8 2xl:px-10 xl:py-10">
+    <div className="w-full space-y-8 px-4 py-8 md:px-6 xl:px-8 2xl:px-10 xl:py-10 3xl:pr-[452px]">
       <section className="border-b border-[var(--border)] pb-6">
         <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-end 2xl:justify-between">
           <div className="space-y-3">
@@ -984,7 +1143,7 @@ export function TeamBuilderPage() {
         </div>
       </section>
         <Card>
-          <CardContent className="grid gap-4 md:grid-cols-2 2xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)] 3xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)_minmax(220px,1fr)_auto]">
+          <CardContent className="grid gap-4 md:grid-cols-2 2xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)_minmax(220px,1fr)] 3xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)_minmax(220px,1fr)_auto]">
             <div className="flex flex-wrap gap-2 md:col-span-2 2xl:col-span-2 3xl:col-span-1">
               <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
                 Dungeon
@@ -1027,13 +1186,51 @@ export function TeamBuilderPage() {
                 placeholder="Name this setup"
               />
             </Field>
-            <div className="flex items-end md:col-span-2 3xl:col-span-1">
+            <div className="grid gap-3 md:col-span-2 3xl:col-span-1">
               <Button variant="primary" className="w-full" onClick={saveCurrentBuild}>
                 <Save className="mr-2 h-4 w-4" />
                 Save build
               </Button>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Button variant="secondary" className="w-full" onClick={exportCurrentBuildCsv}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export CSV
+                </Button>
+                <Button variant="secondary" className="w-full" onClick={exportCurrentBuildJson}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export JSON
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => importInputRef.current?.click()}
+                >
+                  <Import className="mr-2 h-4 w-4" />
+                  Import build
+                </Button>
+              </div>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".json,.nwlab.json,application/json"
+                className="hidden"
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) {
+                    return;
+                  }
+
+                  await importBuildFile(file);
+                  event.target.value = "";
+                }}
+              />
             </div>
           </CardContent>
+          {importError ? (
+            <div className="border-t border-[var(--border)] px-6 pb-6 pt-4 text-sm text-[var(--baby-pink)]">
+              {importError}
+            </div>
+          ) : null}
         </Card>
 
       <div className="space-y-8">
@@ -1080,7 +1277,7 @@ export function TeamBuilderPage() {
             )}
           </div>
 
-          <div className="space-y-6">
+          <div className="hidden space-y-6">
           {selectedMember ? (
             <>
               <Card>
@@ -1491,8 +1688,8 @@ export function TeamBuilderPage() {
         </div>
       </div>
 
-        <div className="grid gap-6 xl:grid-cols-2">
-          <Card className="xl:col-span-2">
+        <div className="grid gap-6 2xl:grid-cols-4">
+          <Card className="2xl:col-span-4">
             <CardHeader>
               <CardTitle>Saved Builds</CardTitle>
               <CardDescription>Builds are stored locally in this browser so you can save and reload working setups.</CardDescription>
@@ -1645,6 +1842,51 @@ export function TeamBuilderPage() {
           </Card>
         </div>
       </div>
+
+      {selectedMember ? (
+        <aside className="space-y-6 3xl:fixed 3xl:right-6 3xl:top-[96px] 3xl:w-[420px] 3xl:max-h-[calc(100vh-112px)] 3xl:overflow-y-auto 3xl:pr-1">
+          <SelectedSlotSidebarCard
+            member={selectedMember}
+            selectedClass={selectedClass}
+            raceOptions={raceOptions}
+            roleOptions={roleOptions}
+            onOpenInspector={() => setInspectorOpen(true)}
+            onClassChange={handleClassChange}
+            onParagonChange={handleParagonChange}
+            onUpdateMember={updateMember}
+            onUpdateCarry={updateCarry}
+            onOpenPicker={openPicker}
+          />
+          <div className="grid gap-4">
+            <MemberEffectPanel
+              title="Boss debuffs from this slot"
+              effects={selectedMemberEffects.boss}
+              emptyLabel="No resolved boss debuffs on this slot yet."
+            />
+            <MemberEffectPanel
+              title="Team buffs from this slot"
+              effects={selectedMemberEffects.team}
+              emptyLabel="No resolved team buffs on this slot yet."
+            />
+            <MemberEffectPanel
+              title="Personal or carry effects"
+              effects={selectedMemberEffects.personal}
+              hiddenCount={selectedMemberEffects.hiddenCount}
+              emptyLabel="No resolved personal or carry effects on this slot yet."
+            />
+          </div>
+          <PowerLoadoutSidebarCard
+            member={selectedMember}
+            selectedClass={selectedClass}
+            classEncounters={classEncounters}
+            classDailies={classDailies}
+            classFeatures={classFeatures}
+            recommendedDebuffEncounters={recommendedDebuffEncounters}
+            onUpdateMember={updateMember}
+            onAssignEncounter={assignEncounter}
+          />
+        </aside>
+      ) : null}
 
       {autoSetupOpen ? (
         <AutoSetupOverlay
@@ -1927,7 +2169,7 @@ function MemberInspectorDrawer({
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-[rgba(9,6,13,0.44)]">
-      <div className="absolute inset-y-0 left-0 w-full max-w-[440px] overflow-y-auto border-r border-[var(--border)] bg-[var(--background)] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+      <div className="absolute inset-y-0 left-0 w-full max-w-[520px] overflow-y-auto border-r border-[var(--border)] bg-[var(--background)] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
         <div className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--background)] px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -2123,7 +2365,7 @@ function MemberInspectorDrawer({
           />
         </div>
       </div>
-      <button type="button" aria-label="Close inspector" onClick={onClose} className="absolute inset-0 left-[440px]" />
+      <button type="button" aria-label="Close inspector" onClick={onClose} className="absolute inset-0 left-[520px]" />
     </div>
   );
 }
@@ -2317,5 +2559,363 @@ function AutoSetupOverlay({
         </div>
       </div>
     </div>
+  );
+}
+
+function SelectedSlotSidebarCard({
+  member,
+  selectedClass,
+  raceOptions,
+  roleOptions,
+  onOpenInspector,
+  onClassChange,
+  onParagonChange,
+  onUpdateMember,
+  onUpdateCarry,
+  onOpenPicker,
+}: {
+  member: TeamMember;
+  selectedClass?: (typeof classes)[number];
+  raceOptions: readonly string[];
+  roleOptions: readonly { value: string; label: string }[];
+  onOpenInspector: () => void;
+  onClassChange: (memberId: string, classId: string) => void;
+  onParagonChange: (memberId: string, paragon: string) => void;
+  onUpdateMember: (memberId: string, patch: Partial<TeamMember>) => void;
+  onUpdateCarry: (memberId: string) => void;
+  onOpenPicker: (memberId: string, kind: PickerKind) => void;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <SelectionThumb
+              imageUrl={getClassImage(member.class_id)}
+              label={getMemberDisplayName(member)}
+              badgeText={getParagonBadge(member)}
+            />
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">
+                Selected slot {member.group}-{member.slot}
+              </p>
+              <CardTitle className="mt-2">{getMemberDisplayName(member)}</CardTitle>
+              <CardDescription>{getMemberTitle(member)}</CardDescription>
+            </div>
+          </div>
+          {member.is_carry ? <Badge variant="teal">Carry</Badge> : <Badge variant="muted">{formatRoleLabel(member.role)}</Badge>}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Field label="Player name">
+          <Input
+            value={member.label}
+            onChange={(event) => onUpdateMember(member.id, { label: event.target.value })}
+            placeholder={`Player ${member.slot}`}
+          />
+        </Field>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <Field label="Class">
+            <Select value={member.class_id} onChange={(event) => onClassChange(member.id, event.target.value)}>
+              <option value="">Select class</option>
+              {classes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Paragon">
+            <Select value={member.paragon} onChange={(event) => onParagonChange(member.id, event.target.value)}>
+              <option value="">{selectedClass ? "Select paragon" : "Select class first"}</option>
+              {(selectedClass?.paragon_options ?? []).map((paragon) => (
+                <option key={paragon} value={paragon}>
+                  {paragon}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Role">
+            <Select
+              value={member.role}
+              onChange={(event) => onUpdateMember(member.id, { role: event.target.value as TeamMember["role"] })}
+            >
+              {roleOptions.map((role) => (
+                <option key={role.value} value={role.value}>
+                  {role.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Race">
+            <Select value={member.race} onChange={(event) => onUpdateMember(member.id, { race: event.target.value })}>
+              <option value="">Select race</option>
+              {raceOptions.map((race) => (
+                <option key={race} value={race}>
+                  {race}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+        <div className="grid gap-4">
+          <Field label="Artifact">
+            <PickerField
+              title={artifacts.find((item) => item.id === member.artifact_id)?.name ?? "Select artifact"}
+              subtitle="Ranked artifact list"
+              imageUrl={artifacts.find((item) => item.id === member.artifact_id)?.image_url}
+              onClick={() => onOpenPicker(member.id, "artifact")}
+            />
+          </Field>
+          <Field label="Companion">
+            <PickerField
+              title={companions.find((item) => item.id === member.companion_id)?.name ?? "Select companion"}
+              subtitle="Support and damage companions"
+              imageLabel={companions.find((item) => item.id === member.companion_id)?.name ?? "Companion"}
+              onClick={() => onOpenPicker(member.id, "companion")}
+            />
+          </Field>
+          <Field label="Enhancement">
+            <PickerField
+              title={companionEnhancements.find((item) => item.id === member.enhancement_id)?.name ?? "Select enhancement"}
+              subtitle="Only proven values shown"
+              imageLabel={companionEnhancements.find((item) => item.id === member.enhancement_id)?.name ?? "Enhancement"}
+              onClick={() => onOpenPicker(member.id, "enhancement")}
+            />
+          </Field>
+          <Field label="Mount combat power">
+            <PickerField
+              title={mountCombatPowers.find((item) => item.id === member.mount_combat_power_id)?.name ?? "Select mount"}
+              subtitle="Support or damage mount power"
+              imageLabel={mountCombatPowers.find((item) => item.id === member.mount_combat_power_id)?.name ?? "Mount"}
+              onClick={() => onOpenPicker(member.id, "mount")}
+            />
+          </Field>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant={member.is_carry ? "primary" : "secondary"} onClick={() => onUpdateCarry(member.id)}>
+            {member.is_carry ? "Selected carry" : "Mark as carry"}
+          </Button>
+          <Button variant="ghost" onClick={onOpenInspector}>
+            Open full editor
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PowerLoadoutSidebarCard({
+  member,
+  selectedClass,
+  classEncounters,
+  classDailies,
+  classFeatures,
+  recommendedDebuffEncounters,
+  onUpdateMember,
+  onAssignEncounter,
+}: {
+  member: TeamMember;
+  selectedClass?: (typeof classes)[number];
+  classEncounters: typeof powers;
+  classDailies: typeof powers;
+  classFeatures: typeof powers;
+  recommendedDebuffEncounters: typeof powers;
+  onUpdateMember: (memberId: string, patch: Partial<TeamMember>) => void;
+  onAssignEncounter: (memberId: string, powerId: string) => void;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Power Loadout</CardTitle>
+        <CardDescription>
+          {selectedClass
+            ? "Adjust encounters, daily, features, companion bonus, mount equip, insignias, and notes."
+            : "Select a class and paragon first."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/60">Recommended debuff encounters</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {recommendedDebuffEncounters.length > 0 ? (
+              recommendedDebuffEncounters.map((power) => {
+                const active = member.encounter_ids.includes(power.id);
+                return (
+                  <button
+                    key={power.id}
+                    type="button"
+                    onClick={() => onAssignEncounter(member.id, power.id)}
+                    className={`border px-3 py-2 text-xs uppercase tracking-[0.12em] ${
+                      active
+                        ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
+                        : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-white/78"
+                    }`}
+                  >
+                    {power.name}
+                  </button>
+                );
+              })
+            ) : (
+              <p className="text-sm text-white/68">
+                {selectedClass ? "No mapped debuff encounters for this class and paragon." : "Select class and paragon first."}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="grid gap-4">
+          <Field label="Encounter 1">
+            <Select
+              value={member.encounter_ids[0] ?? ""}
+              onChange={(event) =>
+                onUpdateMember(member.id, {
+                  encounter_ids: [event.target.value, member.encounter_ids[1] ?? "", member.encounter_ids[2] ?? ""].filter(Boolean),
+                })
+              }
+            >
+              <option value="">{selectedClass ? "Select encounter" : "Select class first"}</option>
+              {classEncounters.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Encounter 2">
+            <Select
+              value={member.encounter_ids[1] ?? ""}
+              onChange={(event) =>
+                onUpdateMember(member.id, {
+                  encounter_ids: [member.encounter_ids[0] ?? "", event.target.value, member.encounter_ids[2] ?? ""].filter(Boolean),
+                })
+              }
+            >
+              <option value="">{selectedClass ? "Select encounter" : "Select class first"}</option>
+              {classEncounters.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Encounter 3">
+            <Select
+              value={member.encounter_ids[2] ?? ""}
+              onChange={(event) =>
+                onUpdateMember(member.id, {
+                  encounter_ids: [member.encounter_ids[0] ?? "", member.encounter_ids[1] ?? "", event.target.value].filter(Boolean),
+                })
+              }
+            >
+              <option value="">{selectedClass ? "Select encounter" : "Select class first"}</option>
+              {classEncounters.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Daily">
+            <Select
+              value={member.daily_ids[0] ?? ""}
+              onChange={(event) => onUpdateMember(member.id, { daily_ids: [event.target.value].filter(Boolean) })}
+            >
+              <option value="">{selectedClass ? "Select daily" : "Select class first"}</option>
+              {classDailies.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Feature 1">
+            <Select
+              value={member.feature_ids[0] ?? ""}
+              onChange={(event) =>
+                onUpdateMember(member.id, {
+                  feature_ids: [event.target.value, member.feature_ids[1] ?? ""].filter(Boolean),
+                })
+              }
+            >
+              <option value="">{selectedClass ? "Select feature" : "Select class first"}</option>
+              {classFeatures.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Feature 2">
+            <Select
+              value={member.feature_ids[1] ?? ""}
+              onChange={(event) =>
+                onUpdateMember(member.id, {
+                  feature_ids: [member.feature_ids[0] ?? "", event.target.value].filter(Boolean),
+                })
+              }
+            >
+              <option value="">{selectedClass ? "Select feature" : "Select class first"}</option>
+              {classFeatures.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Companion bonus">
+            <Select
+              value={member.companion_bonus_id}
+              onChange={(event) => onUpdateMember(member.id, { companion_bonus_id: event.target.value })}
+            >
+              <option value="">Select bonus</option>
+              {companionBonuses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Mount equip power">
+            <Select
+              value={member.mount_equip_power_id}
+              onChange={(event) => onUpdateMember(member.id, { mount_equip_power_id: event.target.value })}
+            >
+              <option value="">None</option>
+              {mountEquipPowers.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          {member.insignia_bonus_ids.map((value, index) => (
+            <Field key={index} label={`Insignia bonus ${index + 1}`}>
+              <Select
+                value={value ?? ""}
+                onChange={(event) => {
+                  const next = [...member.insignia_bonus_ids];
+                  next[index] = event.target.value;
+                  onUpdateMember(member.id, { insignia_bonus_ids: next });
+                }}
+              >
+                <option value="">None</option>
+                {insigniaBonuses.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ))}
+          <Field label="Notes">
+            <Textarea
+              placeholder="Rotation or assignment notes"
+              value={member.notes}
+              onChange={(event) => onUpdateMember(member.id, { notes: event.target.value })}
+            />
+          </Field>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
