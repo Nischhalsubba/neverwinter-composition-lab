@@ -22,6 +22,8 @@ import {
   companionRecommendationsById,
   companions,
   createInitialTeamMembers,
+  effectCatalog,
+  entityEffectLookup,
   enhancementRecommendationsById,
   getDefaultPowerLoadoutForClass,
   getRoleForClassParagon,
@@ -88,6 +90,12 @@ interface PickerItem {
 
 type AutoSetupGoal = "boost_one_dps" | "overall_team_damage";
 type TrialCompositionPreset = "standard" | "msod";
+type SummaryDrawerType = "boss" | "team";
+
+interface SummaryDrawerState {
+  type: SummaryDrawerType;
+  statLabel?: string;
+}
 
 const supportMountPriority = [
   "Hag's Enchanted Cauldron",
@@ -310,6 +318,155 @@ function getSummaryTotals(lines: { total: number; contributions: { id: string }[
     activeSources: lines.reduce((sum, line) => sum + line.contributions.length, 0),
     unresolvedSources: lines.reduce((sum, line) => sum + line.unresolved.length, 0),
     totalSources: lines.reduce((sum, line) => sum + line.contributions.length + line.unresolved.length, 0),
+  };
+}
+
+function getEntityNameById(entityId: string) {
+  return (
+    artifacts.find((item) => item.id === entityId)?.name ??
+    companions.find((item) => item.id === entityId)?.name ??
+    companionEnhancements.find((item) => item.id === entityId)?.name ??
+    companionBonuses.find((item) => item.id === entityId)?.name ??
+    mountCombatPowers.find((item) => item.id === entityId)?.name ??
+    mountEquipPowers.find((item) => item.id === entityId)?.name ??
+    insigniaBonuses.find((item) => item.id === entityId)?.name ??
+    powers.find((item) => item.id === entityId)?.name ??
+    "Unknown source"
+  );
+}
+
+function getArtifactById(artifactId: string) {
+  return artifacts.find((item) => item.id === artifactId);
+}
+
+function getEffectUptimeLabel(effect: EffectDefinition, entityId?: string) {
+  const effectNotes = effect.notes.toLowerCase();
+  const explicitUptime = effect.notes.match(/(\d+(?:\.\d+)?)%\s+uptime/i);
+  if (explicitUptime) {
+    return `${explicitUptime[1]}% uptime`;
+  }
+
+  if (/100%\s+uptime/i.test(effect.notes)) {
+    return "100% uptime";
+  }
+
+  const artifact = entityId ? getArtifactById(entityId) : null;
+  if (artifact?.duration_sec) {
+    const cycle = (artifact.duration_sec / 60) * 100;
+    return `${artifact.duration_sec}s burst / 60s CD (${cycle.toFixed(1)}% cycle)`;
+  }
+
+  if (effect.duration_sec) {
+    return `${effect.duration_sec}s duration`;
+  }
+
+  if (effectNotes.includes("passive") || effect.scope === "team") {
+    return "Passive or always-on";
+  }
+
+  return "Uptime not fully recovered";
+}
+
+function buildSummaryBreakdown(
+  members: TeamMember[],
+  selectedCarryId: string | undefined,
+  type: SummaryDrawerType,
+  statLabel?: string,
+) {
+  const targetStat = statLabel ? statLabel.toLowerCase().replace(/\s+/g, "_") : null;
+
+  return members.flatMap((member) => {
+    const entityIds = [
+      ...member.encounter_ids,
+      ...member.daily_ids,
+      ...member.feature_ids,
+      member.artifact_id,
+      member.companion_id,
+      member.enhancement_id,
+      member.companion_bonus_id,
+      member.mount_combat_power_id,
+      member.mount_equip_power_id,
+      ...member.insignia_bonus_ids,
+    ].filter(Boolean);
+
+    return entityIds.flatMap((entityId) => {
+      const effectIds = entityEffectLookup[entityId] ?? [];
+      return effectIds
+        .map((effectId) => effectCatalog.find((effect) => effect.id === effectId))
+        .filter((effect): effect is EffectDefinition => Boolean(effect))
+        .filter((effect) => {
+          if (effect.scope === "carry" && member.id !== selectedCarryId) {
+            return false;
+          }
+
+          if (type === "boss" && effect.scope !== "boss") {
+            return false;
+          }
+
+          if (type === "team" && !["team", "owner", "carry", "self"].includes(effect.scope)) {
+            return false;
+          }
+
+          if (targetStat && effect.stat !== targetStat) {
+            return false;
+          }
+
+          return true;
+        })
+        .map((effect) => ({
+          id: `${member.id}-${entityId}-${effect.id}`,
+          slotLabel: `${member.group}-${member.slot}`,
+          playerName: getMemberDisplayName(member),
+          entityName: getEntityNameById(entityId),
+          effectName: effect.name,
+          statLabel: titleCase(effect.stat),
+          isResolved: effect.value !== null,
+          valueLabel: effect.value != null ? formatPercent(effect.value) : "Pending",
+          uptimeLabel: getEffectUptimeLabel(effect, entityId),
+          notes: sanitizeUiText(effect.notes, "Imported effect note."),
+        }));
+    });
+  });
+}
+
+function getArtifactOverlapSummary(members: TeamMember[]) {
+  const artifactRows = members
+    .map((member) => {
+      const artifact = artifacts.find((item) => item.id === member.artifact_id);
+      if (!artifact) {
+        return null;
+      }
+
+      const effects = (artifact.effect_ids ?? [])
+        .map((effectId) => effectCatalog.find((effect) => effect.id === effectId))
+        .filter((effect): effect is EffectDefinition => Boolean(effect))
+        .filter((effect) => effect.scope === "boss" && effect.value !== null);
+
+      if (!effects.length) {
+        return null;
+      }
+
+      const burstTotal = effects.reduce((sum, effect) => sum + (effect.value ?? 0), 0);
+      const averageCycleTotal =
+        artifact.duration_sec != null
+          ? effects.reduce((sum, effect) => sum + (effect.value ?? 0) * (artifact.duration_sec! / 60), 0)
+          : 0;
+
+      return {
+        id: artifact.id,
+        artifactName: artifact.name,
+        slotLabel: `${member.group}-${member.slot}`,
+        duration: artifact.duration_sec,
+        burstTotal,
+        averageCycleTotal,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+  return {
+    entries: artifactRows,
+    burstTotal: artifactRows.reduce((sum, row) => sum + row.burstTotal, 0),
+    averageCycleTotal: artifactRows.reduce((sum, row) => sum + row.averageCycleTotal, 0),
   };
 }
 
@@ -536,6 +693,7 @@ export function TeamBuilderPage() {
   const [pickerQuery, setPickerQuery] = useState("");
   const [pickerFilter, setPickerFilter] = useState("all");
   const [importError, setImportError] = useState("");
+  const [summaryDrawer, setSummaryDrawer] = useState<SummaryDrawerState | null>(null);
   const [mountBaseHitOverride, setMountBaseHitOverride] = useState(1000000);
   const [critAssumption, setCritAssumption] = useState(0.5);
   const [caAssumption, setCaAssumption] = useState(0.5);
@@ -565,6 +723,11 @@ export function TeamBuilderPage() {
     () => getMemberEffectSummary(selectedMember, carry?.id),
     [carry?.id, selectedMember],
   );
+  const summaryBreakdown = useMemo(
+    () => buildSummaryBreakdown(teamMembers, carry?.id, summaryDrawer?.type ?? "boss", summaryDrawer?.statLabel),
+    [carry?.id, summaryDrawer?.statLabel, summaryDrawer?.type, teamMembers],
+  );
+  const artifactOverlap = useMemo(() => getArtifactOverlapSummary(teamMembers), [teamMembers]);
   const pickerMember = teamMembers.find((member) => member.id === pickerState?.memberId);
   const pickerItems = useMemo(() => {
     if (!pickerState) {
@@ -1693,6 +1856,8 @@ export function TeamBuilderPage() {
               value: formatPercent(line.total),
               detail: `${line.contributions.length} active • ${line.unresolved.length} pending`,
             }))}
+            onHeaderClick={() => setSummaryDrawer({ type: "boss" })}
+            onLineClick={(label) => setSummaryDrawer({ type: "boss", statLabel: label })}
           />
           <SummaryPanel
             icon={Swords}
@@ -1706,7 +1871,58 @@ export function TeamBuilderPage() {
               value: formatPercent(line.total),
               detail: `${line.contributions.length} active • ${line.unresolved.length} pending`,
             }))}
+            onHeaderClick={() => setSummaryDrawer({ type: "team" })}
+            onLineClick={(label) => setSummaryDrawer({ type: "team", statLabel: label })}
           />
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Artifact Debuff</CardTitle>
+              <CardDescription>
+                Perfect artifact overlap using recovered burst durations and a 60-second mythic cooldown assumption.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Perfect overlap burst</p>
+                  <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-white">
+                    {formatPercent(artifactOverlap.burstTotal)}
+                  </p>
+                </div>
+                <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Average 60s cycle</p>
+                  <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-white">
+                    {formatPercent(artifactOverlap.averageCycleTotal)}
+                  </p>
+                </div>
+              </div>
+              {artifactOverlap.entries.length > 0 ? (
+                <div className="space-y-3">
+                  {artifactOverlap.entries.map((entry) => (
+                    <div
+                      key={`${entry.slotLabel}-${entry.id}`}
+                      className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-white">{entry.artifactName}</p>
+                          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                            {entry.slotLabel} • {entry.duration ? `${entry.duration}s duration / 60s CD` : "60s CD assumed"}
+                          </p>
+                        </div>
+                        <p className="text-sm font-semibold text-white">{formatPercent(entry.burstTotal)}</p>
+                      </div>
+                      <p className="mt-3 text-xs text-white/68">
+                        Average cycle contribution: {formatPercent(entry.averageCycleTotal)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-white/68">No active artifact debuffs found on the current team.</p>
+              )}
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle>Carry Summary</CardTitle>
@@ -1841,6 +2057,145 @@ export function TeamBuilderPage() {
           onSelect={applyPickerSelection}
         />
       ) : null}
+
+      {summaryDrawer ? (
+        <SummaryBreakdownDrawer
+          state={summaryDrawer}
+          items={summaryBreakdown}
+          onClose={() => setSummaryDrawer(null)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function SummaryBreakdownDrawer({
+  state,
+  items,
+  onClose,
+}: {
+  state: SummaryDrawerState;
+  items: Array<{
+    id: string;
+    slotLabel: string;
+    playerName: string;
+    entityName: string;
+    effectName: string;
+    statLabel: string;
+    valueLabel: string;
+    uptimeLabel: string;
+    notes: string;
+    isResolved: boolean;
+  }>;
+  onClose: () => void;
+}) {
+  const resolvedItems = items.filter((item) => item.isResolved);
+  const pendingItems = items.filter((item) => !item.isResolved);
+  const title = state.type === "boss" ? "Boss Debuff Breakdown" : "Team Buff Breakdown";
+  const subtitle = state.statLabel ? `${state.statLabel} sources` : "All active sources";
+
+  return (
+    <div className="fixed inset-0 z-[70]">
+      <button type="button" aria-label="Close breakdown drawer" className="absolute inset-0 bg-black/58" onClick={onClose} />
+      <aside className="absolute inset-y-0 right-0 flex w-full max-w-[30rem] flex-col border-l border-[var(--border)] bg-[var(--surface)]">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-5">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--sky-blue)]">Live summary breakdown</p>
+            <h3 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-white">{title}</h3>
+            <p className="mt-2 text-sm leading-6 text-white/68">
+              {subtitle}. Each source shows where the effect comes from and the recovered uptime window.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-10 w-10 px-0"
+            onClick={onClose}
+            aria-label="Close breakdown drawer"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/58">Active sources</p>
+              <Badge variant="teal">{resolvedItems.length}</Badge>
+            </div>
+            {resolvedItems.length > 0 ? (
+              resolvedItems.map((item) => (
+                <div key={item.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{item.effectName}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                        {item.slotLabel} • {item.playerName}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold text-white">{item.valueLabel}</p>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm text-white/74">
+                    <p>
+                      <span className="text-white/48">From:</span> {item.entityName}
+                    </p>
+                    <p>
+                      <span className="text-white/48">Stat:</span> {item.statLabel}
+                    </p>
+                    <p>
+                      <span className="text-white/48">Uptime:</span> {item.uptimeLabel}
+                    </p>
+                    <p>
+                      <span className="text-white/48">Notes:</span> {item.notes}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <EmptyState
+                title="No active sources"
+                description="The current filter does not have any resolved active sources on the team yet."
+              />
+            )}
+          </section>
+
+          {pendingItems.length > 0 ? (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-white/58">Pending or unresolved</p>
+                <Badge variant="muted">{pendingItems.length}</Badge>
+              </div>
+              {pendingItems.map((item) => (
+                <div key={item.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{item.effectName}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                        {item.slotLabel} • {item.playerName}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold text-white/68">{item.valueLabel}</p>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm text-white/68">
+                    <p>
+                      <span className="text-white/48">From:</span> {item.entityName}
+                    </p>
+                    <p>
+                      <span className="text-white/48">Stat:</span> {item.statLabel}
+                    </p>
+                    <p>
+                      <span className="text-white/48">Uptime:</span> {item.uptimeLabel}
+                    </p>
+                    <p>
+                      <span className="text-white/48">Notes:</span> {item.notes}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </section>
+          ) : null}
+        </div>
+      </aside>
     </div>
   );
 }

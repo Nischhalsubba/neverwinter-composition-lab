@@ -2163,6 +2163,62 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 29 - Added clickable summary breakdowns and artifact debuff overlap math
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `components/summary-panel.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Wired the `Boss Debuffs` and `Team Buffs` summary cards so both the header and each individual stat line can open a right-side breakdown drawer.
+- Added a slide-in summary drawer in Team Builder that lists the active and pending sources behind the clicked summary card.
+- Each breakdown row now shows:
+  - slot and player
+  - source entity name
+  - effect name
+  - stat label
+  - resolved value or pending state
+  - recovered uptime wording
+  - imported note text
+- Added a new `Total Artifact Debuff` card to the Team Builder summary area.
+- The artifact card now shows:
+  - perfect overlap burst total
+  - average contribution across a 60-second mythic cooldown cycle
+  - per-artifact contribution rows for the currently slotted team
+- Imported the missing `effectCatalog` and `entityEffectLookup` into Team Builder so the local summary breakdowns can resolve source entities directly instead of depending only on pre-summarized totals.
+- Extended the local summary-breakdown data model with a resolved/pending flag so the drawer can separate active sources from unresolved ones.
+
+Why:
+
+- The user wanted the summary cards to be inspectable instead of acting like static dashboard blocks.
+- The existing top-line totals did not explain where a debuff or buff was coming from, which member supplied it, or what the expected uptime was.
+- Artifact debuffs were especially opaque, so the new overlap card makes the burst total and the average cycle value visible without forcing the user to infer the timing math manually.
+
+Notes:
+
+- The artifact overlap card assumes a 60-second mythic cooldown, because that was the rule the user explicitly asked for.
+- When an artifact duration is recovered in local data, the average cycle value uses that duration. When it is not recovered, the entry stays in the burst total but does not invent a fake cycle average.
+- Lint warnings remain limited to temporary scratch files under `tmp_*`; the production app files changed in this pass are clean.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 26 - Rebuilt dashboard with live sourced module, event, and planning content
 
 Date:
