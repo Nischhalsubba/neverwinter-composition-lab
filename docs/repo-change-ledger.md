@@ -1878,3 +1878,70 @@ Result:
 
 - `npm run build` passed.
 - `npm run lint` still reports warnings from temporary scratch files such as `tmp_*`, not from the production app files updated in this pass.
+
+## Pass 24 - Responsive layout QA audit and density fixes
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/globals.css`
+- `components/layout/app-shell.tsx`
+- `components/content-page.tsx`
+- `components/ui/card.tsx`
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Ran a layout-focused QA pass against the app shell and Team Builder with attention to the issues visible in the user screenshot:
+  - early horizontal compression
+  - overly narrow main canvas
+  - group cards collapsing into unreadable micro-panels
+  - right-rail panels appearing too early
+  - control bar wrapping poorly at intermediate desktop widths
+- Added a shared `--layout-max` token in `app/globals.css` and widened the app shell to use it.
+- Increased the fixed header height slightly and widened the persistent sidebar so the shell feels less cramped at desktop widths.
+- Updated `components/content-page.tsx` so the secondary right rail only appears at a later breakpoint instead of stealing space too early.
+- Updated `components/ui/card.tsx` so card padding scales with viewport size:
+  - tighter on smaller screens
+  - roomier on larger screens
+- Reworked the Team Builder top control bar so it wraps cleanly across medium and large desktop widths instead of forcing all controls into one dense row too early.
+- Changed the main Team Builder content split from an earlier three-column desktop layout to a later two-column layout:
+  - main composition canvas on the left
+  - summaries on the right only at very wide widths
+- Delayed sticky behavior for the right-side summary rail until a later breakpoint to preserve space for the primary planning workflow.
+- Reworked the group-card internals:
+  - removed the cramped three-column artifact / companion / mount mini-box strip
+  - replaced it with clearer full-width `LoadoutRow` rows
+  - enlarged the slot title line and improved slot metadata spacing
+
+Why:
+
+- The Team Builder is the core product workflow, so it cannot feel compressed or spreadsheet-like on large screens.
+- The screenshot showed a recurring design problem: too many panels were competing inside the same horizontal band, and the roster cards were using detail modules that were too small to stay readable.
+- These fixes are intentionally systemic, not cosmetic:
+  - wider shell
+  - later side-rail breakpoint
+  - responsive card padding
+  - simpler roster-card internals
+- This reduces the chance of similar density regressions showing up again when more content is added.
+
+Notes / QA conclusions:
+
+- The app still contains some text-encoding artifacts in older Team Builder strings that should be normalized in a future cleanup pass, but they do not block build or current interaction.
+- `npm run lint` warnings remain limited to temporary scratch files under `tmp_*`, not the production UI files updated in this pass.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.

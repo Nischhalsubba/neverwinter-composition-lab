@@ -926,7 +926,7 @@ export function TeamBuilderPage() {
 
   if (!mode) {
     return (
-      <div className="space-y-8 px-6 py-8 xl:px-8 xl:py-10">
+      <div className="mx-auto max-w-[var(--layout-max)] space-y-8 px-5 py-8 md:px-8 xl:py-10">
         <Card>
           <CardHeader>
             <p className="text-[10px] uppercase tracking-[0.22em] text-white/58">Professional architect</p>
@@ -961,9 +961,9 @@ export function TeamBuilderPage() {
   }
 
   return (
-    <div className="space-y-8 px-6 py-8 xl:px-8 xl:py-10">
+    <div className="mx-auto max-w-[var(--layout-max)] space-y-8 px-5 py-8 md:px-8 xl:py-10">
       <section className="border-b border-[var(--border)] pb-6">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+        <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-end 2xl:justify-between">
           <div className="space-y-3">
             <p className="text-[10px] uppercase tracking-[0.22em] text-white/58">Professional trial architect</p>
             <h1 className="text-[44px] font-semibold uppercase leading-[0.95] tracking-[-0.09em] text-white">
@@ -984,14 +984,14 @@ export function TeamBuilderPage() {
         </div>
       </section>
         <Card>
-          <CardContent className="grid gap-4 xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)_minmax(220px,1fr)_auto]">
-            <div className="flex flex-wrap gap-2">
+          <CardContent className="grid gap-4 md:grid-cols-2 2xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)] 3xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)_minmax(220px,1fr)_auto]">
+            <div className="flex flex-wrap gap-2 md:col-span-2 2xl:col-span-2 3xl:col-span-1">
               <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
                 Dungeon
-            </Button>
-            <Button variant={mode === "trial" ? "primary" : "secondary"} onClick={() => updateTeamMode("trial")}>
-              Trial
-            </Button>
+              </Button>
+              <Button variant={mode === "trial" ? "primary" : "secondary"} onClick={() => updateTeamMode("trial")}>
+                Trial
+              </Button>
             </div>
             {mode === "trial" ? (
               <Field label="Trial preset">
@@ -1027,8 +1027,8 @@ export function TeamBuilderPage() {
                 placeholder="Name this setup"
               />
             </Field>
-            <div className="flex items-end">
-              <Button variant="primary" className="w-full xl:w-auto" onClick={saveCurrentBuild}>
+            <div className="flex items-end md:col-span-2 3xl:col-span-1">
+              <Button variant="primary" className="w-full" onClick={saveCurrentBuild}>
                 <Save className="mr-2 h-4 w-4" />
                 Save build
               </Button>
@@ -1036,9 +1036,9 @@ export function TeamBuilderPage() {
           </CardContent>
         </Card>
 
-      <div className="grid gap-8 2xl:grid-cols-[minmax(0,1fr)_460px_288px]">
-        <div className="space-y-6 2xl:col-span-1">
-          <div className={`grid gap-6 ${mode === "trial" ? "xl:grid-cols-2" : "xl:grid-cols-[minmax(0,1fr)_320px]"}`}>
+      <div className="grid gap-8 3xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-8">
+          <div className={`grid gap-6 ${mode === "trial" ? "2xl:grid-cols-2" : "2xl:grid-cols-[minmax(0,1fr)_360px]"}`}>
             <ArchitectGroupCard
               title={mode === "trial" ? "Group A - Vanguard" : "Dungeon Party"}
               subtitle={mode === "trial" ? "Frontline pressure, carry setup, and main support coverage." : "Five-player shell with one tank, one healer, and three DPS."}
@@ -1491,7 +1491,7 @@ export function TeamBuilderPage() {
         </div>
       </div>
 
-        <div className="order-first space-y-6 2xl:order-none 2xl:sticky 2xl:top-24 2xl:self-start">
+        <div className="order-first space-y-6 3xl:order-none 3xl:sticky 3xl:top-28 3xl:self-start">
           <Card>
             <CardHeader>
               <CardTitle>Saved Builds</CardTitle>
@@ -1714,7 +1714,7 @@ function ArchitectGroupCard({
           <p className="text-[10px] uppercase tracking-[0.18em] text-white/48">{members.length} members</p>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         {members.map((member) => {
           const artifactName = artifacts.find((item) => item.id === member.artifact_id)?.name ?? "No artifact";
           const companionName = companions.find((item) => item.id === member.companion_id)?.name ?? "No companion";
@@ -1725,7 +1725,7 @@ function ArchitectGroupCard({
               key={member.id}
               type="button"
               onClick={() => onSelect(member.id)}
-              className={`block w-full border p-4 text-left transition ${
+              className={`block w-full border p-5 text-left transition ${
                 member.id === selectedMemberId
                   ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.1)]"
                   : member.is_carry
@@ -1742,35 +1742,38 @@ function ArchitectGroupCard({
                     size="sm"
                   />
                   <div className="min-w-0">
-                    <p className="text-base font-semibold tracking-[-0.03em] text-white">
+                    <p className="text-lg font-semibold tracking-[-0.03em] text-white">
                       {member.group}-{member.slot} {getMemberDisplayName(member)}
                     </p>
-                    <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/62">
-                      {getMemberTitle(member)} / {member.race || "Race pending"} / {formatRoleLabel(member.role)}
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/62">
+                      {getMemberTitle(member)}
+                    </p>
+                    <p className="mt-2 text-sm text-white/74">
+                      {member.race || "Race pending"} • {formatRoleLabel(member.role)}
                     </p>
                   </div>
                 </div>
                 {member.is_carry ? <Badge variant="teal">Carry DPS</Badge> : null}
               </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="border border-[var(--border)] bg-black/20 px-3 py-2">
-                  <p className="text-[9px] uppercase tracking-[0.16em] text-white/52">Companion</p>
-                  <p className="mt-1 text-xs font-medium text-white">{companionName}</p>
-                </div>
-                <div className="border border-[var(--border)] bg-black/20 px-3 py-2">
-                  <p className="text-[9px] uppercase tracking-[0.16em] text-white/52">Artifact</p>
-                  <p className="mt-1 text-xs font-medium text-white">{artifactName}</p>
-                </div>
-                <div className="border border-[var(--border)] bg-black/20 px-3 py-2">
-                  <p className="text-[9px] uppercase tracking-[0.16em] text-white/52">Mount</p>
-                  <p className="mt-1 text-xs font-medium text-white">{mountName}</p>
-                </div>
+              <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-4">
+                <LoadoutRow label="Artifact" value={artifactName} />
+                <LoadoutRow label="Companion" value={companionName} />
+                <LoadoutRow label="Mount" value={mountName} />
               </div>
             </button>
           );
         })}
       </CardContent>
     </Card>
+  );
+}
+
+function LoadoutRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 py-2">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-white/52">{label}</p>
+      <p className="min-w-0 text-right text-sm font-medium text-white">{value}</p>
+    </div>
   );
 }
 

@@ -21,14 +21,14 @@ export function CardHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("space-y-3 p-8 pb-0", className)} {...props} />;
+  return <div className={cn("space-y-3 p-5 pb-0 md:p-6 md:pb-0 xl:p-8 xl:pb-0", className)} {...props} />;
 }
 
 export function CardContent({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-8", className)} {...props} />;
+  return <div className={cn("p-5 md:p-6 xl:p-8", className)} {...props} />;
 }
 
 export function CardTitle({
