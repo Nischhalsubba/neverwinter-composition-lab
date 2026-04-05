@@ -237,7 +237,7 @@ function getPlannedRoleDistribution(mode: TeamMode, trialPreset: TrialCompositio
   }
 
   if (trialPreset === "msod") {
-    return ["tank", "tank", "healer", "dps", "dps", "dps", "dps", "dps", "dps", "dps"] as TeamMember["role"][];
+    return ["tank", "tank", "healer", "healer", "healer", "dps", "dps", "dps", "dps", "dps"] as TeamMember["role"][];
   }
 
   return ["tank", "tank", "healer", "healer", "dps", "dps", "dps", "dps", "dps", "dps"] as TeamMember["role"][];
@@ -1079,7 +1079,7 @@ export function TeamBuilderPage() {
               <Field label="Trial preset">
                 <Select value={trialPreset} onChange={(event) => setTrialPreset(event.target.value as TrialCompositionPreset)}>
                   <option value="standard">Standard Trial: 6 DPS / 2 Healer / 2 Tank</option>
-                  <option value="msod">MSOD: 7 DPS / 1 Bard Healer / 2 Tank</option>
+                  <option value="msod">MSOD: 5 DPS / 3 Healer / 2 Tank</option>
                 </Select>
               </Field>
             ) : null}

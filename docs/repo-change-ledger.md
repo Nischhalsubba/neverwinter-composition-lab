@@ -2058,6 +2058,60 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 26 - Rebuilt dashboard with live sourced module, event, and planning content
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/page.tsx`
+- `data/dashboard-live.ts`
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Replaced the old seeded dashboard with a real interactive dashboard that can switch between `Trial` and `Dungeon` planning modes.
+- Added a live sourced dashboard data module for current Neverwinter items:
+  - `Tempus Arena - The Slaughterhouse`
+  - `For Gods and Glory Battle Pass`
+  - `Patch Notes for 03/25/2026`
+  - `April Fowls Day - A Honking Good Time!`
+- Added a sourced module timeline that now reflects the current line through Module `32.5`.
+- Added a role split card that changes with the selected dashboard mode and trial preset.
+- Added mode-aware artifact recommendations:
+  - trial artifact ranks for trial mode
+  - dungeon artifact ranks for dungeon mode
+- Added mode-aware companion recommendations:
+  - trial support and mandatory coverage for trial mode
+  - ST damage companions for dungeon mode
+- Linked dashboard cards to real app routes or source pages instead of leaving them as static display blocks.
+- Corrected the Team Builder `MSOD` preset from the older 7 DPS shell to the requested `5 DPS / 3 Healer / 2 Tank` shell.
+- Updated the Team Builder preset label to match that corrected MSOD composition.
+
+Why:
+
+- The dashboard was still using stale seeded copy and fake operational numbers, which did not satisfy the user's request for present-date realistic content.
+- The user explicitly asked for internet-backed updates and a dashboard that reflects real trial and dungeon planning instead of placeholder cards.
+- The MSOD role split was no longer aligned with the user's current rules and needed to be corrected at the builder logic layer, not only in display text.
+
+Notes:
+
+- Live dashboard items use current official Steam Community / launcher surfaced news plus Neverwinter module chronology references.
+- Patch note detail depth remains conservative where only the official title and dated publication could be confirmed cleanly from current live sources.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+
+Result:
+
+- `npm run build` passed.
+
 ## Pass 29 - Corrected Team Builder summary compression so the right sidebar remains the real second column
 
 Date:

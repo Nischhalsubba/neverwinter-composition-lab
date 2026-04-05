@@ -1,270 +1,422 @@
-import { ArrowRight, Clock3, Gem, MountainSnow, Sparkles, WandSparkles } from "lucide-react";
+"use client";
+
+import { useMemo, useState } from "react";
+import { ArrowRight, Clock3, ExternalLink, Gem, Shield, Swords, WandSparkles } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   artifactRecommendationsById,
   artifacts,
   companionRecommendationsById,
-  knowledgeSections,
-  moduleTimeline,
-  patchChanges,
+  companions,
   singleTargetCompanionRecommendationsById,
+  trialMandatoryCompanionById,
 } from "@/data/game-data";
+import {
+  dashboardLastVerifiedDate,
+  dashboardLiveFeed,
+  dashboardModuleTimeline,
+  dashboardRoleRules,
+} from "@/data/dashboard-live";
 
-const savedLoadouts = [
-  { title: "Trial Carry Shell", tags: ["Trial", "Carry", "Meta"], href: "/team-builder" },
-  { title: "Balanced Trial Core", tags: ["Trial", "Balanced", "Damage"], href: "/team-builder" },
-  { title: "Dungeon Burst Squad", tags: ["Dungeon", "Boss", "Burst"], href: "/team-builder" },
-];
+type DashboardMode = "trial" | "dungeon";
+type TrialPreset = "standard" | "msod";
 
-export default function Page() {
-  const topArtifacts = artifacts
+function getTopArtifacts(mode: DashboardMode) {
+  return artifacts
     .map((artifact) => ({
       artifact,
-      rank: artifactRecommendationsById[artifact.id]?.trial?.rank ?? 999,
-      boost: artifactRecommendationsById[artifact.id]?.trial?.damageBoost ?? 0,
+      recommendation:
+        mode === "trial"
+          ? artifactRecommendationsById[artifact.id]?.trial ?? null
+          : artifactRecommendationsById[artifact.id]?.dungeon ?? null,
     }))
-    .sort((left, right) => left.rank - right.rank)
-    .slice(0, 3);
+    .filter((entry) => entry.recommendation)
+    .sort((left, right) => (left.recommendation?.rank ?? 999) - (right.recommendation?.rank ?? 999))
+    .slice(0, 5);
+}
 
-  const topSupportCompanions = Object.entries(companionRecommendationsById)
-    .map(([id, value]) => ({ id, value }))
-    .filter((entry) => entry.value)
-    .sort((left, right) => (left.value?.rank ?? 999) - (right.value?.rank ?? 999))
-    .slice(0, 3);
+function getTopTrialSupportCompanions() {
+  return Object.entries(companionRecommendationsById)
+    .map(([id, recommendation]) => ({
+      companion: companions.find((item) => item.id === id),
+      recommendation,
+      mandatory: trialMandatoryCompanionById[id],
+    }))
+    .filter((entry) => entry.companion && (entry.recommendation || entry.mandatory))
+    .sort((left, right) => {
+      if (left.mandatory && !right.mandatory) {
+        return -1;
+      }
 
-  const topDamageCompanions = Object.entries(singleTargetCompanionRecommendationsById)
-    .map(([id, value]) => ({ id, value }))
-    .filter((entry) => entry.value)
-    .sort((left, right) => (left.value?.rank ?? 999) - (right.value?.rank ?? 999))
-    .slice(0, 3);
+      if (!left.mandatory && right.mandatory) {
+        return 1;
+      }
+
+      return (left.recommendation?.rank ?? 999) - (right.recommendation?.rank ?? 999);
+    })
+    .slice(0, 6);
+}
+
+function getTopDungeonDamageCompanions() {
+  return Object.entries(singleTargetCompanionRecommendationsById)
+    .map(([id, recommendation]) => ({
+      companion: companions.find((item) => item.id === id),
+      recommendation,
+    }))
+    .filter((entry) => entry.companion && entry.recommendation)
+    .sort((left, right) => (left.recommendation?.rank ?? 999) - (right.recommendation?.rank ?? 999))
+    .slice(0, 5);
+}
+
+export default function Page() {
+  const [mode, setMode] = useState<DashboardMode>("trial");
+  const [trialPreset, setTrialPreset] = useState<TrialPreset>("standard");
+
+  const topArtifacts = useMemo(() => getTopArtifacts(mode), [mode]);
+  const topTrialSupportCompanions = useMemo(() => getTopTrialSupportCompanions(), []);
+  const topDungeonDamageCompanions = useMemo(() => getTopDungeonDamageCompanions(), []);
+
+  const modeArtifactsLabel = mode === "trial" ? "Trial Artifacts" : "Dungeon Artifacts";
+  const roleRule =
+    mode === "dungeon"
+      ? dashboardRoleRules.dungeon
+      : trialPreset === "msod"
+        ? dashboardRoleRules.trialMsod
+        : dashboardRoleRules.trialStandard;
+
+  const companionRows =
+    mode === "trial"
+      ? topTrialSupportCompanions.map((entry) => ({
+          id: entry.companion?.id ?? entry.recommendation?.name ?? "unknown",
+          name: entry.companion?.name ?? "Unknown companion",
+          badge: entry.mandatory ? "Trial must" : `Support #${entry.recommendation?.rank ?? "?"}`,
+          detail: entry.mandatory
+            ? "Black Death Scorpion is forced in trial planning for CA uptime coverage."
+            : entry.recommendation?.benefit ?? "Recovered support benefit.",
+        }))
+      : topDungeonDamageCompanions.map((entry) => ({
+          id: entry.companion?.id ?? entry.recommendation?.name ?? "unknown",
+          name: entry.companion?.name ?? "Unknown companion",
+          badge: `ST #${entry.recommendation?.rank ?? "?"}`,
+          detail: `ST DPS ${(entry.recommendation?.stDps ?? 0).toLocaleString()} • Max hit ${(entry.recommendation?.maxHit ?? 0).toLocaleString()}`,
+        }));
 
   return (
-    <div className="grid gap-8 px-6 py-8 xl:grid-cols-[minmax(0,1fr)_288px] xl:px-8 xl:py-10">
-      <div className="min-w-0 space-y-8">
-        <section className="relative overflow-hidden border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-10 py-10">
-          <div className="absolute inset-0 bg-[rgba(162,210,255,0.04)]" />
-          <div className="relative max-w-3xl space-y-6">
-            <Badge variant="teal">Active Protocol</Badge>
-            <div className="space-y-3">
-              <h1 className="text-[42px] font-semibold uppercase leading-[0.95] tracking-[-0.08em] text-white">
-                Endgame Planning
-                <br />
-                Without Spreadsheet Fatigue
-              </h1>
-              <p className="max-w-2xl text-sm leading-7 text-white/76">
-                Team Builder, support coverage, artifact rankings, mount choices, and verified planning notes in one layout that stays readable under real endgame use.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-8">
-              <div className="space-y-1">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Current module</p>
-                <p className="text-[28px] font-semibold tracking-[-0.06em] text-white">32.5</p>
-              </div>
-              <div className="space-y-1 border-l border-[var(--border)] pl-8">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Verified artifacts</p>
-                <p className="text-[28px] font-semibold tracking-[-0.06em] text-white">{artifacts.length}</p>
-              </div>
-              <div className="space-y-1 border-l border-[var(--border)] pl-8">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Patch notes loaded</p>
-                <p className="text-[28px] font-semibold tracking-[-0.06em] text-white">{patchChanges.length}</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
-          <Card>
-            <CardContent className="space-y-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-white/58">Meta trends</p>
-                  <h2 className="mt-2 text-xl font-semibold uppercase tracking-[-0.05em] text-white">
-                    Trial Artifacts
-                  </h2>
+    <div className="space-y-8 px-4 py-6 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
+        <Card className="border-[var(--border-strong)]">
+          <CardContent className="space-y-8 p-6 sm:p-8">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-4">
+                <Badge variant="teal">Dashboard verified through April 5, 2026</Badge>
+                <div className="space-y-3">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--sky-blue)]">
+                    Neverwinter live command board
+                  </p>
+                  <h1 className="text-4xl font-semibold uppercase tracking-[-0.08em] text-white sm:text-5xl">
+                    {mode === "trial" ? "Trial command" : "Dungeon command"}
+                  </h1>
+                  <p className="max-w-3xl text-sm leading-7 text-white/76 sm:text-base">
+                    Live module focus, current support priorities, ranked artifacts, and practical team rules in one
+                    planning surface. The dashboard content below is grounded in current official Neverwinter news and
+                    the imported patch-aware data already in this repo.
+                  </p>
                 </div>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/48">Global data</p>
               </div>
-              <div className="space-y-5">
-                {topArtifacts.map(({ artifact, rank, boost }) => (
-                  <div key={artifact.id} className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center border border-[var(--border)] bg-[rgba(255,255,255,0.04)]">
-                      <Gem className="h-5 w-5 text-[var(--pastel-petal)]" />
-                    </div>
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold uppercase tracking-[-0.03em] text-white">{artifact.name}</p>
-                        <p className="text-sm font-semibold text-white">{boost.toFixed(2)}%</p>
-                      </div>
-                      <div className="h-1 bg-[rgba(255,255,255,0.08)]">
-                        <div
-                          className="h-full bg-[var(--sky-blue)]"
-                          style={{ width: `${Math.max(12, 100 - (rank - 1) * 12)}%` }}
-                        />
-                      </div>
-                    </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:w-[360px]">
+                <button
+                  type="button"
+                  onClick={() => setMode("trial")}
+                  className={`border px-4 py-3 text-left transition ${
+                    mode === "trial"
+                      ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
+                      : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-white/84 hover:border-[var(--border-strong)]"
+                  }`}
+                >
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Mode</p>
+                  <p className="mt-2 text-lg font-semibold uppercase tracking-[-0.04em]">Trial</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("dungeon")}
+                  className={`border px-4 py-3 text-left transition ${
+                    mode === "dungeon"
+                      ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
+                      : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-white/84 hover:border-[var(--border-strong)]"
+                  }`}
+                >
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Mode</p>
+                  <p className="mt-2 text-lg font-semibold uppercase tracking-[-0.04em]">Dungeon</p>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Current live line</p>
+                  <p className="mt-3 text-2xl font-semibold tracking-[-0.06em] text-white">Module 32.5</p>
+                  <p className="mt-2 text-sm text-white/68">Tempus Arena - The Slaughterhouse</p>
+                </div>
+                <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Last verified</p>
+                  <p className="mt-3 text-2xl font-semibold tracking-[-0.06em] text-white">Apr 5</p>
+                  <p className="mt-2 text-sm text-white/68">{dashboardLastVerifiedDate}</p>
+                </div>
+                <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Live feed items</p>
+                  <p className="mt-3 text-2xl font-semibold tracking-[-0.06em] text-white">{dashboardLiveFeed.length}</p>
+                  <p className="mt-2 text-sm text-white/68">Current event, module, and patch checkpoints</p>
+                </div>
+              </div>
+
+              <div className="border border-[var(--border-strong)] bg-[rgba(255,255,255,0.02)] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--pastel-petal)]">Role split</p>
+                    <h2 className="mt-2 text-lg font-semibold uppercase tracking-[-0.04em] text-white">
+                      {roleRule.label}
+                    </h2>
                   </div>
-                ))}
+                  {mode === "trial" ? (
+                    <div className="flex gap-2">
+                      <Button
+                        variant={trialPreset === "standard" ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => setTrialPreset("standard")}
+                      >
+                        Standard
+                      </Button>
+                      <Button
+                        variant={trialPreset === "msod" ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => setTrialPreset("msod")}
+                      >
+                        MSOD
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+                <p className="mt-4 text-2xl font-semibold tracking-[-0.06em] text-white">{roleRule.composition}</p>
+                <p className="mt-3 text-sm leading-6 text-white/72">{roleRule.notes}</p>
+                <div className="mt-4">
+                  <Link href="/team-builder" className="inline-flex items-center gap-2 text-sm text-[var(--sky-blue)]">
+                    Open Team Builder
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="space-y-4 p-6">
+              <div className="flex items-center gap-2">
+                <Clock3 className="h-4 w-4 text-[var(--sky-blue)]" />
+                <p className="text-[10px] uppercase tracking-[0.22em] text-white/56">Intelligence feed</p>
+              </div>
+              {dashboardLiveFeed.slice(0, 3).map((item) => (
+                <a
+                  key={item.id}
+                  href={item.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4 transition hover:border-[var(--border-strong)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">{item.date}</p>
+                      <p className="mt-2 text-sm font-semibold text-white">{item.title}</p>
+                    </div>
+                    <Badge variant={item.status === "live" ? "teal" : item.status === "recent" ? "blue" : "purple"}>
+                      {item.status}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-white/72">{item.summary}</p>
+                </a>
+              ))}
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="space-y-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--sky-blue)]">Strategic briefing</p>
-                  <h2 className="mt-2 text-[34px] font-semibold tracking-[-0.06em] text-white">
-                    Patch-aware endgame guidance
-                  </h2>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Release line</p>
-                  <p className="mt-1 text-sm text-white">{moduleTimeline[0] ?? "Module 32.5"}</p>
-                </div>
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-3">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--pastel-petal)]">What to prioritize</p>
-                  {knowledgeSections.slice(0, 2).map((section) => (
-                    <div key={section.title} className="border-l-2 border-[var(--pastel-petal)] bg-black/30 px-4 py-4">
-                      <p className="text-sm font-semibold text-white">{section.title}</p>
-                      <p className="mt-2 text-sm leading-6 text-white/74">{section.points[0]}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="space-y-3">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--baby-pink)]">Live patch pressure</p>
-                  {patchChanges.slice(0, 2).map((patch) => (
-                    <div key={patch.id} className="border-l-2 border-[var(--baby-pink)] bg-black/30 px-4 py-4">
-                      <p className="text-sm font-semibold text-white">{patch.name}</p>
-                      <p className="mt-2 text-sm leading-6 text-white/74">{patch.after}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <CardContent className="space-y-4 p-6">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-white/56">Quick destinations</p>
+              <Link href="/team-builder" className="flex items-center justify-between border border-[var(--border)] px-4 py-3 text-sm text-white transition hover:border-[var(--border-strong)]">
+                Team Builder
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/patch-tracker" className="flex items-center justify-between border border-[var(--border)] px-4 py-3 text-sm text-white transition hover:border-[var(--border-strong)]">
+                Patch Tracker
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/reference" className="flex items-center justify-between border border-[var(--border)] px-4 py-3 text-sm text-white transition hover:border-[var(--border-strong)]">
+                Reference Hub
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </CardContent>
           </Card>
-        </section>
+        </div>
+      </section>
 
-        <section className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-white/58">Saved loadouts</p>
-              <h2 className="mt-2 text-xl font-semibold uppercase tracking-[-0.05em] text-white">Fast entry points</h2>
-            </div>
-            <Link href="/team-builder" className="text-xs uppercase tracking-[0.16em] text-[var(--sky-blue)]">
-              Open builder
-            </Link>
-          </div>
-          <div className="grid gap-6 lg:grid-cols-3">
-            {savedLoadouts.map((loadout, index) => (
-              <Link key={loadout.title} href={loadout.href}>
-                <Card className="h-full transition hover:border-[var(--sky-blue)]">
-                  <CardContent className="space-y-6">
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-white/45">2026.04.{index + 11}</p>
-                    <div>
-                      <p className="text-lg font-semibold uppercase tracking-[-0.05em] text-white">{loadout.title}</p>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {loadout.tags.map((tag) => (
-                          <span key={tag} className="border border-[var(--border)] px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-white/75">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-[var(--border)] pt-4 text-sm text-white/76">
-                      <span>Open loadout</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </div>
-                  </CardContent>
-                </Card>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <Card>
+          <CardContent className="space-y-6 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--pastel-petal)]">{modeArtifactsLabel}</p>
+                <h2 className="mt-2 text-2xl font-semibold uppercase tracking-[-0.05em] text-white">
+                  Ranked damage support
+                </h2>
+              </div>
+              <Link href="/artifacts" className="text-xs uppercase tracking-[0.18em] text-[var(--sky-blue)]">
+                Full list
               </Link>
-            ))}
-          </div>
-        </section>
-      </div>
+            </div>
 
-      <aside className="space-y-6">
-        <Card>
-          <CardContent className="space-y-5">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--pastel-petal)]">Real-time data</p>
-              <h2 className="mt-1 text-sm font-semibold uppercase tracking-[0.04em] text-white">Intelligence feed</h2>
-            </div>
-            <div className="border border-[var(--border)] bg-black/50 p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Estimated raid value</p>
-                <p className="text-2xl font-semibold tracking-[-0.05em] text-white">428.4K</p>
-              </div>
-              <div className="mt-4 h-1 bg-[rgba(255,255,255,0.08)]">
-                <div className="h-full w-[82%] bg-[var(--sky-blue)]" />
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-              <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-white/56">Support companions</p>
-                <p className="mt-2 text-xl font-semibold text-white">{topSupportCompanions.length}</p>
-              </div>
-              <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-white/56">ST companion lines</p>
-                <p className="mt-2 text-xl font-semibold text-white">{topDamageCompanions.length}</p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">Current focus</p>
-              <div className="border-l-2 border-[var(--sky-blue)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-                <p className="text-sm text-white">Trial support coverage is live and patch-aware.</p>
-              </div>
-              <div className="border-l-2 border-[var(--pastel-petal)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-                <p className="text-sm text-white">Artifact and companion rankings are available in local typed data.</p>
-              </div>
+            <div className="space-y-4">
+              {topArtifacts.map(({ artifact, recommendation }) => (
+                <Link
+                  key={artifact.id}
+                  href={`/reference/artifacts/${artifact.id}`}
+                  className="flex items-center gap-4 border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4 transition hover:border-[var(--border-strong)]"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center border border-[var(--border)] bg-[rgba(255,255,255,0.04)]">
+                    <Gem className="h-5 w-5 text-[var(--pastel-petal)]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="truncate text-sm font-semibold text-white">{artifact.name}</p>
+                      <Badge variant="teal">#{recommendation?.rank}</Badge>
+                    </div>
+                    <p className="mt-2 text-sm text-white/72">
+                      {(recommendation?.damageBoost ?? 0).toFixed(2)}% estimated damage boost • {mode === "trial" ? "trial" : "dungeon"} planning rank
+                    </p>
+                  </div>
+                </Link>
+              ))}
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--sky-blue)]">
+                  {mode === "trial" ? "Trial companions" : "Dungeon companions"}
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold uppercase tracking-[-0.05em] text-white">
+                  {mode === "trial" ? "Party buff coverage" : "Damage summon picks"}
+                </h2>
+              </div>
+              <Link href="/companions" className="text-xs uppercase tracking-[0.18em] text-[var(--sky-blue)]">
+                Full list
+              </Link>
+            </div>
+
+            <div className="space-y-4">
+              {companionRows.map((row) => (
+                <Link
+                  key={row.id}
+                  href={`/reference/companions/${row.id}`}
+                  className="flex items-start gap-4 border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4 transition hover:border-[var(--border-strong)]"
+                >
+                  <div className="mt-1 flex h-11 w-11 items-center justify-center border border-[var(--border)] bg-[rgba(255,255,255,0.04)]">
+                    {mode === "trial" ? <Shield className="h-4 w-4 text-[var(--sky-blue)]" /> : <Swords className="h-4 w-4 text-[var(--baby-pink)]" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="truncate text-sm font-semibold text-white">{row.name}</p>
+                      <Badge variant={row.badge === "Trial must" ? "teal" : "purple"}>{row.badge}</Badge>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-white/72">{row.detail}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-6 2xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <Card>
+          <CardContent className="space-y-6 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--baby-pink)]">Real-time data</p>
+                <h2 className="mt-2 text-2xl font-semibold uppercase tracking-[-0.05em] text-white">Live intelligence feed</h2>
+              </div>
+              <a
+                href="https://steamcommunity.com/app/109600/allnews/"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[var(--sky-blue)]"
+              >
+                Open news source
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              {dashboardLiveFeed.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-5 transition hover:border-[var(--border-strong)]"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-white/56">{item.date}</p>
+                      <p className="mt-2 text-base font-semibold text-white">{item.title}</p>
+                    </div>
+                    <Badge variant={item.status === "live" ? "teal" : item.status === "recent" ? "blue" : "purple"}>
+                      {item.category}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-white/72">{item.summary}</p>
+                  <p className="mt-4 text-xs uppercase tracking-[0.16em] text-white/48">{item.sourceLabel}</p>
+                </a>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="space-y-5 p-6">
             <div className="flex items-center gap-2">
-              <Clock3 className="h-4 w-4 text-[var(--sky-blue)]" />
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/58">Module timeline</p>
+              <WandSparkles className="h-4 w-4 text-[var(--pastel-petal)]" />
+              <p className="text-[10px] uppercase tracking-[0.22em] text-white/56">Module timeline</p>
             </div>
-            {moduleTimeline.slice(0, 4).map((item) => (
-              <div key={item} className="border border-[var(--border)] px-4 py-3 text-sm text-white/78">
-                {item}
-              </div>
+            {dashboardModuleTimeline.map((item) => (
+              <a
+                key={item.id}
+                href={item.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4 transition hover:border-[var(--border-strong)]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-white">{item.label}</p>
+                  <p className="text-xs uppercase tracking-[0.16em] text-white/48">{item.releaseDate}</p>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-white/72">{item.summary}</p>
+                {item.previewDate ? (
+                  <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/48">Preview surfaced {item.previewDate}</p>
+                ) : null}
+              </a>
             ))}
           </CardContent>
         </Card>
-
-        <Card>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[var(--pastel-petal)]" />
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/58">Quick destinations</p>
-            </div>
-            <Link href="/team-builder" className="flex items-center justify-between border border-[var(--border)] px-4 py-3 text-sm text-white transition hover:border-[var(--sky-blue)]">
-              Team Builder
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/reference" className="flex items-center justify-between border border-[var(--border)] px-4 py-3 text-sm text-white transition hover:border-[var(--sky-blue)]">
-              Reference Hub
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/mounts" className="flex items-center justify-between border border-[var(--border)] px-4 py-3 text-sm text-white transition hover:border-[var(--sky-blue)]">
-              Mount Notes
-              <MountainSnow className="h-4 w-4" />
-            </Link>
-            <Link href="/companions" className="flex items-center justify-between border border-[var(--border)] px-4 py-3 text-sm text-white transition hover:border-[var(--sky-blue)]">
-              Companion Notes
-              <WandSparkles className="h-4 w-4" />
-            </Link>
-          </CardContent>
-        </Card>
-      </aside>
+      </section>
     </div>
   );
 }
