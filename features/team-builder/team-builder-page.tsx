@@ -75,6 +75,97 @@ interface PickerItem {
   badges: Array<{ label: string; variant: BadgeVariant }>;
 }
 
+type AutoSetupGoal = "boost_one_dps" | "overall_team_damage";
+
+const supportMountPriority = [
+  "Hag's Enchanted Cauldron",
+  "Pegasus",
+  "Red Dragon",
+  "Glorious Undead Lion",
+  "Twice-Paled Alder",
+  "Phantom Panther",
+  "Swarm",
+  "Eclipse Lion",
+  "King of Spines / Tyrannosaur",
+  "Brain Stealer Dragon",
+];
+
+const damageMountPriority = [
+  "Tunnel Vision",
+  "Legendary Giant Toad",
+  "Golden Warhorse",
+  "Demonic Gravehound",
+  "Bigby's Hand",
+];
+
+function getClassIdByName(name: string) {
+  return classes.find((item) => item.name === name)?.id ?? "";
+}
+
+function getRecommendedArtifactIds(teamMode: TeamMode) {
+  return Object.entries(artifactRecommendationsById)
+    .map(([id, value]) => ({
+      id,
+      rank: teamMode === "trial" ? (value.trial?.rank ?? 999) : (value.dungeon?.rank ?? 999),
+    }))
+    .sort((left, right) => left.rank - right.rank)
+    .map((item) => item.id);
+}
+
+function getRecommendedCompanionIds() {
+  return Object.entries(companionRecommendationsById)
+    .filter(([, value]) => Boolean(value))
+    .sort((left, right) => (left[1]?.rank ?? 999) - (right[1]?.rank ?? 999))
+    .map(([id]) => id);
+}
+
+function getRecommendedEnhancementIds() {
+  return Object.entries(enhancementRecommendationsById)
+    .filter(([, value]) => Boolean(value))
+    .sort((left, right) => (left[1]?.rank ?? 999) - (right[1]?.rank ?? 999))
+    .map(([id]) => id);
+}
+
+function getMountPowerIdByPriority(priority: string[]) {
+  return priority
+    .map((name) => mountCombatPowers.find((item) => item.name === name)?.id)
+    .filter(Boolean) as string[];
+}
+
+function getSupportClassPlans() {
+  return classes
+    .flatMap((gameClass) =>
+      gameClass.paragon_options.map((paragon) => {
+        const loadout = getDefaultPowerLoadoutForClass(gameClass.id, paragon);
+        const encounterScore = loadout.encounter_ids.reduce(
+          (sum, id) => sum + (powers.find((item) => item.id === id)?.effect_ids.length ?? 0),
+          0,
+        );
+        const featureScore = loadout.feature_ids.reduce(
+          (sum, id) => sum + (powers.find((item) => item.id === id)?.effect_ids.length ?? 0),
+          0,
+        );
+        const role = getRoleForClassParagon(gameClass.id, paragon);
+        const roleBonus =
+          role === "healer" || role === "tank" || role === "support"
+            ? 4
+            : role === "support_dps"
+              ? 3
+              : 1;
+
+        return {
+          classId: gameClass.id,
+          className: gameClass.name,
+          paragon,
+          role,
+          score: encounterScore * 3 + featureScore * 2 + roleBonus,
+          loadout,
+        };
+      }),
+    )
+    .sort((left, right) => right.score - left.score);
+}
+
 function formatRoleLabel(role: TeamMember["role"]) {
   return role === "support_dps"
     ? "Support DPS"
@@ -242,6 +333,7 @@ export function TeamBuilderPage() {
   const [bossId, setBossId] = useState(bossPresets[0]?.id ?? "");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState("");
+  const [autoSetupOpen, setAutoSetupOpen] = useState(false);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
   const [pickerFilter, setPickerFilter] = useState("all");
@@ -417,12 +509,114 @@ export function TeamBuilderPage() {
     closePicker();
   }
 
+  function applyAutoSetup(goal: AutoSetupGoal) {
+    if (!mode) {
+      return;
+    }
+
+    const currentMode = mode;
+    const totalSlots = currentMode === "trial" ? 10 : 5;
+    const nextMembers = createInitialTeamMembers(currentMode);
+    const recommendedArtifacts = getRecommendedArtifactIds(currentMode);
+    const recommendedCompanions = getRecommendedCompanionIds();
+    const recommendedEnhancements = getRecommendedEnhancementIds();
+    const supportMounts = getMountPowerIdByPriority(supportMountPriority);
+    const damageMounts = getMountPowerIdByPriority(damageMountPriority);
+    const supportPlans = getSupportClassPlans();
+
+    const carryClassId = getClassIdByName("Rogue");
+    const carryParagon = "Assassin";
+    const carryLoadout = getDefaultPowerLoadoutForClass(carryClassId, carryParagon);
+    const balancedDamagePlans = [
+      { classId: getClassIdByName("Rogue"), paragon: "Assassin", role: "dps" as const },
+      { classId: getClassIdByName("Ranger"), paragon: "Warden", role: "dps" as const },
+      { classId: getClassIdByName("Wizard"), paragon: "Arcanist", role: "dps" as const },
+      { classId: getClassIdByName("Barbarian"), paragon: "Blademaster", role: "dps" as const },
+    ].filter((item) => item.classId);
+
+    const usedPlans = new Set<string>();
+
+    nextMembers.forEach((member, index) => {
+      const artifactId = recommendedArtifacts[index % Math.max(recommendedArtifacts.length, 1)] ?? "";
+      const companionId = recommendedCompanions[index % Math.max(recommendedCompanions.length, 1)] ?? "";
+      const enhancementId = recommendedEnhancements[index % Math.max(recommendedEnhancements.length, 1)] ?? "";
+
+      if (goal === "boost_one_dps" && index === 0) {
+        member.class_id = carryClassId;
+        member.paragon = carryParagon;
+        member.role = "dps";
+        member.label = "Carry DPS";
+        member.is_carry = true;
+        member.race = "Human";
+        member.artifact_id = artifactId;
+        member.companion_id = companionId;
+        member.enhancement_id = enhancementId;
+        member.mount_combat_power_id = damageMounts[0] ?? supportMounts[0] ?? "";
+        member.encounter_ids = carryLoadout.encounter_ids;
+        member.daily_ids = carryLoadout.daily_ids;
+        member.feature_ids = carryLoadout.feature_ids;
+        return;
+      }
+
+      const balancedDamagePlan = goal === "overall_team_damage" && index < Math.min(balancedDamagePlans.length, totalSlots)
+        ? balancedDamagePlans[index]
+        : null;
+
+      if (balancedDamagePlan) {
+        const loadout = getDefaultPowerLoadoutForClass(balancedDamagePlan.classId, balancedDamagePlan.paragon);
+        member.class_id = balancedDamagePlan.classId;
+        member.paragon = balancedDamagePlan.paragon;
+        member.role = balancedDamagePlan.role;
+        member.label = `${classes.find((item) => item.id === balancedDamagePlan.classId)?.name ?? "DPS"} DPS`;
+        member.race = "Human";
+        member.artifact_id = artifactId;
+        member.companion_id = companionId;
+        member.enhancement_id = enhancementId;
+        member.mount_combat_power_id = damageMounts[index % Math.max(damageMounts.length, 1)] ?? "";
+        member.encounter_ids = loadout.encounter_ids;
+        member.daily_ids = loadout.daily_ids;
+        member.feature_ids = loadout.feature_ids;
+        member.is_carry = index === 0;
+        return;
+      }
+
+      const supportPlan =
+        supportPlans.find((plan) => {
+          const key = `${plan.classId}:${plan.paragon}`;
+          if (usedPlans.has(key)) {
+            return false;
+          }
+
+          usedPlans.add(key);
+          return true;
+        }) ?? supportPlans[0];
+
+      member.class_id = supportPlan.classId;
+      member.paragon = supportPlan.paragon;
+      member.role = goal === "boost_one_dps" ? "support" : supportPlan.role;
+      member.label = `${supportPlan.className} ${supportPlan.paragon}`;
+      member.race = "Human";
+      member.artifact_id = artifactId;
+      member.companion_id = companionId;
+      member.enhancement_id = enhancementId;
+      member.mount_combat_power_id = supportMounts[(goal === "boost_one_dps" ? index - 1 : index) % Math.max(supportMounts.length, 1)] ?? "";
+      member.encounter_ids = supportPlan.loadout.encounter_ids;
+      member.daily_ids = supportPlan.loadout.daily_ids;
+      member.feature_ids = supportPlan.loadout.feature_ids;
+      member.is_carry = false;
+    });
+
+    setTeamMembers(nextMembers);
+    setSelectedMemberId(nextMembers[0]?.id ?? "");
+    setAutoSetupOpen(false);
+  }
+
   if (!mode) {
     return (
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">Team Builder Start</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Team Builder Start</p>
             <CardTitle className="text-[32px]">Choose party size</CardTitle>
             <CardDescription>
               Start with dungeon for 5 players or trial for 10 players. Every slot begins empty.
@@ -432,20 +626,20 @@ export function TeamBuilderPage() {
             <button
               type="button"
               onClick={() => updateTeamMode("dungeon")}
-              className="border border-white/10 bg-white/[0.03] p-8 text-left transition hover:border-sky-200/40"
+              className="border border-white/10 bg-white/[0.03] p-8 text-left transition hover:border-[rgba(162,210,255,0.9)]"
             >
-              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">5 players</p>
-              <p className="mt-3 text-2xl font-semibold text-stone-100">Dungeon</p>
-              <p className="mt-3 text-sm text-stone-400">Single party. Best for standard 5-player group building.</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">5 players</p>
+              <p className="mt-3 text-2xl font-semibold text-white">Dungeon</p>
+              <p className="mt-3 text-sm text-white/75">Single party. Best for standard 5-player group building.</p>
             </button>
             <button
               type="button"
               onClick={() => updateTeamMode("trial")}
-              className="border border-white/10 bg-white/[0.03] p-8 text-left transition hover:border-sky-200/40"
+              className="border border-white/10 bg-white/[0.03] p-8 text-left transition hover:border-[rgba(162,210,255,0.9)]"
             >
-              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">10 players</p>
-              <p className="mt-3 text-2xl font-semibold text-stone-100">Trial</p>
-              <p className="mt-3 text-sm text-stone-400">Two groups of five for endgame trial planning.</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">10 players</p>
+              <p className="mt-3 text-2xl font-semibold text-white">Trial</p>
+              <p className="mt-3 text-sm text-white/75">Two groups of five for endgame trial planning.</p>
             </button>
           </CardContent>
         </Card>
@@ -456,7 +650,7 @@ export function TeamBuilderPage() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardContent className="grid gap-4 p-6 xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)]">
+        <CardContent className="grid gap-4 p-6 xl:grid-cols-[auto_auto_auto_minmax(220px,1fr)_minmax(220px,1fr)]">
           <div className="flex flex-wrap gap-2">
             <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
               Dungeon
@@ -467,6 +661,9 @@ export function TeamBuilderPage() {
           </div>
           <Button variant="secondary" onClick={() => updateTeamMode(mode)}>
             Reset
+          </Button>
+          <Button variant="secondary" onClick={() => setAutoSetupOpen(true)}>
+            Best Setup
           </Button>
           <Field label="Boss preset">
             <Select value={bossId} onChange={(event) => setBossId(event.target.value)}>
@@ -521,7 +718,7 @@ export function TeamBuilderPage() {
                 <CardHeader>
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
                         Selected slot {selectedMember.group}-{selectedMember.slot}
                       </p>
                       <CardTitle className="mt-2">{getMemberTitle(selectedMember)}</CardTitle>
@@ -643,7 +840,7 @@ export function TeamBuilderPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">Recommended debuff encounters</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/60">Recommended debuff encounters</p>
                     {recommendedDebuffEncounters.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {recommendedDebuffEncounters.map((power) => {
@@ -655,8 +852,8 @@ export function TeamBuilderPage() {
                               onClick={() => assignEncounter(selectedMember.id, power.id)}
                               className={`border px-3 py-2 text-sm transition ${
                                 isSelected
-                                  ? "border-sky-200/40 bg-[rgba(162,210,255,0.16)] text-stone-50"
-                                  : "border-white/10 bg-white/[0.03] text-stone-300 hover:border-white/20"
+                                  ? "border-[rgba(162,210,255,0.9)] bg-[rgba(162,210,255,0.16)] text-white"
+                                  : "border-white/10 bg-white/[0.03] text-white/80 hover:border-white/20"
                               }`}
                             >
                               {power.name}
@@ -665,7 +862,7 @@ export function TeamBuilderPage() {
                         })}
                       </div>
                     ) : (
-                      <p className="mt-3 text-sm text-stone-400">
+                      <p className="mt-3 text-sm text-white/70">
                         {selectedMember.class_id ? "No mapped debuff encounters for this class and paragon." : "Select class and paragon first."}
                       </p>
                     )}
@@ -869,7 +1066,7 @@ export function TeamBuilderPage() {
               <CardTitle>Carry Summary</CardTitle>
               <CardDescription>{carry ? getMemberTitle(carry) : "No carry selected"}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-stone-300">
+            <CardContent className="space-y-3 text-sm text-white/80">
               <p>Damage bonus: {formatPercent(teamState.carryState.outgoing_damage_bonus)}</p>
               <p>Combat advantage: {formatPercent(teamState.carryState.effective_ca)}</p>
               <p>Power: {formatPercent(teamState.carryState.effective_power)}</p>
@@ -879,7 +1076,7 @@ export function TeamBuilderPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Calculator className="h-4 w-4 text-sky-100" />
+                <Calculator className="h-4 w-4 text-white" />
                 <CardTitle>Mount Hit Calculator</CardTitle>
               </div>
               <CardDescription>Simple breakdown for the currently selected carry setup.</CardDescription>
@@ -921,12 +1118,12 @@ export function TeamBuilderPage() {
                   Boss
                 </Button>
               </div>
-              <div className="grid gap-3 text-sm text-stone-300">
+              <div className="grid gap-3 text-sm text-white/80">
                 <p>After owner: {Math.round(mountCalc.afterOwnerScaling).toLocaleString()}</p>
                 <p>After personal: {Math.round(mountCalc.afterPersonalBuffs).toLocaleString()}</p>
                 <p>After team: {Math.round(mountCalc.afterTeamBuffs).toLocaleString()}</p>
                 <p>After boss: {Math.round(mountCalc.afterBossDebuffs).toLocaleString()}</p>
-                <p className="text-base font-semibold text-stone-100">
+                <p className="text-base font-semibold text-white">
                   Final estimated hit: {Math.round(mountCalc.finalEstimatedHit).toLocaleString()}
                 </p>
               </div>
@@ -934,6 +1131,13 @@ export function TeamBuilderPage() {
           </Card>
         </div>
       </div>
+
+      {autoSetupOpen ? (
+        <AutoSetupOverlay
+          onClose={() => setAutoSetupOpen(false)}
+          onSelect={applyAutoSetup}
+        />
+      ) : null}
 
       {pickerState && pickerMember ? (
         <SelectionOverlay
@@ -966,7 +1170,7 @@ function RosterGroup({
 }) {
   return (
     <section className="space-y-3">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500">{title}</p>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-white/60">{title}</p>
       <div className="space-y-2">
         {members.map((member) => (
           <button
@@ -975,17 +1179,17 @@ function RosterGroup({
             onClick={() => onSelect(member.id)}
             className={`block w-full border p-4 text-left transition ${
               member.id === selectedMemberId
-                ? "border-sky-200/40 bg-[rgba(162,210,255,0.12)]"
+                ? "border-[rgba(162,210,255,0.9)] bg-[rgba(162,210,255,0.12)]"
                 : "border-white/10 bg-white/[0.03] hover:border-white/20"
             }`}
           >
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-stone-100">
+              <p className="text-sm font-medium text-white">
                 {member.group}-{member.slot} {getMemberTitle(member)}
               </p>
               {member.is_carry ? <Badge variant="teal">Carry</Badge> : null}
             </div>
-            <p className="mt-2 text-sm text-stone-400">{getMemberSummary(member)}</p>
+            <p className="mt-2 text-sm text-white/70">{getMemberSummary(member)}</p>
           </button>
         ))}
       </div>
@@ -996,7 +1200,7 @@ function RosterGroup({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block space-y-2">
-      <span className="text-xs uppercase tracking-[0.18em] text-stone-500">{label}</span>
+      <span className="text-xs uppercase tracking-[0.18em] text-white/60">{label}</span>
       {children}
     </label>
   );
@@ -1015,13 +1219,13 @@ function PickerField({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-14 w-full items-center justify-between border border-white/10 bg-white/[0.03] px-4 py-3 text-left transition hover:border-sky-200/40"
+      className="flex min-h-14 w-full items-center justify-between border border-white/10 bg-white/[0.03] px-4 py-3 text-left transition hover:border-[rgba(162,210,255,0.9)]"
     >
       <div>
-        <p className="text-sm font-medium text-stone-100">{title}</p>
-        <p className="mt-1 text-xs text-stone-400">{subtitle}</p>
+        <p className="text-sm font-medium text-white">{title}</p>
+        <p className="mt-1 text-xs text-white/70">{subtitle}</p>
       </div>
-      <Search className="h-4 w-4 text-sky-100" />
+      <Search className="h-4 w-4 text-white" />
     </button>
   );
 }
@@ -1055,23 +1259,23 @@ function SelectionOverlay({
         <div className="flex max-h-full w-full flex-col overflow-hidden border border-white/10 bg-[rgba(30,32,46,0.96)] shadow-[0_36px_90px_rgba(0,0,0,0.35)]">
           <div className="flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/80">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
                 {getPickerLabel(kind)} for {member.group}-{member.slot}
               </p>
-              <h3 className="mt-2 text-2xl font-semibold text-stone-50">{getPickerLabel(kind)}</h3>
-              <p className="mt-2 text-sm text-stone-400">Only concise, proven values are shown in this picker.</p>
+              <h3 className="mt-2 text-2xl font-semibold text-white">{getPickerLabel(kind)}</h3>
+              <p className="mt-2 text-sm text-white/70">Only concise, proven values are shown in this picker.</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center border border-white/10 bg-white/[0.04] text-stone-200 transition hover:border-sky-200/40"
+              className="flex h-10 w-10 items-center justify-center border border-white/10 bg-white/[0.04] text-white transition hover:border-[rgba(162,210,255,0.9)]"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
           <div className="space-y-4 border-b border-white/10 px-6 py-4">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-100/80" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
               <Input
                 value={query}
                 onChange={(event) => onQueryChange(event.target.value)}
@@ -1110,14 +1314,14 @@ function SelectionOverlay({
                       />
                     ) : (
                       <div className="flex h-16 w-16 items-center justify-center border border-white/10 bg-white/[0.04]">
-                        <ImageOff className="h-4 w-4 text-stone-500" />
+                        <ImageOff className="h-4 w-4 text-white/50" />
                       </div>
                     )}
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-base font-semibold text-stone-50">{item.name}</p>
-                      {item.subtitle ? <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{item.subtitle}</p> : null}
+                      <p className="text-base font-semibold text-white">{item.name}</p>
+                      {item.subtitle ? <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/60">{item.subtitle}</p> : null}
                     </div>
                     {item.badges.length ? (
                       <div className="flex flex-wrap gap-2">
@@ -1128,7 +1332,7 @@ function SelectionOverlay({
                         ))}
                       </div>
                     ) : null}
-                    <p className="text-sm leading-6 text-stone-300">{item.description}</p>
+                    <p className="text-sm leading-6 text-white/80">{item.description}</p>
                   </div>
                   <div className="flex flex-col items-stretch justify-between gap-3">
                     <Button variant="primary" onClick={() => onSelect(item.id)}>
@@ -1139,7 +1343,7 @@ function SelectionOverlay({
                         href={item.sourceUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-2 text-xs uppercase tracking-[0.16em] text-sky-100/90"
+                        className="inline-flex items-center justify-center gap-2 text-xs uppercase tracking-[0.16em] text-white/80"
                       >
                         Source
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -1154,6 +1358,63 @@ function SelectionOverlay({
                 description="Try a broader search or switch filters."
               />
             )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AutoSetupOverlay({
+  onClose,
+  onSelect,
+}: {
+  onClose: () => void;
+  onSelect: (goal: AutoSetupGoal) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.78)] backdrop-blur-sm">
+      <div className="mx-auto flex h-full max-w-[760px] items-center justify-center px-5 py-8">
+        <div className="w-full border border-white/15 bg-black p-6 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Best setup</p>
+              <h3 className="mt-2 text-2xl font-semibold text-white">
+                Are you bossing one DPS or do you want overall team damage?
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-white/70">
+                The first option stacks the group around one carry. The second spreads damage across multiple DPS slots and uses damage mounts on those DPS members.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center border border-white/15 bg-black text-white transition hover:border-white/30"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => onSelect("boost_one_dps")}
+              className="border border-[rgba(162,210,255,0.95)] bg-[rgba(162,210,255,0.15)] p-5 text-left transition hover:bg-[rgba(162,210,255,0.22)]"
+            >
+              <p className="text-lg font-semibold text-white">Boost one DPS</p>
+              <p className="mt-2 text-sm leading-6 text-white/75">
+                One carry DPS. The rest of the team is filled with support classes, debuff encounters, support mounts, support artifacts, and top support companions.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelect("overall_team_damage")}
+              className="border border-[rgba(205,180,219,0.95)] bg-[rgba(205,180,219,0.15)] p-5 text-left transition hover:bg-[rgba(205,180,219,0.22)]"
+            >
+              <p className="text-lg font-semibold text-white">Overall team damage</p>
+              <p className="mt-2 text-sm leading-6 text-white/75">
+                Balanced damage lineup. Multiple DPS slots receive 4000-magnitude-style damage mounts while the rest of the team still carries support and debuff coverage.
+              </p>
+            </button>
           </div>
         </div>
       </div>

@@ -1260,3 +1260,64 @@ Checks run:
 Result:
 
 - Both passed after the Team Builder rewrite and proven-value filtering pass.
+
+## Pass 15 - Flat palette reset and guided best-setup automation
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/globals.css`
+- `components/ui/card.tsx`
+- `components/ui/button.tsx`
+- `components/ui/badge.tsx`
+- `components/ui/input.tsx`
+- `components/ui/select.tsx`
+- `components/ui/textarea.tsx`
+- `components/layout/app-shell.tsx`
+- `components/summary-panel.tsx`
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Removed gradient usage from the app-facing shell and shared UI primitives.
+- Reset the visual system to a flat palette built from:
+  - `#cdb4db`
+  - `#ffc8dd`
+  - `#ffafcc`
+  - `#bde0fe`
+  - `#a2d2ff`
+  - black / white
+- Updated shared cards, buttons, badges, inputs, selects, textareas, summary panels, and the shell header/sidebar to use flat surfaces and higher-contrast text.
+- Simplified the Team Builder styling further so it reads more like a straightforward tool than a decorative dashboard.
+- Added a guided `Best Setup` flow in Team Builder:
+  - pressing the button opens a prompt
+  - the user chooses either `Boost one DPS` or `Overall team damage`
+- Implemented auto-fill logic for those two strategies using existing imported data instead of invented values:
+  - recommended artifacts
+  - recommended companions
+  - recommended enhancements
+  - support mount priority
+  - damage mount priority
+  - current class / paragon loadout defaults
+- For `Boost one DPS`, the first slot becomes a carry DPS and the remaining slots are populated with support-oriented classes, artifacts, enhancements, companions, and support mounts.
+- For `Overall team damage`, multiple DPS slots are populated with damage-mount choices while the remaining slots still preserve support and debuff coverage.
+
+Why:
+
+- The user explicitly required that gradients be removed entirely and that the app use only the provided palette plus black/white text where needed.
+- The user also explicitly requested a guided best-setup action that can either maximize one DPS or balance overall team damage.
+- The implementation keeps the auto-build deterministic and source-constrained rather than pretending to know perfect live meta values that are not fully verified.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the flat-theme reset and best-setup automation pass.
