@@ -34,6 +34,7 @@ import {
 } from "@/data/game-data";
 import { sanitizeUiText } from "@/lib/display-text";
 import { calculateMountHit, collectMemberEffects, summarizeTeam } from "@/lib/effect-engine";
+import { exportBuildWorkbook } from "@/lib/team-build-export";
 import {
   createSharedBuildPayload,
   deleteSavedBuild,
@@ -504,15 +505,6 @@ function getPickerLabel(kind: PickerKind) {
   }
 }
 
-function escapeCsvValue(value: string | number | boolean | null | undefined) {
-  const text = String(value ?? "");
-  if (text.includes(",") || text.includes('"') || text.includes("\n")) {
-    return `"${text.replaceAll('"', '""')}"`;
-  }
-
-  return text;
-}
-
 function downloadTextFile(filename: string, content: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -521,70 +513,6 @@ function downloadTextFile(filename: string, content: string, type: string) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
-}
-
-function buildExportCsv(
-  build: Pick<SavedTeamBuild, "name" | "mode" | "trialPreset" | "bossId" | "teamMembers">,
-) {
-  const headers = [
-    "Build Name",
-    "Mode",
-    "Trial Preset",
-    "Boss Id",
-    "Group",
-    "Slot",
-    "Player Name",
-    "Class Id",
-    "Paragon",
-    "Race",
-    "Role",
-    "Artifact Id",
-    "Companion Id",
-    "Enhancement Id",
-    "Companion Bonus Id",
-    "Mount Id",
-    "Mount Combat Power Id",
-    "Mount Equip Power Id",
-    "Insignia Bonus Ids",
-    "Encounter Ids",
-    "Daily Ids",
-    "Feature Ids",
-    "Carry",
-    "Notes",
-  ];
-
-  const rows = build.teamMembers.map((member) =>
-    [
-      build.name,
-      build.mode,
-      build.trialPreset,
-      build.bossId,
-      member.group,
-      member.slot,
-      member.label,
-      member.class_id,
-      member.paragon,
-      member.race,
-      member.role,
-      member.artifact_id,
-      member.companion_id,
-      member.enhancement_id,
-      member.companion_bonus_id,
-      member.mount_id,
-      member.mount_combat_power_id,
-      member.mount_equip_power_id,
-      member.insignia_bonus_ids.join("|"),
-      member.encounter_ids.join("|"),
-      member.daily_ids.join("|"),
-      member.feature_ids.join("|"),
-      member.is_carry,
-      member.notes,
-    ]
-      .map(escapeCsvValue)
-      .join(","),
-  );
-
-  return [headers.map(escapeCsvValue).join(","), ...rows].join("\n");
 }
 
 export function TeamBuilderPage() {
@@ -776,25 +704,20 @@ export function TeamBuilderPage() {
     );
   }
 
-  function exportCurrentBuildCsv() {
+  async function exportCurrentBuildExcel() {
     if (!mode) {
       return;
     }
 
     const name = buildName.trim() || `${mode === "trial" ? "Trial" : "Dungeon"} build`;
-    const csv = buildExportCsv({
+    await exportBuildWorkbook({
+      id: activeSavedBuildId || `export-${Date.now()}`,
       name,
       mode,
       trialPreset,
       bossId,
       teamMembers,
     });
-
-    downloadTextFile(
-      `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "team-build"}.csv`,
-      csv,
-      "text/csv;charset=utf-8",
-    );
   }
 
   async function importBuildFile(file: File) {
@@ -1120,7 +1043,7 @@ export function TeamBuilderPage() {
   }
 
   return (
-    <div className="w-full space-y-8 px-4 py-8 md:px-6 xl:px-8 2xl:px-10 xl:py-10 3xl:pr-[452px]">
+    <div className="w-full space-y-8 px-4 py-8 md:px-6 xl:px-8 2xl:px-10 xl:py-10">
       <section className="border-b border-[var(--border)] pb-6">
         <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-end 2xl:justify-between">
           <div className="space-y-3">
@@ -1192,9 +1115,9 @@ export function TeamBuilderPage() {
                 Save build
               </Button>
               <div className="grid gap-3 sm:grid-cols-3">
-                <Button variant="secondary" className="w-full" onClick={exportCurrentBuildCsv}>
+                <Button variant="secondary" className="w-full" onClick={exportCurrentBuildExcel}>
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  Export Excel
                 </Button>
                 <Button variant="secondary" className="w-full" onClick={exportCurrentBuildJson}>
                   <Download className="mr-2 h-4 w-4" />
@@ -1233,7 +1156,7 @@ export function TeamBuilderPage() {
           ) : null}
         </Card>
 
-      <div className="space-y-8">
+      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start xl:gap-8">
         <div className="space-y-8">
           <div className={`grid gap-6 ${mode === "trial" ? "2xl:grid-cols-2" : "2xl:grid-cols-[minmax(0,1fr)_360px]"}`}>
             <ArchitectGroupCard
@@ -1841,10 +1764,9 @@ export function TeamBuilderPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {selectedMember ? (
-        <aside className="space-y-6 3xl:fixed 3xl:right-6 3xl:top-[96px] 3xl:w-[420px] 3xl:max-h-[calc(100vh-112px)] 3xl:overflow-y-auto 3xl:pr-1">
+        {selectedMember ? (
+          <aside className="space-y-6 xl:sticky xl:top-[96px] xl:max-h-[calc(100vh-112px)] xl:overflow-y-auto xl:pr-1">
           <SelectedSlotSidebarCard
             member={selectedMember}
             selectedClass={selectedClass}
@@ -1857,24 +1779,12 @@ export function TeamBuilderPage() {
             onUpdateCarry={updateCarry}
             onOpenPicker={openPicker}
           />
-          <div className="grid gap-4">
-            <MemberEffectPanel
-              title="Boss debuffs from this slot"
-              effects={selectedMemberEffects.boss}
-              emptyLabel="No resolved boss debuffs on this slot yet."
-            />
-            <MemberEffectPanel
-              title="Team buffs from this slot"
-              effects={selectedMemberEffects.team}
-              emptyLabel="No resolved team buffs on this slot yet."
-            />
-            <MemberEffectPanel
-              title="Personal or carry effects"
-              effects={selectedMemberEffects.personal}
-              hiddenCount={selectedMemberEffects.hiddenCount}
-              emptyLabel="No resolved personal or carry effects on this slot yet."
-            />
-          </div>
+          <MemberEffectPanel
+            title="Boss debuffs from this slot"
+            effects={selectedMemberEffects.boss}
+            hiddenCount={selectedMemberEffects.hiddenCount}
+            emptyLabel="No resolved boss debuffs on this slot yet."
+          />
           <PowerLoadoutSidebarCard
             member={selectedMember}
             selectedClass={selectedClass}
@@ -1885,8 +1795,9 @@ export function TeamBuilderPage() {
             onUpdateMember={updateMember}
             onAssignEncounter={assignEncounter}
           />
-        </aside>
-      ) : null}
+          </aside>
+        ) : null}
+      </div>
 
       {autoSetupOpen ? (
         <AutoSetupOverlay

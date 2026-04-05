@@ -1946,6 +1946,72 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 28 - Upgraded build export to formatted Excel and locked Team Builder into a true 2-column layout
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `package.json`
+- `lib/team-build-export.ts`
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Added `exceljs` as an app dependency so build exports can generate a real `.xlsx` workbook instead of a flat CSV.
+- Created `lib/team-build-export.ts` to centralize workbook generation for Team Builder exports.
+- Built a formatted Excel workbook export with two sheets:
+  - `Overview`
+  - `Team Setup`
+- Styled workbook headers and overview rows so the export opens with readable structure instead of raw id-only data.
+- Added workbook image embedding where the current local typed data already exposes image URLs:
+  - class icons
+  - artifact icons
+  - encounter icons
+  - daily icon
+  - feature icons
+- Kept text fields for entities that do not yet have fully recovered image assets in the current typed dataset, instead of inventing fake images.
+- Replaced the previous `Export CSV` Team Builder action with `Export Excel`.
+- Changed the Team Builder shell from a padded single-column main area plus overlaid right rail to a true responsive 2-column layout at `xl` and above.
+- Removed the old right-padding workaround from the main Team Builder container.
+- Made the right sidebar structurally part of the Team Builder grid instead of relying on late-breakpoint overlay positioning.
+- Kept the right sidebar viewport-aware and scrollable with:
+  - selected slot
+  - boss debuffs from this slot
+  - power loadout
+- Kept the lower summary block in the requested 4-column layout for:
+  - Boss Debuffs
+  - Team Buffs
+  - Carry Summary
+  - Mount Hit Calculator
+
+Why:
+
+- The user wanted the Team Builder to behave as a real 2-column app layout, with the active slot tools anchored on the right instead of feeling detached from the main content.
+- The user also wanted the spreadsheet export to feel presentation-ready rather than dumping raw ids into an unformatted table.
+- Moving from CSV to `.xlsx` makes it possible to preserve headers, spacing, frozen panes, and inline images where local source-aware assets already exist.
+
+Notes:
+
+- The export currently embeds images only for entities that already expose usable image URLs in the app data model.
+- JSON import/export remains the exact-share universal format between users.
+- The formatted Excel export is the presentation-friendly spreadsheet output.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 26 - Fixed shell navigation and added list/detail/search flow for clickable reference surfaces
 
 Date:
