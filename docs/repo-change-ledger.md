@@ -2163,6 +2163,46 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 28 - Strengthened active tab contrast and corrected role split rules
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `components/ui/button.tsx`
+- `components/layout/app-shell.tsx`
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Strengthened the active visual state for the app shell navigation so active tabs are clearly differentiated from hover-only states.
+- Updated the shared button variants so selected mode buttons and preset toggles have a much stronger active treatment and clearer hover separation.
+- Corrected `Party Role Split` so empty slots are no longer counted as `support` before a class is selected.
+- Changed the Team Builder role split card to show assigned roles against the required shell:
+  - Dungeon: `1 tank / 1 healer / 3 DPS`
+  - Standard trial: `2 tanks / 2 healers / 6 DPS`
+  - MSOD: `2 tanks / 3 healers / 5 DPS`
+- Added an explicit MSOD Bard-healer requirement line so the builder now shows progress toward the mandatory `1 Bard / Minstrel healer`.
+
+Why:
+
+- The active tabs and toggles were too close to the hover state, so it was hard to tell what was actually selected.
+- The role split card was misleading because blank slots inherited the default `support` role and inflated the counts.
+- The user wanted the real dungeon, trial, and MSOD shell rules reflected directly in the sidebar.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+
+Result:
+
+- `npm run build` passed.
+
 ## Pass 27 - Replaced the pastel palette with the blue Neverwinter palette
 
 Date:

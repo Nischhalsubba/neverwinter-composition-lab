@@ -9,13 +9,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "border-[var(--sky-blue)] bg-[var(--sky-blue)] text-black hover:bg-[var(--icy-blue)]",
+          "border-[var(--thistle)] bg-[var(--thistle)] text-[var(--sky-blue)] hover:border-[var(--pastel-petal)] hover:bg-[var(--pastel-petal)] hover:text-[var(--sky-blue)]",
         secondary:
-          "border-[var(--thistle)] bg-[rgba(205,180,219,0.18)] text-black hover:bg-[rgba(205,180,219,0.28)]",
+          "border-[var(--pastel-petal)] bg-[var(--surface)] text-black hover:border-[var(--baby-pink)] hover:bg-[var(--panel)]",
         ghost:
-          "border-[var(--pastel-petal)] bg-transparent text-black hover:bg-[rgba(255,200,221,0.16)]",
+          "border-[var(--pastel-petal)] bg-transparent text-black hover:bg-[var(--panel)]",
         danger:
-          "border-[var(--baby-pink)] bg-[var(--baby-pink)] text-black hover:bg-[var(--pastel-petal)]",
+          "border-[var(--baby-pink)] bg-[var(--baby-pink)] text-[var(--thistle)] hover:border-[var(--pastel-petal)] hover:bg-[var(--pastel-petal)]",
       },
       size: {
         sm: "h-10 px-4",

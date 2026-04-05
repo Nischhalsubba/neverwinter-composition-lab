@@ -27,8 +27,8 @@ function ShellLink({
       href={href}
       className={`flex items-center gap-4 border-l-2 px-6 py-3 text-[11px] uppercase tracking-[0.18em] transition ${
         active
-          ? "border-[var(--sky-blue)] bg-[rgba(205,180,219,0.08)] text-black"
-          : "border-transparent text-black/66 hover:text-black"
+          ? "border-[var(--thistle)] bg-[var(--thistle)] text-[var(--sky-blue)]"
+          : "border-transparent text-black/66 hover:bg-[var(--panel)] hover:text-black"
       }`}
     >
       <Icon className={`h-4 w-4 ${active ? "text-[var(--sky-blue)]" : "text-black/58"}`} />
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 href="/"
                 className={`border-b-2 px-0 py-2 text-xs uppercase tracking-[0.14em] ${
-                  pathname === "/" ? "border-[var(--sky-blue)] text-black" : "border-transparent text-black/62"
+                  pathname === "/" ? "border-[var(--thistle)] text-[var(--thistle)]" : "border-transparent text-black/62 hover:text-[var(--thistle)]"
                 }`}
               >
                 Dashboard
@@ -98,8 +98,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 href="/team-builder"
                 className={`border-b-2 px-0 py-2 text-xs uppercase tracking-[0.14em] ${
                   pathname === "/team-builder"
-                    ? "border-[var(--sky-blue)] text-black"
-                    : "border-transparent text-black/62"
+                    ? "border-[var(--thistle)] text-[var(--thistle)]"
+                    : "border-transparent text-black/62 hover:text-[var(--thistle)]"
                 }`}
               >
                 Team Builder

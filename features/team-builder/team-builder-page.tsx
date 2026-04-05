@@ -482,13 +482,47 @@ function getArtifactOverlapSummary(members: TeamMember[]) {
 }
 
 function getPartyRoleSplit(teamMembers: TeamMember[]) {
+  const configuredMembers = teamMembers.filter((member) => member.class_id);
   return {
-    tank: teamMembers.filter((member) => member.role === "tank").length,
-    healer: teamMembers.filter((member) => member.role === "healer").length,
-    dps: teamMembers.filter((member) => member.role === "dps").length,
-    support: teamMembers.filter((member) => member.role === "support").length,
-    supportDps: teamMembers.filter((member) => member.role === "support_dps").length,
-    boost: teamMembers.filter((member) => member.role === "boost").length,
+    tank: configuredMembers.filter((member) => member.role === "tank").length,
+    healer: configuredMembers.filter((member) => member.role === "healer").length,
+    dps: configuredMembers.filter((member) => member.role === "dps").length,
+    support: configuredMembers.filter((member) => member.role === "support").length,
+    supportDps: configuredMembers.filter((member) => member.role === "support_dps").length,
+    boost: configuredMembers.filter((member) => member.role === "boost").length,
+  };
+}
+
+function getRequiredRoleSplit(mode: TeamMode, trialPreset: TrialCompositionPreset) {
+  if (mode === "dungeon") {
+    return {
+      shellLabel: "5-player shell",
+      tank: 1,
+      healer: 1,
+      dps: 3,
+      bardHealerRequired: 0,
+      description: "Dungeon planning assumes 1 tank, 1 healer, and 3 DPS.",
+    };
+  }
+
+  if (trialPreset === "msod") {
+    return {
+      shellLabel: "10-player MSOD shell",
+      tank: 2,
+      healer: 3,
+      dps: 5,
+      bardHealerRequired: 1,
+      description: "MSOD uses 2 tanks, 3 healers, and 5 DPS, with 1 healer locked to Bard / Minstrel.",
+    };
+  }
+
+  return {
+    shellLabel: "10-player trial shell",
+    tank: 2,
+    healer: 2,
+    dps: 6,
+    bardHealerRequired: 0,
+    description: "Standard trial uses 2 tanks, 2 healers, and 6 DPS.",
   };
 }
 
@@ -1785,6 +1819,7 @@ export function TeamBuilderPage() {
             mode={mode}
             trialPreset={trialPreset}
             roleSplit={partyRoleSplit}
+            teamMembers={teamMembers}
           />
           <SelectedSlotSidebarCard
             member={selectedMember}
@@ -2856,24 +2891,17 @@ function PartyRoleSplitCard({
   mode,
   trialPreset,
   roleSplit,
+  teamMembers,
 }: {
   mode: TeamMode;
   trialPreset: TrialCompositionPreset;
   roleSplit: ReturnType<typeof getPartyRoleSplit>;
+  teamMembers: TeamMember[];
 }) {
-  const title =
-    mode === "dungeon"
-      ? "Dungeon role split"
-      : trialPreset === "msod"
-        ? "MSOD role split"
-        : "Trial role split";
-
-  const description =
-    mode === "dungeon"
-      ? "Current 5-player shell coverage."
-      : trialPreset === "msod"
-        ? "Current 10-player MSOD shell coverage with 3 healers."
-        : "Current standard 10-player trial shell coverage.";
+  const required = getRequiredRoleSplit(mode, trialPreset);
+  const assignedBardHealerCount = teamMembers.filter(
+    (member) => member.role === "healer" && member.class_id === getClassIdByName("Bard") && member.paragon === "Minstrel",
+  ).length;
 
   return (
     <Card>
@@ -2882,27 +2910,25 @@ function PartyRoleSplitCard({
           <div>
             <CardTitle>Party Role Split</CardTitle>
             <CardDescription>
-              {title}. {description}
+              {required.description}
             </CardDescription>
           </div>
-          <Badge variant="teal">
-            {mode === "dungeon" ? "5 player shell" : "10 player shell"}
-          </Badge>
+          <Badge variant="teal">{required.shellLabel}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
             <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">Tank</p>
-            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-black">{roleSplit.tank}</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-black">{roleSplit.tank} / {required.tank}</p>
           </div>
           <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
             <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">Healer</p>
-            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-black">{roleSplit.healer}</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-black">{roleSplit.healer} / {required.healer}</p>
           </div>
           <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
             <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">DPS</p>
-            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-black">{roleSplit.dps}</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-black">{roleSplit.dps} / {required.dps}</p>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -2919,6 +2945,14 @@ function PartyRoleSplitCard({
             <p className="mt-2 text-base font-semibold text-black">{roleSplit.boost}</p>
           </div>
         </div>
+        {required.bardHealerRequired > 0 ? (
+          <div className="border border-[var(--border-strong)] bg-[var(--panel)] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">Bard healer requirement</p>
+            <p className="mt-2 text-base font-semibold text-black">
+              {assignedBardHealerCount} / {required.bardHealerRequired} Bard / Minstrel healer
+            </p>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
