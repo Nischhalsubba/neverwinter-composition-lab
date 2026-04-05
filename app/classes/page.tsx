@@ -16,10 +16,11 @@ export default function Page() {
     >
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {classSnapshots.map((item) => {
+          const classEntry = classes.find((entry) => entry.name === item.className);
           const classPowerCount = powers.filter((power) => power.class_name === item.className).length;
 
           return (
-            <Link key={item.className} href={`/reference/classes/${classes.find((entry) => entry.name === item.className)?.id ?? ""}`}>
+            <Link key={item.className} href={classEntry ? `/reference/classes/${classEntry.id}` : "/classes"}>
             <Card className="h-full transition hover:border-[var(--sky-blue)]">
               <CardHeader>
                 <div className="flex items-start gap-4">

@@ -5,6 +5,7 @@ import {
   Users,
   Info,
   LibraryBig,
+  Settings,
 } from "lucide-react";
 
 export const appRoutes: { href: string; label: string; icon: LucideIcon }[] = [
@@ -14,6 +15,7 @@ export const appRoutes: { href: string; label: string; icon: LucideIcon }[] = [
 ];
 
 export const utilityRoutes: { href: string; label: string; icon: LucideIcon; badge?: string }[] = [
+  { href: "/settings", label: "Settings", icon: Settings },
   { href: "/about", label: "Data Notes", icon: Info, badge: "Notes" },
 ];
 

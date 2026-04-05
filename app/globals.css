@@ -9,10 +9,13 @@
   --layout-max: 1920px;
   --background: #09060d;
   --foreground: #ffffff;
-  --panel: rgba(205, 180, 219, 0.12);
-  --panel-2: rgba(189, 224, 254, 0.14);
-  --border: rgba(205, 180, 219, 0.28);
-  --muted: rgba(255, 255, 255, 0.74);
+  --surface: #120d17;
+  --surface-2: #1a1322;
+  --panel: rgba(205, 180, 219, 0.18);
+  --panel-2: rgba(189, 224, 254, 0.18);
+  --border: rgba(205, 180, 219, 0.38);
+  --border-strong: rgba(162, 210, 255, 0.62);
+  --muted: rgba(255, 255, 255, 0.84);
   --teal: var(--sky-blue);
   --green: var(--icy-blue);
   --red: var(--baby-pink);
@@ -49,6 +52,22 @@ body {
   line-height: 1.5;
 }
 
+html[data-high-contrast="true"] {
+  --panel: rgba(205, 180, 219, 0.22);
+  --panel-2: rgba(189, 224, 254, 0.22);
+  --border: rgba(205, 180, 219, 0.48);
+  --border-strong: rgba(162, 210, 255, 0.82);
+}
+
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -61,12 +80,21 @@ textarea {
   font: inherit;
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--sky-blue);
+  outline-offset: 2px;
+}
+
 select {
   color: #ffffff;
 }
 
 select option {
-  background: #09060d;
+  background: var(--surface-2);
   color: #ffffff;
 }
 
@@ -79,7 +107,7 @@ select option:focus-visible {
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 ::selection {

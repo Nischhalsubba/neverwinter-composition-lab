@@ -4,11 +4,12 @@ import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Bell, HelpCircle, Menu, Search, Settings, Swords, X } from "lucide-react";
 
 import { appRoutes, referenceRoutes, utilityRoutes } from "@/config/navigation";
 import { Input } from "@/components/ui/input";
+import { readAppSettings } from "@/lib/app-settings";
 
 function ShellLink({
   href,
@@ -41,6 +42,24 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const applySettings = () => {
+      const settings = readAppSettings();
+      root.dataset.highContrast = settings.highContrastMode ? "true" : "false";
+      root.dataset.reducedMotion = settings.reducedMotion ? "true" : "false";
+    };
+
+    applySettings();
+    window.addEventListener("storage", applySettings);
+    window.addEventListener("focus", applySettings);
+
+    return () => {
+      window.removeEventListener("storage", applySettings);
+      window.removeEventListener("focus", applySettings);
+    };
+  }, []);
 
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

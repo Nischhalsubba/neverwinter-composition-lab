@@ -2163,6 +2163,76 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 30 - Repaired the summary drawer, rebuilt settings, and raised the contrast floor
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `app/settings/page.tsx`
+- `lib/app-settings.ts`
+- `components/layout/app-shell.tsx`
+- `app/globals.css`
+- `components/ui/input.tsx`
+- `components/ui/select.tsx`
+- `components/ui/textarea.tsx`
+- `components/ui/card.tsx`
+- `app/classes/page.tsx`
+- `config/navigation.ts`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Fixed the right-side summary breakdown drawer so it now sits below the fixed app header instead of colliding with it.
+- Increased the drawer width, strengthened its border and surface contrast, and improved the spacing and typography inside each breakdown row.
+- Cleaned imported note text in the drawer so visible source-branding phrases are stripped from frontend notes while the gameplay content remains.
+- Replaced the previous shallow settings page with a real local-preferences screen.
+- Added persistent settings storage in `lib/app-settings.ts` for:
+  - builder defaults
+  - trial preset defaults
+  - auto-setup defaults
+  - calculator assumptions
+  - accessibility and interaction preferences
+  - export behavior
+- Added functional settings actions:
+  - copy settings JSON
+  - import settings JSON
+  - reset defaults
+  - clear all saved builds
+- Hooked the shell into the saved settings so high-contrast mode and reduced-motion mode now apply to the whole app through document-level data attributes.
+- Raised the global surface, border, and placeholder contrast values in `globals.css`.
+- Strengthened shared form control contrast by moving `Input`, `Select`, and `Textarea` onto the darker surface token and a stronger focus border.
+- Moved `Card` surfaces to the explicit surface token to keep panel contrast more consistent across pages.
+- Fixed a broken class-detail link fallback in `app/classes/page.tsx` so the class cards never navigate to an empty reference route.
+- Added `Settings` to the shell utility navigation so the page is directly reachable from sidebar navigation as well as the header icon.
+
+Why:
+
+- The old summary drawer looked like a debug overlay instead of a finished product because it was flush to the viewport top and too narrow for the amount of detail being shown.
+- The user explicitly asked for a comprehensive, functional settings page instead of a placeholder utility screen.
+- Contrast problems were showing up in the drawer and in form fields, so the fix needed to happen at the shared token and component level rather than only in one panel.
+- Empty-route fallbacks undermine trust in the product, so the most obvious broken-link path was removed in this pass.
+
+Notes:
+
+- The new settings layer is local-browser only for now; there is still no backend or auth dependency.
+- Lint output remains dominated by temporary scratch files such as `tmp_*`, not by the production app files changed in this pass.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 29 - Added clickable summary breakdowns and artifact debuff overlap math
 
 Date:

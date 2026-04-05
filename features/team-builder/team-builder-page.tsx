@@ -367,6 +367,17 @@ function getEffectUptimeLabel(effect: EffectDefinition, entityId?: string) {
   return "Uptime not fully recovered";
 }
 
+function cleanBreakdownNoteText(note: string) {
+  const cleaned = note
+    .replace(/directly extracted from nw hub[^.]*\./gi, "")
+    .replace(/community-maintained source[^.]*\./gi, "")
+    .replace(/in-game tooltip confirmation is still recommended\./gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return cleaned || "Recovered effect note.";
+}
+
 function buildSummaryBreakdown(
   members: TeamMember[],
   selectedCarryId: string | undefined,
@@ -423,7 +434,7 @@ function buildSummaryBreakdown(
           isResolved: effect.value !== null,
           valueLabel: effect.value != null ? formatPercent(effect.value) : "Pending",
           uptimeLabel: getEffectUptimeLabel(effect, entityId),
-          notes: sanitizeUiText(effect.notes, "Imported effect note."),
+          notes: cleanBreakdownNoteText(sanitizeUiText(effect.notes, "Imported effect note.")),
         }));
     });
   });
@@ -2095,14 +2106,19 @@ function SummaryBreakdownDrawer({
   const subtitle = state.statLabel ? `${state.statLabel} sources` : "All active sources";
 
   return (
-    <div className="fixed inset-0 z-[70]">
-      <button type="button" aria-label="Close breakdown drawer" className="absolute inset-0 bg-black/58" onClick={onClose} />
-      <aside className="absolute inset-y-0 right-0 flex w-full max-w-[30rem] flex-col border-l border-[var(--border)] bg-[var(--surface)]">
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-5">
+    <div className="fixed inset-x-0 bottom-0 top-[72px] z-[70]">
+      <button
+        type="button"
+        aria-label="Close breakdown drawer"
+        className="absolute inset-0 bg-black/52"
+        onClick={onClose}
+      />
+      <aside className="absolute inset-y-0 right-0 flex w-full max-w-[38rem] min-w-0 flex-col border-l border-[var(--border-strong)] bg-[var(--surface-2)] shadow-[0_18px_80px_rgba(0,0,0,0.45)]">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--border)] bg-[var(--surface-2)] px-6 py-5">
           <div>
             <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--sky-blue)]">Live summary breakdown</p>
             <h3 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-white">{title}</h3>
-            <p className="mt-2 text-sm leading-6 text-white/68">
+            <p className="mt-2 text-sm leading-6 text-white/78">
               {subtitle}. Each source shows where the effect comes from and the recovered uptime window.
             </p>
           </div>
@@ -2120,33 +2136,33 @@ function SummaryBreakdownDrawer({
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/58">Active sources</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/68">Active sources</p>
               <Badge variant="teal">{resolvedItems.length}</Badge>
             </div>
             {resolvedItems.length > 0 ? (
               resolvedItems.map((item) => (
-                <div key={item.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
+                <div key={item.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.04)] px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-white">{item.effectName}</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/68">
                         {item.slotLabel} • {item.playerName}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-white">{item.valueLabel}</p>
+                    <p className="shrink-0 text-sm font-semibold text-white">{item.valueLabel}</p>
                   </div>
-                  <div className="mt-3 grid gap-2 text-sm text-white/74">
+                  <div className="mt-3 grid gap-2 text-sm leading-6 text-white/84">
                     <p>
-                      <span className="text-white/48">From:</span> {item.entityName}
+                      <span className="text-white/62">From:</span> {item.entityName}
                     </p>
                     <p>
-                      <span className="text-white/48">Stat:</span> {item.statLabel}
+                      <span className="text-white/62">Stat:</span> {item.statLabel}
                     </p>
                     <p>
-                      <span className="text-white/48">Uptime:</span> {item.uptimeLabel}
+                      <span className="text-white/62">Uptime:</span> {item.uptimeLabel}
                     </p>
                     <p>
-                      <span className="text-white/48">Notes:</span> {item.notes}
+                      <span className="text-white/62">Notes:</span> {item.notes}
                     </p>
                   </div>
                 </div>
@@ -2162,32 +2178,32 @@ function SummaryBreakdownDrawer({
           {pendingItems.length > 0 ? (
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/58">Pending or unresolved</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-white/68">Pending or unresolved</p>
                 <Badge variant="muted">{pendingItems.length}</Badge>
               </div>
               {pendingItems.map((item) => (
-                <div key={item.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
+                <div key={item.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.04)] px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-white">{item.effectName}</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/68">
                         {item.slotLabel} • {item.playerName}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-white/68">{item.valueLabel}</p>
+                    <p className="shrink-0 text-sm font-semibold text-white/78">{item.valueLabel}</p>
                   </div>
-                  <div className="mt-3 grid gap-2 text-sm text-white/68">
+                  <div className="mt-3 grid gap-2 text-sm leading-6 text-white/80">
                     <p>
-                      <span className="text-white/48">From:</span> {item.entityName}
+                      <span className="text-white/62">From:</span> {item.entityName}
                     </p>
                     <p>
-                      <span className="text-white/48">Stat:</span> {item.statLabel}
+                      <span className="text-white/62">Stat:</span> {item.statLabel}
                     </p>
                     <p>
-                      <span className="text-white/48">Uptime:</span> {item.uptimeLabel}
+                      <span className="text-white/62">Uptime:</span> {item.uptimeLabel}
                     </p>
                     <p>
-                      <span className="text-white/48">Notes:</span> {item.notes}
+                      <span className="text-white/62">Notes:</span> {item.notes}
                     </p>
                   </div>
                 </div>
