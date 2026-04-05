@@ -2163,6 +2163,62 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 26 - Fixed shell active-state contrast and rebuilt companion and mount libraries
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/globals.css`
+- `components/layout/app-shell.tsx`
+- `app/classes/page.tsx`
+- `app/companions/page.tsx`
+- `app/mounts/page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Rebalanced the shell color hierarchy so header, sidebar, and page background now read as one system instead of competing layers.
+- Strengthened active-state contrast in the shell navigation and top tabs by switching active items to a dark filled state with light text.
+- Fixed the `Reference` / `Reference Hub` double-active bug in the sidebar by only marking the secondary `Reference` entry active on child reference pages, not on `/reference` itself.
+- Rebuilt the header search control into a clearer search bar with a dedicated submit action.
+- Rebuilt the `Classes` page into an interactive browser with class selection, paragon switching, and power filtering by debuff, buff, and support focus using imported class and power images.
+- Replaced the static `Companions` page with a filterable planning board:
+  - search
+  - role tag filtering
+  - focus filtering for strongest group buff, strongest debuff, top support, top ST, and trial-must entries
+  - enhancement ranking panel
+- Replaced the static `Mounts` page with a filterable planning board:
+  - mode filter for trial, dungeon, or mixed support setups
+  - type filter for strongest group support, damage mounts, or equip powers
+  - effect-focus filter for incoming-damage, team-buff, owner-scaled, and utility entries
+- Verified that dungeon best-setup role distribution is still enforced as `1 tank / 1 healer / 3 DPS` through the existing Team Builder planning logic.
+
+Why:
+
+- The user reported that active and hover states were too similar, especially in the shell.
+- The user also needed the companion and mount libraries to behave like real planning tools instead of static reference dumps.
+- The duplicate active state on `Reference Hub` and `Reference` created clear navigation ambiguity.
+
+Notes:
+
+- The companion page now supports the actionable filters that can be backed by the currently verified local dataset. Melee/ranged delivery classification is still not inferred because that data is not fully verified in the local source layer.
+- Build and lint are clean for production app code. Remaining lint warnings continue to come only from temporary scratch files such as `tmp_*`.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` reports no production app errors; only existing warnings from temporary scratch files remain.
+
 ## Pass 29 - Unified shell background, redesigned header search, rebuilt class browser, and ran a QA sweep
 
 Date:
