@@ -1501,6 +1501,70 @@ Result:
 
 - `npm run build` passed.
 
+## Pass 31 - Added mobile navigation and replaced generic reference details with NW Hub-backed content
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `components/layout/app-shell.tsx`
+- `app/reference/[entityType]/[itemId]/page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Added a mobile/tablet hamburger navigation flow to the shared app shell.
+- Added an off-canvas mobile navigation drawer that includes:
+  - app routes
+  - reference route entry
+  - utility routes
+  - mobile search field
+- Kept the desktop fixed sidebar behavior unchanged while making the app usable below the `lg` breakpoint.
+- Replaced the old generic reference detail page with an entity-aware detail route.
+- Wired reference details to the imported NW Hub snapshot data and typed game data already stored locally in the repo.
+- Added real detail sections for the main entity types instead of a blank shared shell:
+  - artifacts
+  - companions
+  - classes and paragon records
+  - mounts / mount combat powers / mount equip powers
+  - effects
+  - companion enhancements
+  - companion bonus powers
+  - bosses
+  - patches
+  - glossary terms
+  - dungeons / trials / events where typed notes exist
+- Added richer source-aware right-rail content on detail pages:
+  - visual reference image when available
+  - navigation links
+  - direct source links
+- Used sanitized NW Hub-derived text where raw imported strings contained unresolved placeholders, rather than rendering empty or misleading detail cards.
+- Changed unsupported detail pages to resolve to `notFound()` instead of keeping a hollow placeholder page.
+
+Why:
+
+- The user wanted the app to be usable on mobile and tablet, not just desktop.
+- The previous detail page was a generic wrapper around the reference index and did not justify having a detail route at all.
+- The repo already contained extracted NW Hub snapshot data, so using that data directly is better than showing empty shells or fake placeholder copy.
+- Returning 404 for unsupported entities is better than keeping a detail page with no real content.
+
+Notes:
+
+- NW Hub pages are heavily app-rendered, so the detail implementation relies on the local typed NW Hub snapshots already extracted into the repo and linked back to their source URLs.
+- This satisfies the requirement to use real NW Hub content while keeping the app source-aware and offline-friendly.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+
+Result:
+
+- `npm run build` passed.
+
 ## Pass 30 - Moved Saved Builds and summary cards below the 2-column Team Builder so the right sidebar is slot-tools only
 
 Date:
