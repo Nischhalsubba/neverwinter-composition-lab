@@ -7,15 +7,15 @@
   --icy-blue: #bde0fe;
   --sky-blue: #a2d2ff;
   --layout-max: 1920px;
-  --background: #000000;
-  --foreground: #ffffff;
-  --surface: rgba(205, 180, 219, 0.08);
-  --surface-2: rgba(162, 210, 255, 0.08);
-  --panel: rgba(205, 180, 219, 0.16);
-  --panel-2: rgba(189, 224, 254, 0.16);
-  --border: rgba(205, 180, 219, 0.34);
-  --border-strong: rgba(162, 210, 255, 0.72);
-  --muted: rgba(255, 255, 255, 0.84);
+  --background: #cdb4db;
+  --foreground: #000000;
+  --surface: rgba(255, 200, 221, 0.58);
+  --surface-2: rgba(189, 224, 254, 0.72);
+  --panel: rgba(255, 175, 204, 0.68);
+  --panel-2: rgba(162, 210, 255, 0.74);
+  --border: rgba(205, 180, 219, 0.9);
+  --border-strong: rgba(162, 210, 255, 1);
+  --muted: rgba(0, 0, 0, 0.72);
   --teal: var(--sky-blue);
   --green: var(--icy-blue);
   --red: var(--baby-pink);
@@ -26,7 +26,7 @@
   --radius-chip: 0px;
   --radius-card: 0px;
   --radius-panel: 0px;
-  --shadow-panel: 0 16px 40px rgba(162, 210, 255, 0.18);
+  --shadow-panel: 0 16px 40px rgba(205, 180, 219, 0.35);
 }
 
 @theme inline {
@@ -41,7 +41,7 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
@@ -53,12 +53,12 @@ body {
 }
 
 html[data-high-contrast="true"] {
-  --surface: rgba(205, 180, 219, 0.12);
-  --surface-2: rgba(162, 210, 255, 0.12);
-  --panel: rgba(205, 180, 219, 0.22);
-  --panel-2: rgba(189, 224, 254, 0.22);
-  --border: rgba(205, 180, 219, 0.48);
-  --border-strong: rgba(162, 210, 255, 0.84);
+  --surface: rgba(255, 200, 221, 0.72);
+  --surface-2: rgba(189, 224, 254, 0.84);
+  --panel: rgba(255, 175, 204, 0.82);
+  --panel-2: rgba(162, 210, 255, 0.88);
+  --border: rgba(205, 180, 219, 1);
+  --border-strong: rgba(162, 210, 255, 1);
 }
 
 html[data-reduced-motion="true"] *,
@@ -92,12 +92,12 @@ textarea:focus-visible {
 }
 
 select {
-  color: #ffffff;
+  color: #000000;
 }
 
 select option {
   background: var(--surface-2);
-  color: #ffffff;
+  color: #000000;
 }
 
 select option:checked,
@@ -109,7 +109,7 @@ select option:focus-visible {
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(0, 0, 0, 0.52);
 }
 
 ::selection {

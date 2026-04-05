@@ -35,7 +35,7 @@ export function SummaryPanel({
             {highlights.map((item) => (
               <div
                 key={item.label}
-                className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3"
+                className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
               >
                 <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">{item.label}</p>
                 <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-white">{item.value}</p>
@@ -48,7 +48,7 @@ export function SummaryPanel({
             type="button"
             key={line.label}
             onClick={() => onLineClick?.(line.label)}
-            className="block w-full border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-5 py-4 text-left"
+            className="block w-full border border-[var(--border)] bg-[var(--surface)] px-5 py-4 text-left"
           >
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm text-white">{line.label}</p>

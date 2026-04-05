@@ -77,7 +77,7 @@ function DetailStat({
   value: string | number | null | undefined;
 }) {
   return (
-    <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+    <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
       <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">{label}</p>
       <p className="mt-2 text-sm font-semibold text-white">{value == null || value === "" ? "Not listed" : value}</p>
     </div>
@@ -136,7 +136,7 @@ function renderArtifactDetail(itemId: string): DetailPayload | null {
           {snapshot?.powertext ? (
             <div className="space-y-2">
               <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Power text</p>
-              <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
+              <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
                 <p className="whitespace-pre-line text-sm leading-7 text-white/84">{snapshot.powertext}</p>
               </div>
             </div>
@@ -177,7 +177,7 @@ function renderArtifactDetail(itemId: string): DetailPayload | null {
           </CardHeader>
           <CardContent className="space-y-3">
             {Object.entries(snapshot.ranks).map(([rank, rankData]) => (
-              <div key={rank} className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+              <div key={rank} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-white">{rank}</p>
                   <p className="text-xs uppercase tracking-[0.16em] text-white/62">
@@ -302,7 +302,7 @@ function renderClassDetail(itemId: string): DetailPayload | null {
           {(snapshot?.paragons ?? []).map((paragon) => (
             <div
               key={paragon.name}
-              className={`border px-4 py-4 ${activeParagon === paragon.name ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.08)]" : "border-[var(--border)] bg-[rgba(255,255,255,0.02)]"}`}
+              className={`border px-4 py-4 ${activeParagon === paragon.name ? "border-[var(--sky-blue)] bg-[var(--surface-2)]" : "border-[var(--border)] bg-[var(--surface)]"}`}
             >
               <p className="text-sm font-semibold text-white">{paragon.name}</p>
               <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-white/62">{paragon.role}</p>
@@ -320,7 +320,7 @@ function renderClassDetail(itemId: string): DetailPayload | null {
             .filter((power) => !activeParagon || !power.paragon_path || power.paragon_path === activeParagon)
             .slice(0, 18)
             .map((power) => (
-              <div key={power.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+              <div key={power.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-semibold text-white">{power.name}</p>
                   <Badge variant="muted">{power.power_type}</Badge>
@@ -603,7 +603,7 @@ export default async function Page({
                 <CardDescription>Imported image asset used by the app where available.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="relative aspect-square overflow-hidden border border-[var(--border)] bg-[rgba(255,255,255,0.02)]">
+                <div className="relative aspect-square overflow-hidden border border-[var(--border)] bg-[var(--surface)]">
                   <Image src={detail.imageUrl} alt={item.title} fill className="object-contain p-6" />
                 </div>
               </CardContent>

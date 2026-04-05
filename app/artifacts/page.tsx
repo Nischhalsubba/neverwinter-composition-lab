@@ -38,7 +38,7 @@ export default function Page() {
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-white/10 text-xs uppercase tracking-[0.18em] text-white/54">
+                <tr className="border-b border-[var(--border)] text-xs uppercase tracking-[0.18em] text-white/54">
                   <th className="px-4 py-3">Artifact</th>
                   <th className="px-4 py-3">Recommended Artifact</th>
                   <th className="px-4 py-3">Trial Rank</th>
@@ -54,7 +54,7 @@ export default function Page() {
                   const dungeon = recommendation?.dungeon;
 
                   return (
-                    <tr key={artifact.id} className="border-b border-white/8 align-top">
+                    <tr key={artifact.id} className="border-b border-[var(--border)] align-top">
                       <td className="px-4 py-4">
                         <div className="flex items-start gap-3">
                           {artifact.image_url ? (
@@ -63,7 +63,7 @@ export default function Page() {
                               alt={artifact.name}
                               width={48}
                               height={48}
-                              className="border border-white/10 bg-white/[0.04]"
+                              className="border border-[var(--border)] bg-[var(--surface)]"
                             />
                           ) : null}
                           <div>

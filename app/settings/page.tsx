@@ -32,7 +32,7 @@ function SettingToggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
+    <div className="flex items-start justify-between gap-4 border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
       <div className="min-w-0">
         <p className="text-sm font-medium text-white">{label}</p>
         <p className="mt-1 text-sm leading-6 text-white/78">{description}</p>
@@ -44,7 +44,7 @@ function SettingToggle({
         className={`relative mt-1 h-7 w-14 border transition ${
           checked
             ? "border-[var(--sky-blue)] bg-[var(--sky-blue)]"
-            : "border-[var(--border-strong)] bg-[rgba(255,255,255,0.08)]"
+            : "border-[var(--border-strong)] bg-[var(--surface-2)]"
         }`}
       >
         <span
@@ -273,16 +273,16 @@ export default function Page() {
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-white/80">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-4 py-3">
+                <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                   <p className="text-[10px] uppercase tracking-[0.16em] text-white/62">Saved builds</p>
                   <p className="mt-2 text-lg font-semibold text-white">{savedBuildCount}</p>
                 </div>
-                <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-4 py-3">
+                <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                   <p className="text-[10px] uppercase tracking-[0.16em] text-white/62">Contrast mode</p>
                   <p className="mt-2 text-lg font-semibold text-white">{settings.highContrastMode ? "Enabled" : "Disabled"}</p>
                 </div>
               </div>
-              <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
+              <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
                 <p className="text-sm leading-6 text-white">{status}</p>
               </div>
             </CardContent>

@@ -1212,7 +1212,7 @@ export function TeamBuilderPage() {
             <button
               type="button"
               onClick={() => updateTeamMode("dungeon")}
-              className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-10 text-left transition hover:border-[var(--sky-blue)]"
+              className="border border-[var(--border)] bg-[var(--surface)] p-10 text-left transition hover:border-[var(--sky-blue)]"
             >
               <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">5 players</p>
               <p className="mt-4 text-[34px] font-semibold uppercase tracking-[-0.07em] text-white">Dungeon</p>
@@ -1221,7 +1221,7 @@ export function TeamBuilderPage() {
             <button
               type="button"
               onClick={() => updateTeamMode("trial")}
-              className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-10 text-left transition hover:border-[var(--sky-blue)]"
+              className="border border-[var(--border)] bg-[var(--surface)] p-10 text-left transition hover:border-[var(--sky-blue)]"
             >
               <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">10 players</p>
               <p className="mt-4 text-[34px] font-semibold uppercase tracking-[-0.07em] text-white">Trial</p>
@@ -1589,7 +1589,7 @@ export function TeamBuilderPage() {
                               className={`border px-3 py-2 text-sm transition ${
                                 isSelected
                                   ? "border-[rgba(162,210,255,0.9)] bg-[rgba(162,210,255,0.16)] text-white"
-                                  : "border-white/10 bg-white/[0.03] text-white/80 hover:border-white/20"
+                                  : "border-[var(--border)] bg-[var(--surface)] text-white/80 hover:border-[var(--border-strong)]"
                               }`}
                             >
                               {power.name}
@@ -1827,7 +1827,7 @@ export function TeamBuilderPage() {
             <CardContent className="space-y-3">
               {savedBuilds.length > 0 ? (
                 savedBuilds.slice(0, 6).map((build) => (
-                  <div key={build.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                  <div key={build.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-white">{build.name}</p>
@@ -1894,13 +1894,13 @@ export function TeamBuilderPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                   <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Perfect overlap burst</p>
                   <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-white">
                     {formatPercent(artifactOverlap.burstTotal)}
                   </p>
                 </div>
-                <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                   <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Average 60s cycle</p>
                   <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-white">
                     {formatPercent(artifactOverlap.averageCycleTotal)}
@@ -1912,7 +1912,7 @@ export function TeamBuilderPage() {
                   {artifactOverlap.entries.map((entry) => (
                     <div
                       key={`${entry.slotLabel}-${entry.id}`}
-                      className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3"
+                      className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -2110,10 +2110,10 @@ function SummaryBreakdownDrawer({
       <button
         type="button"
         aria-label="Close breakdown drawer"
-        className="absolute inset-0 bg-black/52"
+        className="absolute inset-0 bg-[rgba(205,180,219,0.42)]"
         onClick={onClose}
       />
-      <aside className="absolute inset-y-0 right-0 flex w-full max-w-[38rem] min-w-0 flex-col border-l border-[var(--border-strong)] bg-[var(--surface-2)] shadow-[0_18px_80px_rgba(0,0,0,0.45)]">
+      <aside className="absolute inset-y-0 right-0 flex w-full max-w-[38rem] min-w-0 flex-col border-l border-[var(--border-strong)] bg-[var(--surface-2)] shadow-[0_18px_80px_rgba(205,180,219,0.35)]">
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--border)] bg-[var(--surface-2)] px-6 py-5">
           <div>
             <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--sky-blue)]">Live summary breakdown</p>
@@ -2141,7 +2141,7 @@ function SummaryBreakdownDrawer({
             </div>
             {resolvedItems.length > 0 ? (
               resolvedItems.map((item) => (
-                <div key={item.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.04)] px-4 py-4">
+                <div key={item.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-white">{item.effectName}</p>
@@ -2182,7 +2182,7 @@ function SummaryBreakdownDrawer({
                 <Badge variant="muted">{pendingItems.length}</Badge>
               </div>
               {pendingItems.map((item) => (
-                <div key={item.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.04)] px-4 py-4">
+                <div key={item.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-white">{item.effectName}</p>
@@ -2256,7 +2256,7 @@ function ArchitectGroupCard({
                   ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.1)]"
                   : member.is_carry
                     ? "border-[var(--pastel-petal)] bg-[rgba(255,200,221,0.08)]"
-                    : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] hover:border-[var(--sky-blue)]"
+                    : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--sky-blue)]"
               }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -2296,7 +2296,7 @@ function ArchitectGroupCard({
 
 function LoadoutRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 py-2">
+    <div className="flex items-center justify-between gap-4 border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
       <p className="text-[10px] uppercase tracking-[0.16em] text-white/52">{label}</p>
       <p className="min-w-0 text-right text-sm font-medium text-white">{value}</p>
     </div>
@@ -2399,7 +2399,7 @@ function MemberEffectPanel({
   hiddenCount?: number;
 }) {
   return (
-    <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4">
+    <div className="border border-[var(--border)] bg-[var(--surface)] p-4">
       <p className="text-[10px] uppercase tracking-[0.18em] text-white/58">{title}</p>
       {effects.length > 0 ? (
         <div className="mt-3 space-y-2">
@@ -2453,7 +2453,7 @@ function MemberInspectorDrawer({
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-[rgba(9,6,13,0.44)]">
-      <div className="absolute inset-y-0 left-0 w-full max-w-[520px] overflow-y-auto border-r border-[var(--border)] bg-[var(--background)] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+      <div className="absolute inset-y-0 left-0 w-full max-w-[520px] overflow-y-auto border-r border-[var(--border)] bg-[var(--background)] shadow-[0_24px_80px_rgba(205,180,219,0.35)]">
         <div className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--background)] px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -2617,7 +2617,7 @@ function MemberInspectorDrawer({
                     className={`border px-3 py-2 text-xs uppercase tracking-[0.12em] ${
                       member.encounter_ids.includes(power.id)
                         ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
-                        : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-white/78"
+                        : "border-[var(--border)] bg-[var(--surface)] text-white/78"
                     }`}
                   >
                     {power.name}
@@ -2680,7 +2680,7 @@ function SelectionOverlay({
   return (
     <div className="fixed inset-0 z-50 bg-[rgba(205,180,219,0.16)] backdrop-blur-sm">
       <div className="mx-auto flex h-full max-w-[1320px] items-center justify-center px-5 py-8">
-        <div className="flex max-h-full w-full flex-col overflow-hidden border border-[var(--border)] bg-[rgba(9,6,13,0.96)] shadow-[0_36px_90px_rgba(0,0,0,0.35)]">
+        <div className="flex max-h-full w-full flex-col overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] shadow-[0_36px_90px_rgba(205,180,219,0.35)]">
           <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-5">
             <div>
               <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
@@ -2790,9 +2790,9 @@ function AutoSetupOverlay({
   const [boostTargetMemberId, setBoostTargetMemberId] = useState(members[0]?.id ?? "");
 
   return (
-    <div className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.78)] backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 bg-[rgba(205,180,219,0.42)] backdrop-blur-sm">
       <div className="mx-auto flex h-full max-w-[760px] items-center justify-center px-5 py-8">
-        <div className="w-full border border-white/15 bg-black p-6 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+        <div className="w-full border border-[var(--border)] bg-[var(--surface-2)] p-6 shadow-[0_16px_40px_rgba(205,180,219,0.35)]">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Best setup</p>
@@ -2806,7 +2806,7 @@ function AutoSetupOverlay({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center border border-white/15 bg-black text-white transition hover:border-white/30"
+              className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[var(--surface)] text-white transition hover:border-[var(--border-strong)]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -3111,7 +3111,7 @@ function PowerLoadoutSidebarCard({
                     className={`border px-3 py-2 text-xs uppercase tracking-[0.12em] ${
                       active
                         ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
-                        : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-white/78"
+                        : "border-[var(--border)] bg-[var(--surface)] text-white/78"
                     }`}
                   >
                     {power.name}

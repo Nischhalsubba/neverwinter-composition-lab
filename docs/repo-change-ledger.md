@@ -2529,6 +2529,65 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 32 - Removed black and white from app surfaces and overlays
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/globals.css`
+- `components/summary-panel.tsx`
+- `app/artifacts/page.tsx`
+- `app/settings/page.tsx`
+- `app/reference/[entityType]/[itemId]/page.tsx`
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Changed the global app background from black to the approved palette, using `#CDB4DB` as the base app field.
+- Rebuilt the shared surface tokens so cards, panels, overlays, and secondary shells now use only:
+  - `#CDB4DB`
+  - `#FFC8DD`
+  - `#FFAFCC`
+  - `#BDE0FE`
+  - `#A2D2FF`
+- Removed the remaining black-based overlays and dark modal panels in Team Builder and replaced them with palette overlays and palette panel fills.
+- Replaced the remaining white-tinted generic panel fills in:
+  - summary cards
+  - artifact table cells
+  - settings cards
+  - generic reference detail cards
+  - Team Builder saved-build rows
+  - Team Builder side panels
+  - Team Builder picker and breakdown panels
+- Switched the app color scheme from dark to light at the browser hint level so native controls stop expecting black-backed UI chrome.
+
+Why:
+
+- The user explicitly said black and white should not be used as app colors, only as text colors when contrast requires them.
+- The earlier palette pass still left black app backgrounds and white-tinted surface utilities in several high-visibility panels.
+- This pass removes those remaining violations at the token level and in the most visible route-level surfaces.
+
+Notes:
+
+- Black and white are still intentionally used for text where contrast requires them.
+- This pass was about eliminating non-palette app surfaces, not removing readable text contrast.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 28 - Upgraded build export to formatted Excel and locked Team Builder into a true 2-column layout
 
 Date:
