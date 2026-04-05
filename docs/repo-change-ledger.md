@@ -1450,3 +1450,54 @@ Checks run:
 Result:
 
 - Both passed after the shell simplification and image-led Team Builder redesign.
+
+## Pass 18 - Enforced dungeon and trial role distributions
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Updated Team Builder composition rules so dungeon presets now assume:
+  - `1 tank`
+  - `1 healer`
+  - `3 DPS`
+- Updated standard trial presets so they now assume:
+  - `6 DPS`
+  - `2 healers`
+  - `2 tanks`
+- Added a visible `Trial preset` control in the Team Builder toolbar with:
+  - `Standard Trial: 6 DPS / 2 Healer / 2 Tank`
+  - `MSOD: 7 DPS / 1 Bard Healer / 2 Tank`
+- Updated auto-setup logic so role assignment now follows those preset distributions instead of filling from a loose support-first pool.
+- Added explicit tank, healer, and DPS class-path plans so auto-setup can reliably place:
+  - tank builds into tank slots
+  - healer builds into healer slots
+  - DPS builds into DPS slots
+- Ensured the MSOD preset forces the healer slot to use the Bard healer path first.
+- Updated the Team Builder start-screen copy so the role expectations are visible before the user chooses dungeon or trial.
+
+Why:
+
+- The user explicitly clarified the intended endgame role counts for dungeon and trial compositions.
+- The user also gave a special MSOD composition note that needed to be reflected in the planner instead of leaving the builder to infer role counts loosely.
+- The supplied MSOD note said `7 DPS / 3 healer / 2 tanks`, which exceeds the product's fixed 10-player trial limit. To stay consistent with the app's 10-player rule, the implementation uses the closest legal interpretation:
+  - `7 DPS / 1 Bard healer / 2 tanks`
+- That assumption is now explicit in the code and this ledger entry so it can be revised later if a different MSOD split is confirmed.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` passed after removing the temporary unused-variable warning from the role-distribution refactor.

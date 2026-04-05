@@ -78,6 +78,7 @@ interface PickerItem {
 }
 
 type AutoSetupGoal = "boost_one_dps" | "overall_team_damage";
+type TrialCompositionPreset = "standard" | "msod";
 
 const supportMountPriority = [
   "Hag's Enchanted Cauldron",
@@ -185,6 +186,37 @@ function getSupportClassPlans() {
       }),
     )
     .sort((left, right) => right.score - left.score);
+}
+
+function getPlannedRoleDistribution(mode: TeamMode, trialPreset: TrialCompositionPreset) {
+  if (mode === "dungeon") {
+    return ["tank", "healer", "dps", "dps", "dps"] as TeamMember["role"][];
+  }
+
+  if (trialPreset === "msod") {
+    return ["tank", "tank", "healer", "dps", "dps", "dps", "dps", "dps", "dps", "dps"] as TeamMember["role"][];
+  }
+
+  return ["tank", "tank", "healer", "healer", "dps", "dps", "dps", "dps", "dps", "dps"] as TeamMember["role"][];
+}
+
+function getRolePlan(
+  className: string,
+  paragon: string,
+  role: TeamMember["role"],
+) {
+  const classId = getClassIdByName(className);
+  if (!classId) {
+    return null;
+  }
+
+  return {
+    classId,
+    className,
+    paragon,
+    role,
+    loadout: getDefaultPowerLoadoutForClass(classId, paragon),
+  };
 }
 
 function formatRoleLabel(role: TeamMember["role"]) {
@@ -385,6 +417,7 @@ function getPickerLabel(kind: PickerKind) {
 
 export function TeamBuilderPage() {
   const [mode, setMode] = useState<TeamMode | null>(null);
+  const [trialPreset, setTrialPreset] = useState<TrialCompositionPreset>("standard");
   const [bossId, setBossId] = useState(bossPresets[0]?.id ?? "");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState("");
@@ -456,6 +489,9 @@ export function TeamBuilderPage() {
   function updateTeamMode(nextMode: TeamMode) {
     const nextMembers = createInitialTeamMembers(nextMode);
     setMode(nextMode);
+    if (nextMode === "dungeon") {
+      setTrialPreset("standard");
+    }
     setTeamMembers(nextMembers);
     setSelectedMemberId(nextMembers[0]?.id ?? "");
     setPickerState(null);
@@ -570,7 +606,6 @@ export function TeamBuilderPage() {
     }
 
     const currentMode = mode;
-    const totalSlots = currentMode === "trial" ? 10 : 5;
     const nextMembers = createInitialTeamMembers(currentMode);
     const recommendedArtifacts = getRecommendedArtifactIds(currentMode);
     const recommendedSupportCompanions = getRecommendedSupportCompanionIds(currentMode);
@@ -580,22 +615,50 @@ export function TeamBuilderPage() {
     const supportMounts = getMountPowerIdByPriority(supportMountPriority);
     const damageMounts = getMountPowerIdByPriority(damageMountPriority);
     const supportPlans = getSupportClassPlans();
+    const plannedRoles = getPlannedRoleDistribution(currentMode, trialPreset);
 
     const carryClassId = getClassIdByName("Rogue");
     const carryParagon = "Assassin";
     const carryLoadout = getDefaultPowerLoadoutForClass(carryClassId, carryParagon);
     const balancedDamagePlans = [
-      { classId: getClassIdByName("Rogue"), paragon: "Assassin", role: "dps" as const },
-      { classId: getClassIdByName("Ranger"), paragon: "Warden", role: "dps" as const },
-      { classId: getClassIdByName("Wizard"), paragon: "Arcanist", role: "dps" as const },
-      { classId: getClassIdByName("Barbarian"), paragon: "Blademaster", role: "dps" as const },
-    ].filter((item) => item.classId);
+      getRolePlan("Rogue", "Assassin", "dps"),
+      getRolePlan("Ranger", "Warden", "dps"),
+      getRolePlan("Wizard", "Arcanist", "dps"),
+      getRolePlan("Barbarian", "Blademaster", "dps"),
+      getRolePlan("Fighter", "Dreadnought", "dps"),
+      getRolePlan("Cleric", "Arbiter", "dps"),
+      getRolePlan("Warlock", "Hellbringer", "dps"),
+    ].filter(Boolean);
 
-    const usedPlans = new Set<string>();
+    const tankPlans = [
+      getRolePlan("Fighter", "Vanguard", "tank"),
+      getRolePlan("Paladin", "Justicar", "tank"),
+    ].filter(Boolean);
+
+    const healerPlans = [
+      getRolePlan("Bard", "Minstrel", "healer"),
+      getRolePlan("Cleric", "Devout", "healer"),
+      getRolePlan("Warlock", "Soulweaver", "healer"),
+      getRolePlan("Paladin", "Oathkeeper", "healer"),
+    ].filter(Boolean);
+
+    const dpsPlans = [
+      getRolePlan("Rogue", "Assassin", "dps"),
+      getRolePlan("Ranger", "Warden", "dps"),
+      getRolePlan("Wizard", "Arcanist", "dps"),
+      getRolePlan("Barbarian", "Blademaster", "dps"),
+      getRolePlan("Fighter", "Dreadnought", "dps"),
+      getRolePlan("Cleric", "Arbiter", "dps"),
+      getRolePlan("Warlock", "Hellbringer", "dps"),
+      getRolePlan("Bard", "Songblade", "dps"),
+    ].filter(Boolean);
+
+    const usedSupportPlans = new Set<string>();
 
     nextMembers.forEach((member, index) => {
       const artifactId = recommendedArtifacts[index % Math.max(recommendedArtifacts.length, 1)] ?? "";
       const enhancementId = recommendedEnhancements[index % Math.max(recommendedEnhancements.length, 1)] ?? "";
+      const plannedRole = plannedRoles[index] ?? "dps";
 
       if (goal === "boost_one_dps" && index === 0) {
         member.class_id = carryClassId;
@@ -614,24 +677,41 @@ export function TeamBuilderPage() {
         return;
       }
 
-      const balancedDamagePlan = goal === "overall_team_damage" && index < Math.min(balancedDamagePlans.length, totalSlots)
-        ? balancedDamagePlans[index]
-        : null;
+      let selectedPlan = null as (ReturnType<typeof getRolePlan> | null);
 
-      if (balancedDamagePlan) {
-        const loadout = getDefaultPowerLoadoutForClass(balancedDamagePlan.classId, balancedDamagePlan.paragon);
-        member.class_id = balancedDamagePlan.classId;
-        member.paragon = balancedDamagePlan.paragon;
-        member.role = balancedDamagePlan.role;
-        member.label = `${classes.find((item) => item.id === balancedDamagePlan.classId)?.name ?? "DPS"} DPS`;
+      if (goal === "overall_team_damage" && plannedRole === "dps") {
+        const dpsIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => plannedRoles[currentIndex] === "dps").length - 1;
+        selectedPlan = balancedDamagePlans[dpsIndex % Math.max(balancedDamagePlans.length, 1)] ?? null;
+      } else if (goal === "boost_one_dps" && plannedRole === "dps") {
+        const dpsIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => plannedRoles[currentIndex] === "dps").length - 2;
+        selectedPlan = dpsPlans[Math.max(dpsIndex, 0) % Math.max(dpsPlans.length, 1)] ?? null;
+      } else if (plannedRole === "tank") {
+        const tankIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => plannedRoles[currentIndex] === "tank").length - 1;
+        selectedPlan = tankPlans[tankIndex % Math.max(tankPlans.length, 1)] ?? null;
+      } else if (plannedRole === "healer") {
+        const healerIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => plannedRoles[currentIndex] === "healer").length - 1;
+        selectedPlan = healerPlans[healerIndex % Math.max(healerPlans.length, 1)] ?? null;
+      }
+
+      if (selectedPlan) {
+        member.class_id = selectedPlan.classId;
+        member.paragon = selectedPlan.paragon;
+        member.role = selectedPlan.role;
+        member.label = `${classes.find((item) => item.id === selectedPlan.classId)?.name ?? "Player"} ${formatRoleLabel(selectedPlan.role)}`;
         member.race = "Human";
         member.artifact_id = artifactId;
-        member.companion_id = recommendedDamageCompanions[index] ?? fallbackCompanions[index] ?? "";
+        member.companion_id =
+          plannedRole === "dps"
+            ? recommendedDamageCompanions[index % Math.max(recommendedDamageCompanions.length, 1)] ?? fallbackCompanions[index] ?? ""
+            : recommendedSupportCompanions[index % Math.max(recommendedSupportCompanions.length, 1)] ?? fallbackCompanions[index] ?? "";
         member.enhancement_id = enhancementId;
-        member.mount_combat_power_id = damageMounts[index % Math.max(damageMounts.length, 1)] ?? "";
-        member.encounter_ids = loadout.encounter_ids;
-        member.daily_ids = loadout.daily_ids;
-        member.feature_ids = loadout.feature_ids;
+        member.mount_combat_power_id =
+          plannedRole === "dps"
+            ? damageMounts[index % Math.max(damageMounts.length, 1)] ?? supportMounts[0] ?? ""
+            : supportMounts[index % Math.max(supportMounts.length, 1)] ?? "";
+        member.encounter_ids = selectedPlan.loadout.encounter_ids;
+        member.daily_ids = selectedPlan.loadout.daily_ids;
+        member.feature_ids = selectedPlan.loadout.feature_ids;
         member.is_carry = index === 0;
         return;
       }
@@ -639,11 +719,11 @@ export function TeamBuilderPage() {
       const supportPlan =
         supportPlans.find((plan) => {
           const key = `${plan.classId}:${plan.paragon}`;
-          if (usedPlans.has(key)) {
+          if (usedSupportPlans.has(key)) {
             return false;
           }
 
-          usedPlans.add(key);
+          usedSupportPlans.add(key);
           return true;
         }) ?? supportPlans[0];
 
@@ -678,7 +758,7 @@ export function TeamBuilderPage() {
             <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Team Builder Start</p>
             <CardTitle className="text-[32px]">Choose party size</CardTitle>
             <CardDescription>
-              Start with dungeon for 5 players or trial for 10 players. Every slot begins empty.
+              Start with dungeon for 5 players or trial for 10 players. Every slot begins empty. Dungeon presets assume 1 tank and 1 healer. Trial presets assume 6 DPS, 2 healers, and 2 tanks.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
@@ -689,7 +769,7 @@ export function TeamBuilderPage() {
             >
               <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">5 players</p>
               <p className="mt-3 text-2xl font-semibold text-white">Dungeon</p>
-              <p className="mt-3 text-sm text-white/75">Single party. Best for standard 5-player group building.</p>
+              <p className="mt-3 text-sm text-white/75">Single party with 1 tank, 1 healer, and 3 DPS.</p>
             </button>
             <button
               type="button"
@@ -698,7 +778,7 @@ export function TeamBuilderPage() {
             >
               <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">10 players</p>
               <p className="mt-3 text-2xl font-semibold text-white">Trial</p>
-              <p className="mt-3 text-sm text-white/75">Two groups of five for endgame trial planning.</p>
+              <p className="mt-3 text-sm text-white/75">Two groups of five with the default 2 tank, 2 healer, 6 DPS split.</p>
             </button>
           </CardContent>
         </Card>
@@ -708,19 +788,27 @@ export function TeamBuilderPage() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardContent className="grid gap-4 p-6 xl:grid-cols-[auto_auto_auto_minmax(220px,1fr)_minmax(220px,1fr)]">
-          <div className="flex flex-wrap gap-2">
-            <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
-              Dungeon
+        <Card>
+          <CardContent className="grid gap-4 p-6 xl:grid-cols-[auto_auto_auto_minmax(220px,1fr)_minmax(220px,1fr)]">
+            <div className="flex flex-wrap gap-2">
+              <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
+                Dungeon
             </Button>
             <Button variant={mode === "trial" ? "primary" : "secondary"} onClick={() => updateTeamMode("trial")}>
               Trial
             </Button>
-          </div>
-          <Button variant="secondary" onClick={() => updateTeamMode(mode)}>
-            Reset
-          </Button>
+            </div>
+            {mode === "trial" ? (
+              <Field label="Trial preset">
+                <Select value={trialPreset} onChange={(event) => setTrialPreset(event.target.value as TrialCompositionPreset)}>
+                  <option value="standard">Standard Trial: 6 DPS / 2 Healer / 2 Tank</option>
+                  <option value="msod">MSOD: 7 DPS / 1 Bard Healer / 2 Tank</option>
+                </Select>
+              </Field>
+            ) : null}
+            <Button variant="secondary" onClick={() => updateTeamMode(mode)}>
+              Reset
+            </Button>
           <Button variant="secondary" onClick={() => setAutoSetupOpen(true)}>
             Best Setup
           </Button>
