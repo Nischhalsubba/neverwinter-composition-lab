@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { Bell, HelpCircle, Menu, Search, Settings, Swords, X } from "lucide-react";
+import { HelpCircle, Menu, Search, Settings, Swords, X } from "lucide-react";
 
 import { appRoutes, referenceRoutes, utilityRoutes } from "@/config/navigation";
 import { Input } from "@/components/ui/input";
@@ -118,9 +118,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               />
             </form>
             <div className="hidden items-center gap-3 sm:flex">
-              <Link href="/patch-tracker" aria-label="Patch tracker">
-                <Bell className="h-4 w-4 text-white/72 transition hover:text-white" />
-              </Link>
               <Link href="/reference" aria-label="Reference hub">
                 <HelpCircle className="h-4 w-4 text-white/72 transition hover:text-white" />
               </Link>

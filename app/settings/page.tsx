@@ -306,9 +306,6 @@ export default function Page() {
               <Link href="/about" className="block border border-[var(--border)] px-4 py-3 text-white transition hover:border-[var(--sky-blue)]">
                 Data Notes
               </Link>
-              <Link href="/patch-tracker" className="block border border-[var(--border)] px-4 py-3 text-white transition hover:border-[var(--sky-blue)]">
-                Patch Tracker
-              </Link>
             </CardContent>
           </Card>
 

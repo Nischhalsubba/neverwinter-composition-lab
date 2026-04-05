@@ -25,10 +25,5 @@ export const referenceRoutes: { href: string; label: string; icon: LucideIcon }[
   { href: "/companions", label: "Companions", icon: BookOpen },
   { href: "/mounts", label: "Mounts", icon: BookOpen },
   { href: "/artifacts", label: "Artifacts", icon: BookOpen },
-  { href: "/dungeons", label: "Dungeons", icon: BookOpen },
-  { href: "/trials", label: "Trials", icon: BookOpen },
-  { href: "/events", label: "Events", icon: BookOpen },
-  { href: "/patch-tracker", label: "Patch Tracker", icon: BookOpen },
-  { href: "/endgame-guide", label: "Endgame Guide", icon: BookOpen },
   { href: "/glossary", label: "Glossary", icon: BookOpen },
 ];

@@ -46,14 +46,14 @@ export default function Page() {
                 return (
                   <div key={companion.id} className="border border-white/10 bg-white/[0.03] p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Link href={`/reference/companions/${companion.id}`} className="text-sm font-medium text-stone-100 hover:text-white">
+                      <Link href={`/reference/companions/${companion.id}`} className="text-sm font-medium text-white hover:text-white/84">
                         {companion.name}
                       </Link>
                       <Badge variant="teal">Rank #{recommendation?.rank}</Badge>
                       <Badge variant="purple">{companion.role_tag}</Badge>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-stone-300">{recommendation?.benefit}</p>
-                    <p className="mt-2 text-sm text-stone-400">
+                    <p className="mt-2 text-sm leading-6 text-white/82">{recommendation?.benefit}</p>
+                    <p className="mt-2 text-sm text-white/70">
                       Rough damage boost: {recommendation?.roughDamageBoost?.toFixed(2) ?? "pending"}% | ST DPS: {recommendation?.stDps ?? "pending"}
                     </p>
                   </div>
@@ -87,10 +87,10 @@ export default function Page() {
                         </Badge>
                       ))}
                     </div>
-                    <Link href={`/reference/companion-powers/${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`} className="mt-3 block text-sm font-medium text-stone-100 hover:text-white">
+                    <Link href={`/reference/companion-powers/${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`} className="mt-3 block text-sm font-medium text-white hover:text-white/84">
                       {item.name}
                     </Link>
-                    <p className="mt-2 text-sm leading-6 text-stone-400">
+                    <p className="mt-2 text-sm leading-6 text-white/74">
                       {sanitizeUiText(item.text, "Verified slot-bonus entry. Exact variable tooltip values are hidden until fully proven.")}
                     </p>
                   </div>
@@ -118,12 +118,12 @@ export default function Page() {
                   return (
                     <div key={item.name} className="border border-white/10 bg-white/[0.03] p-4">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Link href={`/reference/enhancements/${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`} className="text-sm font-medium text-stone-100 hover:text-white">
+                        <Link href={`/reference/enhancements/${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`} className="text-sm font-medium text-white hover:text-white/84">
                           {item.name}
                         </Link>
                         {recommendation ? <Badge variant="teal">Rank #{recommendation.rank}</Badge> : null}
                       </div>
-                      <p className="mt-2 text-sm leading-6 text-stone-400">
+                      <p className="mt-2 text-sm leading-6 text-white/74">
                         {recommendation
                           ? `${recommendation.benefit}${recommendation.damageBoost != null ? ` Damage boost ${recommendation.damageBoost.toFixed(2)}%.` : ""}`
                           : sanitizeUiText(item.text, "Verified enhancement entry. Exact variable tooltip values are hidden until fully proven.")}

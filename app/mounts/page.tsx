@@ -23,12 +23,12 @@ export default function Page() {
             {mounts.map((mount) => (
               <div key={mount.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link href={`/reference/mounts/${mount.id}`} className="text-sm font-medium text-stone-100 hover:text-white">
+                  <Link href={`/reference/mounts/${mount.id}`} className="text-sm font-medium text-white hover:text-white/84">
                     {mount.name}
                   </Link>
                   <Badge variant="orange">{mount.mount_type}</Badge>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-stone-400">{mount.notes}</p>
+                <p className="mt-3 text-sm leading-6 text-white/74">{mount.notes}</p>
                 <div className="mt-3">
                   <SourceBadge {...mount} />
                 </div>
@@ -45,15 +45,15 @@ export default function Page() {
             {mountCombatPowers.map((power) => (
               <div key={power.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link href={`/reference/mounts/${power.id}`} className="text-sm font-medium text-stone-100 hover:text-white">
+                  <Link href={`/reference/mounts/${power.id}`} className="text-sm font-medium text-white hover:text-white/84">
                     {power.name}
                   </Link>
                   <Badge variant="blue">{power.damage_type}</Badge>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-stone-400">
+                <p className="mt-3 text-sm leading-6 text-white/74">
                   Base hit: {power.base_hit ? power.base_hit.toLocaleString() : "Pending verification"}.
                 </p>
-                <p className="mt-2 text-sm leading-6 text-stone-400">{power.notes}</p>
+                <p className="mt-2 text-sm leading-6 text-white/74">{power.notes}</p>
               </div>
             ))}
           </CardContent>

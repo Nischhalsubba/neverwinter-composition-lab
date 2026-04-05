@@ -2386,6 +2386,89 @@ Result:
 
 - `npm run build` passed.
 
+## Pass 30 - Removed empty routes, simplified the dashboard, and tightened the app to the approved palette
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/events/page.tsx`
+- `app/patch-tracker/page.tsx`
+- `app/dungeons/page.tsx`
+- `app/endgame-guide/page.tsx`
+- `app/trials/page.tsx`
+- `config/navigation.ts`
+- `app/reference/page.tsx`
+- `app/reference/[entityType]/[itemId]/page.tsx`
+- `components/layout/app-shell.tsx`
+- `app/settings/page.tsx`
+- `app/page.tsx`
+- `app/globals.css`
+- `features/team-builder/team-builder-page.tsx`
+- `app/about/page.tsx`
+- `app/glossary/page.tsx`
+- `app/buffs-debuffs/page.tsx`
+- `app/companions/page.tsx`
+- `app/mounts/page.tsx`
+- `app/artifacts/page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Deleted the empty route pages the user explicitly wanted removed:
+  - `events`
+  - `patch tracker`
+  - `dungeons`
+  - `end game guide`
+  - `trials`
+- Removed those routes from the shell navigation so the sidebar no longer points to empty or low-value pages.
+- Updated the reference hub and generic detail-route fallback map so deleted pages now resolve back into the surviving reference surfaces instead of linking to dead routes.
+- Removed the remaining shell-level links that still referenced deleted routes.
+- Rebuilt the dashboard into a simpler builder-first planning surface.
+- Removed the old live-feed / module-timeline style dashboard structure and replaced it with only the cards that directly help Team Builder:
+  - mode switch
+  - role shell summary
+  - builder actions
+  - top debuff artifacts
+  - top companions
+  - top purple debuffs
+- Simplified the dashboard layout to a cleaner 2-column information flow instead of a noisier multi-panel command board.
+- Tightened the global theme tokens in `app/globals.css` so the app now stays on the approved palette:
+  - `#CDB4DB`
+  - `#FFC8DD`
+  - `#FFAFCC`
+  - `#BDE0FE`
+  - `#A2D2FF`
+- Kept black and white only for foreground / background text contrast and removed remaining stray utility grays from the touched frontend pages.
+- Restyled the Team Builder `Party Role Split` card into clearer count blocks so it no longer reads like a cramped diagnostic panel.
+- Replaced lingering `text-stone-*` style utilities in the app pages touched by this pass with palette-safe white-opacity text styles so the frontend no longer drifts into off-palette gray.
+
+Why:
+
+- The user explicitly asked for empty pages to be removed rather than left as hollow routes.
+- The previous dashboard still looked like a generalized status board instead of a focused planning surface for Team Builder.
+- The user wanted the role split area fixed and the palette constrained to the uploaded five-color reference image.
+- Cleaning the remaining off-palette text utilities was necessary so the app would not keep regressing into mixed visual language.
+
+Notes:
+
+- The underlying imported data is still available for the surviving list and detail pages even though several top-level routes were removed.
+- Route removal here was limited to the empty / low-value pages the user named, not to the fuller reference surfaces such as artifacts, classes, companions, mounts, buffs and debuffs, glossary, settings, and the reference hub.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 28 - Upgraded build export to formatted Excel and locked Team Builder into a true 2-column layout
 
 Date:

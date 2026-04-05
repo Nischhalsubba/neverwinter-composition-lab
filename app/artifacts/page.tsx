@@ -38,7 +38,7 @@ export default function Page() {
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-white/10 text-xs uppercase tracking-[0.18em] text-stone-500">
+                <tr className="border-b border-white/10 text-xs uppercase tracking-[0.18em] text-white/54">
                   <th className="px-4 py-3">Artifact</th>
                   <th className="px-4 py-3">Recommended Artifact</th>
                   <th className="px-4 py-3">Trial Rank</th>
@@ -67,10 +67,10 @@ export default function Page() {
                             />
                           ) : null}
                           <div>
-                            <Link href={`/reference/artifacts/${artifact.id}`} className="font-medium text-stone-100 hover:text-white">
+                            <Link href={`/reference/artifacts/${artifact.id}`} className="font-medium text-white hover:text-white/84">
                               {artifact.name}
                             </Link>
-                            <p className="mt-1 text-sm text-stone-400">{artifact.category}</p>
+                            <p className="mt-1 text-sm text-white/70">{artifact.category}</p>
                           </div>
                         </div>
                       </td>
@@ -81,15 +81,15 @@ export default function Page() {
                           {!trial && !dungeon ? <Badge variant="muted">Not ranked</Badge> : null}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-stone-200">{trial ? `#${trial.rank}` : "-"}</td>
-                      <td className="px-4 py-4 text-sm text-stone-200">{dungeon ? `#${dungeon.rank}` : "-"}</td>
-                      <td className="px-4 py-4 text-sm text-stone-200">
+                      <td className="px-4 py-4 text-sm text-white/82">{trial ? `#${trial.rank}` : "-"}</td>
+                      <td className="px-4 py-4 text-sm text-white/82">{dungeon ? `#${dungeon.rank}` : "-"}</td>
+                      <td className="px-4 py-4 text-sm text-white/82">
                         <div className="space-y-1">
                           <p>{trial ? `Trial ${trial.damageBoost.toFixed(2)}%` : "Trial -"}</p>
                           <p>{dungeon ? `Dungeon ${dungeon.damageBoost.toFixed(2)}%` : "Dungeon -"}</p>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm leading-6 text-stone-400">{artifact.notes}</td>
+                      <td className="px-4 py-4 text-sm leading-6 text-white/74">{artifact.notes}</td>
                     </tr>
                   );
                 })}

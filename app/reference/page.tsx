@@ -11,7 +11,6 @@ import {
   companions,
   effectCatalog,
   mountCombatPowers,
-  patchChanges,
 } from "@/data/game-data";
 
 const routeSummaries: Record<string, { count: string; preview: string }> = {
@@ -44,13 +43,6 @@ const routeSummaries: Record<string, { count: string; preview: string }> = {
     count: `${artifacts.length} artifacts`,
     preview: artifacts
       .slice(0, 3)
-      .map((item) => item.name)
-      .join(" / "),
-  },
-  "/patch-tracker": {
-    count: `${patchChanges.length} patch notes`,
-    preview: patchChanges
-      .slice(0, 2)
       .map((item) => item.name)
       .join(" / "),
   },

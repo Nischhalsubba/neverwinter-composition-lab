@@ -19,7 +19,7 @@ export default function Page() {
                 <Link href={`/reference/glossary/${entry.term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`}>{entry.term}</Link>
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm leading-6 text-stone-400">{entry.definition}</CardContent>
+            <CardContent className="text-sm leading-6 text-white/74">{entry.definition}</CardContent>
           </Card>
         ))}
       </div>

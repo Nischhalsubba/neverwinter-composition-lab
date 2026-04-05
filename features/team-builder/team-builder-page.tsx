@@ -2878,35 +2878,44 @@ function PartyRoleSplitCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Party Role Split</CardTitle>
-        <CardDescription>
-          {title}. {description}
-        </CardDescription>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle>Party Role Split</CardTitle>
+            <CardDescription>
+              {title}. {description}
+            </CardDescription>
+          </div>
+          <Badge variant="teal">
+            {mode === "dungeon" ? "5 player shell" : "10 player shell"}
+          </Badge>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-          <span className="text-sm text-white">Tank</span>
-          <span className="text-sm font-semibold text-white">{roleSplit.tank}</span>
-        </div>
-        <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-          <span className="text-sm text-white">Healer</span>
-          <span className="text-sm font-semibold text-white">{roleSplit.healer}</span>
-        </div>
-        <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-          <span className="text-sm text-white">DPS</span>
-          <span className="text-sm font-semibold text-white">{roleSplit.dps}</span>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Tank</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-white">{roleSplit.tank}</p>
+          </div>
+          <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Healer</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-white">{roleSplit.healer}</p>
+          </div>
+          <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">DPS</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-white">{roleSplit.dps}</p>
+          </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 py-3 text-center">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/56">Support</p>
+          <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Support</p>
             <p className="mt-2 text-base font-semibold text-white">{roleSplit.support}</p>
           </div>
-          <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 py-3 text-center">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/56">Support DPS</p>
+          <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Support DPS</p>
             <p className="mt-2 text-base font-semibold text-white">{roleSplit.supportDps}</p>
           </div>
-          <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 py-3 text-center">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/56">Boost</p>
+          <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Boost</p>
             <p className="mt-2 text-base font-semibold text-white">{roleSplit.boost}</p>
           </div>
         </div>
