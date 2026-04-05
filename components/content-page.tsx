@@ -21,7 +21,7 @@ export function ContentPage({
   metadata?: SourceMetadata;
 }) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -35,7 +35,7 @@ export function ContentPage({
         </Card>
         {children}
       </div>
-      <div className="space-y-6">{rightRail}</div>
+      {rightRail ? <div className="space-y-6">{rightRail}</div> : null}
     </div>
   );
 }

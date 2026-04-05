@@ -200,6 +200,19 @@ function getMemberTitle(member: TeamMember) {
   return className ? `${className}${member.paragon ? ` / ${member.paragon}` : ""}` : `Empty Slot ${member.slot}`;
 }
 
+function getInitials(value: string) {
+  return value
+    .split(/[\s/&-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function getClassImage(classId: string) {
+  return classes.find((item) => item.id === classId)?.image_url;
+}
+
 function getMemberSummary(member: TeamMember) {
   const parts = [
     member.race || "Race not set",
@@ -761,106 +774,162 @@ export function TeamBuilderPage() {
           {selectedMember ? (
             <>
               <Card>
-                <CardHeader>
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
-                        Selected slot {selectedMember.group}-{selectedMember.slot}
-                      </p>
-                      <CardTitle className="mt-2">{getMemberTitle(selectedMember)}</CardTitle>
-                      <CardDescription>{getMemberSummary(selectedMember)}</CardDescription>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedMember.is_carry ? <Badge variant="teal">Carry</Badge> : null}
-                      <Badge variant="muted">{formatRoleLabel(selectedMember.role)}</Badge>
-                    </div>
+                  <CardHeader>
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <SelectionThumb imageUrl={getClassImage(selectedMember.class_id)} label={getMemberTitle(selectedMember)} />
+                        <div>
+                          <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
+                            Selected slot {selectedMember.group}-{selectedMember.slot}
+                          </p>
+                          <CardTitle className="mt-2">{getMemberTitle(selectedMember)}</CardTitle>
+                          <CardDescription>{getMemberSummary(selectedMember)}</CardDescription>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedMember.is_carry ? <Badge variant="teal">Carry</Badge> : null}
+                        <Badge variant="muted">{formatRoleLabel(selectedMember.role)}</Badge>
+                      </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <Field label="Class">
-                      <Select value={selectedMember.class_id} onChange={(event) => handleClassChange(selectedMember.id, event.target.value)}>
-                        <option value="">Select class</option>
-                        {classes.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Select>
-                    </Field>
-                    <Field label="Paragon">
-                      <Select value={selectedMember.paragon} onChange={(event) => handleParagonChange(selectedMember.id, event.target.value)}>
-                        <option value="">{selectedMember.class_id ? "Select paragon" : "Select class first"}</option>
-                        {(selectedClass?.paragon_options ?? []).map((paragon) => (
-                          <option key={paragon} value={paragon}>
-                            {paragon}
-                          </option>
-                        ))}
-                      </Select>
-                    </Field>
-                    <Field label="Role">
-                      <Select
-                        value={selectedMember.role}
-                        onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
-                      >
-                        {roleOptions.map((role) => (
-                          <option key={role.value} value={role.value}>
-                            {role.label}
-                          </option>
-                        ))}
-                      </Select>
-                    </Field>
-                    <Field label="Race">
-                      <Select value={selectedMember.race} onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}>
-                        <option value="">Select race</option>
-                        {raceOptions.map((race) => (
-                          <option key={race} value={race}>
-                            {race}
-                          </option>
-                        ))}
-                      </Select>
-                    </Field>
-                  </div>
+                  <CardContent className="space-y-6">
+                    <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+                      <div className="space-y-4">
+                        <Field label="Class">
+                          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {classes.map((item) => {
+                              const active = selectedMember.class_id === item.id;
 
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <Field label="Artifact">
-                      <PickerField
-                        title={artifacts.find((item) => item.id === selectedMember.artifact_id)?.name ?? "Select artifact"}
-                        subtitle="Ranked artifact list"
-                        onClick={() => openPicker(selectedMember.id, "artifact")}
-                      />
-                    </Field>
-                    <Field label="Companion">
-                      <PickerField
-                        title={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Select companion"}
-                        subtitle="Support and damage companions"
-                        onClick={() => openPicker(selectedMember.id, "companion")}
-                      />
-                    </Field>
-                    <Field label="Enhancement">
-                      <PickerField
-                        title={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Select enhancement"}
-                        subtitle="Only proven values shown"
-                        onClick={() => openPicker(selectedMember.id, "enhancement")}
-                      />
-                    </Field>
-                    <Field label="Mount combat power">
-                      <PickerField
-                        title={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Select mount"}
-                        subtitle="Mount power list"
-                        onClick={() => openPicker(selectedMember.id, "mount")}
-                      />
-                    </Field>
-                  </div>
+                              return (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => handleClassChange(selectedMember.id, item.id)}
+                                  className={`flex items-center gap-3 border p-3 text-left transition ${
+                                    active
+                                      ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.16)]"
+                                      : "border-[var(--border)] bg-[rgba(205,180,219,0.1)] hover:border-[var(--pastel-petal)]"
+                                  }`}
+                                >
+                                  <SelectionThumb imageUrl={item.image_url} label={item.name} />
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium text-white">{item.name}</p>
+                                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/80">
+                                      {item.role_focus.map(formatRoleLabel).join(" / ")}
+                                    </p>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </Field>
 
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant={selectedMember.is_carry ? "primary" : "secondary"} onClick={() => updateCarry(selectedMember.id)}>
-                      {selectedMember.is_carry ? "Selected carry" : "Mark as carry"}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() =>
-                        updateMember(selectedMember.id, {
+                        <Field label="Paragon">
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {(selectedClass?.paragon_options ?? []).map((paragon) => {
+                              const active = selectedMember.paragon === paragon;
+
+                              return (
+                                <button
+                                  key={paragon}
+                                  type="button"
+                                  onClick={() => handleParagonChange(selectedMember.id, paragon)}
+                                  className={`flex items-center gap-3 border p-3 text-left transition ${
+                                    active
+                                      ? "border-[var(--baby-pink)] bg-[rgba(255,175,204,0.16)]"
+                                      : "border-[var(--border)] bg-[rgba(255,200,221,0.1)] hover:border-[var(--baby-pink)]"
+                                  }`}
+                                >
+                                  <SelectionThumb imageUrl={selectedClass?.image_url} label={paragon} />
+                                  <div>
+                                    <p className="text-sm font-medium text-white">{paragon}</p>
+                                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/80">
+                                      {formatRoleLabel(getRoleForClassParagon(selectedClass?.id ?? "", paragon))}
+                                    </p>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                            {!selectedClass ? (
+                              <div className="border border-[var(--border)] bg-[rgba(205,180,219,0.08)] p-4 text-sm text-white/80">
+                                Select a class first to choose a paragon path.
+                              </div>
+                            ) : null}
+                          </div>
+                        </Field>
+                      </div>
+
+                      <div className="space-y-4">
+                        <Field label="Role">
+                          <Select
+                            value={selectedMember.role}
+                            onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
+                          >
+                            {roleOptions.map((role) => (
+                              <option key={role.value} value={role.value}>
+                                {role.label}
+                              </option>
+                            ))}
+                          </Select>
+                        </Field>
+                        <Field label="Race">
+                          <Select value={selectedMember.race} onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}>
+                            <option value="">Select race</option>
+                            {raceOptions.map((race) => (
+                              <option key={race} value={race}>
+                                {race}
+                              </option>
+                            ))}
+                          </Select>
+                        </Field>
+                        <Field label="Carry">
+                          <Button variant={selectedMember.is_carry ? "primary" : "secondary"} onClick={() => updateCarry(selectedMember.id)}>
+                            {selectedMember.is_carry ? "Selected carry" : "Mark as carry"}
+                          </Button>
+                        </Field>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                      <Field label="Artifact">
+                        <PickerField
+                          title={artifacts.find((item) => item.id === selectedMember.artifact_id)?.name ?? "Select artifact"}
+                          subtitle="Ranked artifact list"
+                          imageUrl={artifacts.find((item) => item.id === selectedMember.artifact_id)?.image_url}
+                          onClick={() => openPicker(selectedMember.id, "artifact")}
+                        />
+                      </Field>
+                      <Field label="Companion">
+                        <PickerField
+                          title={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Select companion"}
+                          subtitle="Support and damage companions"
+                          imageLabel={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Companion"}
+                          onClick={() => openPicker(selectedMember.id, "companion")}
+                        />
+                      </Field>
+                      <Field label="Enhancement">
+                        <PickerField
+                          title={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Select enhancement"}
+                          subtitle="Only proven values shown"
+                          imageLabel={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Enhancement"}
+                          onClick={() => openPicker(selectedMember.id, "enhancement")}
+                        />
+                      </Field>
+                      <Field label="Mount combat power">
+                        <PickerField
+                          title={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Select mount"}
+                          subtitle="Mount power list"
+                          imageLabel={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Mount"}
+                          onClick={() => openPicker(selectedMember.id, "mount")}
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          updateMember(selectedMember.id, {
                           artifact_id: "",
                           companion_id: "",
                           enhancement_id: "",
@@ -1252,24 +1321,57 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function SelectionThumb({
+  imageUrl,
+  label,
+}: {
+  imageUrl?: string;
+  label: string;
+}) {
+  if (imageUrl) {
+    return (
+      <Image
+        src={imageUrl}
+        alt={label}
+        width={56}
+        height={56}
+        className="h-14 w-14 border border-[var(--border)] bg-[rgba(205,180,219,0.1)] object-cover"
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-14 w-14 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-sm font-semibold text-white">
+      {getInitials(label)}
+    </div>
+  );
+}
+
 function PickerField({
   title,
   subtitle,
+  imageUrl,
+  imageLabel,
   onClick,
 }: {
   title: string;
   subtitle: string;
+  imageUrl?: string;
+  imageLabel?: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-14 w-full items-center justify-between border border-white/10 bg-white/[0.03] px-4 py-3 text-left transition hover:border-[rgba(162,210,255,0.9)]"
+      className="flex min-h-20 w-full items-center justify-between gap-3 border border-[var(--border)] bg-[rgba(205,180,219,0.1)] px-4 py-3 text-left transition hover:border-[var(--sky-blue)]"
     >
-      <div>
+      <div className="flex min-w-0 items-center gap-3">
+        <SelectionThumb imageUrl={imageUrl} label={imageLabel ?? title} />
+        <div className="min-w-0">
         <p className="text-sm font-medium text-white">{title}</p>
         <p className="mt-1 text-xs text-white/70">{subtitle}</p>
+        </div>
       </div>
       <Search className="h-4 w-4 text-white" />
     </button>
@@ -1300,10 +1402,10 @@ function SelectionOverlay({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-[rgba(16,19,26,0.82)] backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 bg-[rgba(205,180,219,0.16)] backdrop-blur-sm">
       <div className="mx-auto flex h-full max-w-[1320px] items-center justify-center px-5 py-8">
-        <div className="flex max-h-full w-full flex-col overflow-hidden border border-white/10 bg-[rgba(30,32,46,0.96)] shadow-[0_36px_90px_rgba(0,0,0,0.35)]">
-          <div className="flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
+        <div className="flex max-h-full w-full flex-col overflow-hidden border border-[var(--border)] bg-[rgba(9,6,13,0.96)] shadow-[0_36px_90px_rgba(0,0,0,0.35)]">
+          <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-5">
             <div>
               <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
                 {getPickerLabel(kind)} for {member.group}-{member.slot}
@@ -1314,12 +1416,12 @@ function SelectionOverlay({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center border border-white/10 bg-white/[0.04] text-white transition hover:border-[rgba(162,210,255,0.9)]"
+              className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-white transition hover:border-[var(--sky-blue)]"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="space-y-4 border-b border-white/10 px-6 py-4">
+          <div className="space-y-4 border-b border-[var(--border)] px-6 py-4">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
               <Input
@@ -1347,7 +1449,7 @@ function SelectionOverlay({
               items.map((item) => (
                 <div
                   key={item.id}
-                  className="grid gap-4 border border-white/10 bg-white/[0.03] p-4 lg:grid-cols-[72px_minmax(0,1fr)_140px]"
+                  className="grid gap-4 border border-[var(--border)] bg-[rgba(205,180,219,0.08)] p-4 lg:grid-cols-[72px_minmax(0,1fr)_140px]"
                 >
                   <div className="flex items-start">
                     {item.imageUrl ? (
@@ -1356,11 +1458,11 @@ function SelectionOverlay({
                         alt={item.name}
                         width={64}
                         height={64}
-                        className="h-16 w-16 border border-white/10 bg-white/[0.04] object-cover"
+                        className="h-16 w-16 border border-[var(--border)] bg-[rgba(205,180,219,0.12)] object-cover"
                       />
                     ) : (
-                      <div className="flex h-16 w-16 items-center justify-center border border-white/10 bg-white/[0.04]">
-                        <ImageOff className="h-4 w-4 text-white/50" />
+                      <div className="flex h-16 w-16 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-sm font-semibold text-white">
+                        {getInitials(item.name) || <ImageOff className="h-4 w-4 text-white/70" />}
                       </div>
                     )}
                   </div>

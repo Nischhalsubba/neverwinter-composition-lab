@@ -1385,3 +1385,68 @@ Checks run:
 Result:
 
 - Both passed after integrating the support and ST companion ranking layers.
+
+## Pass 17 - Simpler shell and image-led selection redesign
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/globals.css`
+- `components/ui/card.tsx`
+- `components/ui/button.tsx`
+- `components/ui/badge.tsx`
+- `components/ui/input.tsx`
+- `components/ui/select.tsx`
+- `components/ui/textarea.tsx`
+- `components/summary-panel.tsx`
+- `components/empty-state.tsx`
+- `components/loading-state.tsx`
+- `components/layout/app-shell.tsx`
+- `components/content-page.tsx`
+- `app/page.tsx`
+- `app/reference/page.tsx`
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Reworked the shell from a dense left-sidebar layout into a simpler top-header and top-navigation structure.
+- Kept the app on the approved palette only:
+  - `#cdb4db`
+  - `#ffc8dd`
+  - `#ffafcc`
+  - `#bde0fe`
+  - `#a2d2ff`
+  - black / white text only
+- Updated shared UI primitives so cards, buttons, badges, inputs, selects, textareas, summary panels, empty states, and loading states all use the approved palette rather than grayscale utility styling.
+- Simplified `ContentPage` so the right rail is only rendered when present instead of always reserving visual space.
+- Updated the dashboard and reference hub cards to match the new flatter, easier-to-read shell.
+- Redesigned the top of the Team Builder setup card:
+  - class selection now uses visible image tiles with class emblems
+  - paragon selection now uses visible image tiles instead of a hidden dropdown
+  - role, race, and carry controls remain immediately visible alongside those choices
+- Upgraded Team Builder picker fields so the current selection now shows a thumbnail area instead of text-only rows:
+  - classes and paragons use the real imported class emblem image
+  - artifacts continue using imported artifact images
+  - other selectors use consistent visual thumbnail blocks when no extracted image is available in local data
+- Updated the popup selection rows to use stronger visual blocks and palette-based surfaces so entries are easier to scan.
+
+Why:
+
+- The user explicitly asked for a full layout redesign with ease of use as the top priority.
+- The user also explicitly required the app to use only the approved five colors plus black and white text.
+- The prior shell still looked like a dense admin interface, and class/paragon selection still relied too heavily on dropdowns instead of visual choices.
+- Moving the highest-value setup controls to image-led tiles makes the Team Builder easier to understand at a glance and reduces the chance that players miss critical setup options.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after the shell simplification and image-led Team Builder redesign.

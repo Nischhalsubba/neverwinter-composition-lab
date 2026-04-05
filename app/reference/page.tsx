@@ -14,14 +14,14 @@ export default function Page() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {referenceRoutes.map((route) => (
           <Link key={route.href} href={route.href}>
-            <Card className="h-full transition hover:border-[rgba(162,210,255,0.36)]">
+            <Card className="h-full transition hover:border-[var(--sky-blue)]">
               <CardHeader>
                 <CardTitle>{route.label}</CardTitle>
                 <CardDescription>
                   Open the supporting reference view for {route.label.toLowerCase()}.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-[rgba(205,180,219,0.84)]">
+              <CardContent className="text-sm text-white/80">
                 Supporting reference content only.
               </CardContent>
             </Card>

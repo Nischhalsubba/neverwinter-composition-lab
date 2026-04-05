@@ -8,15 +8,15 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-[rgba(205,180,219,0.9)] bg-[rgba(205,180,219,0.2)] text-white",
-        teal: "border-[rgba(162,210,255,0.95)] bg-[rgba(162,210,255,0.2)] text-white",
-        green: "border-[rgba(189,224,254,0.95)] bg-[rgba(189,224,254,0.2)] text-white",
-        red: "border-[rgba(255,175,204,0.95)] bg-[rgba(255,175,204,0.18)] text-white",
-        purple: "border-[rgba(205,180,219,0.95)] bg-[rgba(205,180,219,0.2)] text-white",
-        orange: "border-[rgba(255,200,221,0.95)] bg-[rgba(255,200,221,0.18)] text-white",
-        gold: "border-[rgba(255,200,221,0.95)] bg-[rgba(255,200,221,0.18)] text-white",
-        blue: "border-[rgba(189,224,254,0.95)] bg-[rgba(189,224,254,0.18)] text-white",
-        muted: "border-white/20 bg-white/5 text-white/80",
+        default: "border-[var(--thistle)] bg-[rgba(205,180,219,0.16)] text-white",
+        teal: "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.18)] text-white",
+        green: "border-[var(--icy-blue)] bg-[rgba(189,224,254,0.18)] text-white",
+        red: "border-[var(--baby-pink)] bg-[rgba(255,175,204,0.18)] text-white",
+        purple: "border-[var(--thistle)] bg-[rgba(205,180,219,0.18)] text-white",
+        orange: "border-[var(--pastel-petal)] bg-[rgba(255,200,221,0.18)] text-white",
+        gold: "border-[var(--pastel-petal)] bg-[rgba(255,200,221,0.18)] text-white",
+        blue: "border-[var(--icy-blue)] bg-[rgba(189,224,254,0.18)] text-white",
+        muted: "border-[var(--thistle)] bg-[rgba(205,180,219,0.1)] text-white",
       },
     },
     defaultVariants: {

@@ -27,7 +27,7 @@ export default function Page() {
             </CardHeader>
             <CardContent className="space-y-3">
               {moduleTimeline.map((item) => (
-                <div key={item} className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3 text-sm text-stone-300">
+                <div key={item} className="border border-[var(--border)] bg-[rgba(205,180,219,0.1)] px-4 py-3 text-sm text-white">
                   {item}
                 </div>
               ))}
@@ -38,7 +38,7 @@ export default function Page() {
               <CardTitle>Patch-aware guardrail</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm leading-6 text-stone-400">
+              <p className="text-sm leading-6 text-white/80">
                 Unresolved values remain in the data model with `verification_status`, `source_type`, `source_url`, and `notes`.
               </p>
             </CardContent>
@@ -51,14 +51,14 @@ export default function Page() {
           <Card key={item.href}>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <item.icon className="h-5 w-5 text-teal-200" />
+                <item.icon className="h-5 w-5 text-[var(--sky-blue)]" />
                 <Badge variant="teal">Live</Badge>
               </div>
               <CardTitle>{item.title}</CardTitle>
               <CardDescription>{item.copy}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href={item.href} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-stone-100 transition hover:bg-white/10">
+              <Link href={item.href} className="flex items-center justify-between border border-[var(--sky-blue)] bg-[rgba(162,210,255,0.16)] px-4 py-3 text-sm text-white transition hover:bg-[rgba(162,210,255,0.22)]">
                 Open page
                 <ArrowRight className="h-4 w-4" />
               </Link>
@@ -68,22 +68,22 @@ export default function Page() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2 text-gold-200">
-              <ScrollText className="h-4 w-4 text-amber-200" />
-              <p className="text-xs uppercase tracking-[0.22em] text-amber-200">Useful real content</p>
+          <Card>
+            <CardHeader>
+            <div className="flex items-center gap-2 text-white">
+              <ScrollText className="h-4 w-4 text-[var(--pastel-petal)]" />
+              <p className="text-xs uppercase tracking-[0.22em] text-white">Useful real content</p>
             </div>
             <CardTitle>Knowledge hub seeds</CardTitle>
             <CardDescription>The app is seeded with meaningful guidance instead of blank placeholders.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {knowledgeSections.map((section) => (
-              <div key={section.title} className="rounded-[22px] border border-white/8 bg-black/20 p-4">
-                <p className="text-sm font-medium text-stone-100">{section.title}</p>
+              <div key={section.title} className="border border-[var(--border)] bg-[rgba(205,180,219,0.1)] p-4">
+                <p className="text-sm font-medium text-white">{section.title}</p>
                 <div className="mt-3 space-y-2">
                   {section.points.map((point) => (
-                    <p key={point} className="text-sm leading-6 text-stone-400">
+                    <p key={point} className="text-sm leading-6 text-white/80">
                       {point}
                     </p>
                   ))}
@@ -99,12 +99,12 @@ export default function Page() {
             </CardHeader>
             <CardContent className="space-y-3">
               {companions.slice(0, 4).map((companion) => (
-                <div key={companion.id} className="flex items-center justify-between rounded-2xl border border-white/8 bg-black/20 px-4 py-3">
+                <div key={companion.id} className="flex items-center justify-between border border-[var(--border)] bg-[rgba(189,224,254,0.12)] px-4 py-3">
                   <div>
-                    <p className="text-sm font-medium text-stone-100">{companion.name}</p>
-                    <p className="text-xs uppercase tracking-[0.16em] text-stone-500">{companion.role_tag}</p>
+                    <p className="text-sm font-medium text-white">{companion.name}</p>
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/80">{companion.role_tag}</p>
                   </div>
-                  <p className="text-sm text-stone-300">{companion.st_dps?.toLocaleString() ?? "Pending"}</p>
+                  <p className="text-sm text-white">{companion.st_dps?.toLocaleString() ?? "Pending"}</p>
                 </div>
               ))}
             </CardContent>
@@ -114,21 +114,21 @@ export default function Page() {
               <CardTitle>Artifacts and mounts</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
-              <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+              <div className="border border-[var(--border)] bg-[rgba(255,200,221,0.12)] p-4">
                 <div className="mb-3 flex items-center gap-2">
-                  <Gem className="h-4 w-4 text-amber-200" />
-                  <p className="text-sm font-medium text-stone-100">Top debuff artifacts</p>
+                  <Gem className="h-4 w-4 text-[var(--pastel-petal)]" />
+                  <p className="text-sm font-medium text-white">Top debuff artifacts</p>
                 </div>
-                <p className="text-sm leading-6 text-stone-400">
+                <p className="text-sm leading-6 text-white/80">
                   {artifacts.slice(0, 3).map((item) => item.name).join(", ")}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+              <div className="border border-[var(--border)] bg-[rgba(162,210,255,0.12)] p-4">
                 <div className="mb-3 flex items-center gap-2">
-                  <MountainSnow className="h-4 w-4 text-orange-200" />
-                  <p className="text-sm font-medium text-stone-100">Support mounts</p>
+                  <MountainSnow className="h-4 w-4 text-[var(--sky-blue)]" />
+                  <p className="text-sm font-medium text-white">Support mounts</p>
                 </div>
-                <p className="text-sm leading-6 text-stone-400">
+                <p className="text-sm leading-6 text-white/80">
                   {mounts.slice(0, 3).map((item) => item.name).join(", ")}
                 </p>
               </div>
@@ -140,9 +140,9 @@ export default function Page() {
             </CardHeader>
             <CardContent className="space-y-3">
               {patchChanges.slice(0, 3).map((patch) => (
-                <div key={patch.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
-                  <p className="text-sm font-medium text-stone-100">{patch.name}</p>
-                  <p className="mt-2 text-sm leading-6 text-stone-400">{patch.after}</p>
+                <div key={patch.id} className="border border-[var(--border)] bg-[rgba(205,180,219,0.1)] p-4">
+                  <p className="text-sm font-medium text-white">{patch.name}</p>
+                  <p className="mt-2 text-sm leading-6 text-white/80">{patch.after}</p>
                 </div>
               ))}
             </CardContent>

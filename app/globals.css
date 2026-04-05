@@ -6,12 +6,12 @@
   --baby-pink: #ffafcc;
   --icy-blue: #bde0fe;
   --sky-blue: #a2d2ff;
-  --background: #08080b;
+  --background: #09060d;
   --foreground: #ffffff;
-  --panel: rgba(255, 255, 255, 0.04);
-  --panel-2: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.14);
-  --muted: rgba(255, 255, 255, 0.68);
+  --panel: rgba(205, 180, 219, 0.12);
+  --panel-2: rgba(189, 224, 254, 0.14);
+  --border: rgba(205, 180, 219, 0.28);
+  --muted: rgba(255, 255, 255, 0.74);
   --teal: var(--sky-blue);
   --green: var(--icy-blue);
   --red: var(--baby-pink);
@@ -45,6 +45,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-feature-settings: "ss01" 1, "cv01" 1, "cv02" 1;
+  line-height: 1.5;
 }
 
 a {

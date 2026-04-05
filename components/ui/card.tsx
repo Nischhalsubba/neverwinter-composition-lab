@@ -9,7 +9,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "border border-white/15 bg-black shadow-[0_16px_40px_rgba(0,0,0,0.3)]",
+        "border border-[var(--border)] bg-[var(--panel)] shadow-[0_18px_42px_rgba(0,0,0,0.28)] backdrop-blur-sm",
         className,
       )}
       {...props}
@@ -47,5 +47,5 @@ export function CardDescription({
   className,
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("text-sm leading-7 text-white/70", className)} {...props} />;
+  return <p className={cn("text-sm leading-7 text-white/80", className)} {...props} />;
 }
