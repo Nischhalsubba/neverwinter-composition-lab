@@ -2219,6 +2219,49 @@ Result:
 - `npm run build` passed.
 - `npm run lint` reports no production app errors; only existing warnings from temporary scratch files remain.
 
+## Pass 27 - Fixed active-state contrast and preserved standard trial role counts in auto setup
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `components/layout/app-shell.tsx`
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Strengthened the shell active-state styling again so active nav items and top tabs now use the dark blue fill with light cyan text and icon color instead of a weaker active/read state.
+- Fixed the trial `Best Setup` role-allocation bug for non-MSOD trial setups.
+- Added a dedicated role-assignment helper for auto-setup generation so the selected boost target can be any slot without corrupting the required role split.
+- Standard trial boost setups now preserve `2 tanks / 2 healers / 6 DPS`.
+- Dungeon boost setups continue to preserve `1 tank / 1 healer / 3 DPS`.
+- MSOD boost setups continue to preserve `2 tanks / 3 healers / 5 DPS`.
+
+Why:
+
+- The user still reported that active state and text contrast were too close in the shell.
+- The boost-target logic was overriding whatever role the chosen slot originally had, which could turn a planned tank slot into a DPS slot and inflate the DPS count.
+
+Notes:
+
+- The fix no longer relies on slot order for the carry/boost target. It keeps the required role pool intact, removes one planned DPS from the remaining pool, and then assigns the chosen slot as the boosted DPS.
+- Lint output remains limited to `tmp_*` scratch files, not the production app files changed in this pass.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` reports no production app errors; only existing warnings from temporary scratch files remain.
+
 ## Pass 29 - Unified shell background, redesigned header search, rebuilt class browser, and ran a QA sweep
 
 Date:

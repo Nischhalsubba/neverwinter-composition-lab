@@ -244,6 +244,39 @@ function getPlannedRoleDistribution(mode: TeamMode, trialPreset: TrialCompositio
   return ["tank", "tank", "healer", "healer", "dps", "dps", "dps", "dps", "dps", "dps"] as TeamMember["role"][];
 }
 
+function getRoleAssignmentsForAutoSetup(
+  mode: TeamMode,
+  trialPreset: TrialCompositionPreset,
+  totalSlots: number,
+  boostTargetSlot?: number,
+) {
+  const plannedRoles = [...getPlannedRoleDistribution(mode, trialPreset)];
+
+  if (!boostTargetSlot) {
+    return plannedRoles.slice(0, totalSlots);
+  }
+
+  const dpsIndex = plannedRoles.indexOf("dps");
+  if (dpsIndex >= 0) {
+    plannedRoles.splice(dpsIndex, 1);
+  }
+
+  const roleAssignments: TeamMember["role"][] = [];
+  let nextRoleIndex = 0;
+
+  for (let slot = 1; slot <= totalSlots; slot += 1) {
+    if (slot === boostTargetSlot) {
+      roleAssignments.push("dps");
+      continue;
+    }
+
+    roleAssignments.push(plannedRoles[nextRoleIndex] ?? "dps");
+    nextRoleIndex += 1;
+  }
+
+  return roleAssignments;
+}
+
 function getRolePlan(
   className: string,
   paragon: string,
@@ -1076,7 +1109,6 @@ export function TeamBuilderPage() {
     const supportInsignias = getInsigniaIdsByPriority(supportInsigniaPriority);
     const damageInsignias = getInsigniaIdsByPriority(damageInsigniaPriority);
     const supportPlans = getSupportClassPlans();
-    const plannedRoles = getPlannedRoleDistribution(currentMode, trialPreset);
     const boostTargetSlot =
       goal === "boost_one_dps"
         ? Math.max(
@@ -1087,6 +1119,12 @@ export function TeamBuilderPage() {
             ),
           )
         : 1;
+    const roleAssignments = getRoleAssignmentsForAutoSetup(
+      currentMode,
+      trialPreset,
+      nextMembers.length,
+      goal === "boost_one_dps" ? boostTargetSlot : undefined,
+    );
 
     const carryClassId = getClassIdByName("Rogue");
     const carryParagon = "Assassin";
@@ -1131,7 +1169,7 @@ export function TeamBuilderPage() {
     nextMembers.forEach((member, index) => {
       const artifactId = recommendedArtifacts[index % Math.max(recommendedArtifacts.length, 1)] ?? "";
       const enhancementId = recommendedEnhancements[index % Math.max(recommendedEnhancements.length, 1)] ?? "";
-      const plannedRole = plannedRoles[index] ?? "dps";
+      const plannedRole = roleAssignments[index] ?? "dps";
 
       if (goal === "boost_one_dps" && member.slot === boostTargetSlot) {
         member.class_id = carryClassId;
@@ -1154,16 +1192,16 @@ export function TeamBuilderPage() {
       let selectedPlan = null as (ReturnType<typeof getRolePlan> | null);
 
       if (goal === "overall_team_damage" && plannedRole === "dps") {
-        const dpsIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => plannedRoles[currentIndex] === "dps").length - 1;
+        const dpsIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => roleAssignments[currentIndex] === "dps").length - 1;
         selectedPlan = balancedDamagePlans[dpsIndex % Math.max(balancedDamagePlans.length, 1)] ?? null;
       } else if (goal === "boost_one_dps" && plannedRole === "dps") {
-        const dpsIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => plannedRoles[currentIndex] === "dps").length - 2;
+        const dpsIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => roleAssignments[currentIndex] === "dps").length - 2;
         selectedPlan = dpsPlans[Math.max(dpsIndex, 0) % Math.max(dpsPlans.length, 1)] ?? null;
       } else if (plannedRole === "tank") {
-        const tankIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => plannedRoles[currentIndex] === "tank").length - 1;
+        const tankIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => roleAssignments[currentIndex] === "tank").length - 1;
         selectedPlan = tankPlans[tankIndex % Math.max(tankPlans.length, 1)] ?? null;
       } else if (plannedRole === "healer") {
-        const healerIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => plannedRoles[currentIndex] === "healer").length - 1;
+        const healerIndex = nextMembers.slice(0, index + 1).filter((_, currentIndex) => roleAssignments[currentIndex] === "healer").length - 1;
         selectedPlan = healerPlans[healerIndex % Math.max(healerPlans.length, 1)] ?? null;
       }
 
