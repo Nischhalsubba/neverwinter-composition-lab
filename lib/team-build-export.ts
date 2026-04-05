@@ -7,13 +7,13 @@ type ExportableBuild = Pick<
 >;
 
 const overviewPalette = {
-  thistle: "FFCDB4DB",
-  petal: "FFFFC8DD",
-  pink: "FFFFAFCC",
-  icy: "FFBDE0FE",
-  sky: "FFA2D2FF",
-  black: "FF000000",
-  white: "FFFFFFFF",
+  thistle: "FF03045E",
+  petal: "FF0077B6",
+  pink: "FF00B4D8",
+  icy: "FF90E0EF",
+  sky: "FFCAF0F8",
+  black: "FF03045E",
+  white: "FFCAF0F8",
 };
 
 function getArtifactName(artifactId: string) {

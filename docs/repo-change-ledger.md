@@ -2163,6 +2163,51 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 27 - Replaced the pastel palette with the blue Neverwinter palette
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/globals.css`
+- `lib/team-build-export.ts`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Replaced the previous lavender-pink app palette with the new blue palette:
+  - `#03045E`
+  - `#0077B6`
+  - `#00B4D8`
+  - `#90E0EF`
+  - `#CAF0F8`
+- Remapped the shared global design tokens so the entire app inherits the new palette without having to rewrite every component class individually.
+- Rebalanced background, surface, panel, border, focus, selection, and placeholder tokens for the new cooler color family.
+- Updated the high-contrast variant to stay consistent with the new palette.
+- Updated the exported workbook palette so Excel exports visually match the in-app design direction instead of retaining the previous color system.
+
+Why:
+
+- The user rejected the previous palette and supplied a new blue palette for the whole product.
+- The app theme is token-driven, so changing the core CSS variables is the safest way to refresh the entire experience consistently.
+- The export should look like part of the same product, not like an outdated theme snapshot.
+
+Notes:
+
+- The token names were preserved to avoid a broad refactor, but their mapped values now follow the new blue palette.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+
+Result:
+
+- `npm run build` passed.
+
 ## Pass 26 - Comprehensive color-contrast audit and control readability pass
 
 Date:

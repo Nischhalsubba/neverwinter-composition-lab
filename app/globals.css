@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --thistle: #cdb4db;
-  --pastel-petal: #ffc8dd;
-  --baby-pink: #ffafcc;
-  --icy-blue: #bde0fe;
-  --sky-blue: #a2d2ff;
+  --thistle: #03045e;
+  --pastel-petal: #0077b6;
+  --baby-pink: #00b4d8;
+  --icy-blue: #90e0ef;
+  --sky-blue: #caf0f8;
   --layout-max: 1920px;
-  --background: #cdb4db;
-  --foreground: #000000;
-  --surface: rgba(255, 200, 221, 0.58);
-  --surface-2: rgba(189, 224, 254, 0.72);
-  --panel: rgba(255, 175, 204, 0.68);
-  --panel-2: rgba(162, 210, 255, 0.74);
-  --border: rgba(205, 180, 219, 0.9);
-  --border-strong: rgba(162, 210, 255, 1);
-  --muted: rgba(0, 0, 0, 0.72);
+  --background: #caf0f8;
+  --foreground: #03045e;
+  --surface: rgba(202, 240, 248, 0.86);
+  --surface-2: rgba(144, 224, 239, 0.88);
+  --panel: rgba(0, 180, 216, 0.18);
+  --panel-2: rgba(0, 119, 182, 0.22);
+  --border: rgba(0, 119, 182, 0.34);
+  --border-strong: rgba(0, 180, 216, 0.78);
+  --muted: rgba(3, 4, 94, 0.72);
   --teal: var(--sky-blue);
   --green: var(--icy-blue);
   --red: var(--baby-pink);
@@ -26,7 +26,7 @@
   --radius-chip: 0px;
   --radius-card: 0px;
   --radius-panel: 0px;
-  --shadow-panel: 0 16px 40px rgba(205, 180, 219, 0.35);
+  --shadow-panel: 0 18px 44px rgba(0, 119, 182, 0.18);
 }
 
 @theme inline {
@@ -53,12 +53,12 @@ body {
 }
 
 html[data-high-contrast="true"] {
-  --surface: rgba(255, 200, 221, 0.72);
-  --surface-2: rgba(189, 224, 254, 0.84);
-  --panel: rgba(255, 175, 204, 0.82);
-  --panel-2: rgba(162, 210, 255, 0.88);
-  --border: rgba(205, 180, 219, 1);
-  --border-strong: rgba(162, 210, 255, 1);
+  --surface: rgba(202, 240, 248, 0.94);
+  --surface-2: rgba(144, 224, 239, 0.96);
+  --panel: rgba(0, 180, 216, 0.24);
+  --panel-2: rgba(0, 119, 182, 0.28);
+  --border: rgba(0, 119, 182, 0.56);
+  --border-strong: rgba(3, 4, 94, 0.92);
 }
 
 html[data-reduced-motion="true"] *,
@@ -87,32 +87,32 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--sky-blue);
+  outline: 2px solid var(--pastel-petal);
   outline-offset: 2px;
 }
 
 select {
-  color: #000000;
+  color: var(--foreground);
 }
 
 select option {
   background: var(--surface-2);
-  color: #000000;
+  color: var(--foreground);
 }
 
 select option:checked,
 select option:hover,
 select option:focus-visible {
-  background: var(--sky-blue);
-  color: #000000;
+  background: var(--icy-blue);
+  color: var(--foreground);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(0, 0, 0, 0.52);
+  color: rgba(3, 4, 94, 0.52);
 }
 
 ::selection {
-  background: rgba(162, 210, 255, 0.55);
-  color: #000000;
+  background: rgba(0, 180, 216, 0.32);
+  color: var(--foreground);
 }
