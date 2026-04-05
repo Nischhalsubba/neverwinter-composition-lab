@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Calculator, Download, ImageOff, Import, Save, Search, Swords, Target, Trash2, X } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
+import { Reveal, SlideInPanel, StaggerGroup } from "@/components/motion/reveal";
 import { SummaryPanel } from "@/components/summary-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -772,6 +773,7 @@ export function TeamBuilderPage() {
   const [pickerFilter, setPickerFilter] = useState("all");
   const [importError, setImportError] = useState("");
   const [summaryDrawer, setSummaryDrawer] = useState<SummaryDrawerState | null>(null);
+  const [actionStatus, setActionStatus] = useState("");
   const [mountBaseHitOverride, setMountBaseHitOverride] = useState(1000000);
   const [critAssumption, setCritAssumption] = useState(0.5);
   const [caAssumption, setCaAssumption] = useState(0.5);
@@ -869,6 +871,15 @@ export function TeamBuilderPage() {
     setSavedBuilds(readSavedBuilds());
   }, []);
 
+  useEffect(() => {
+    if (!actionStatus) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setActionStatus(""), 2200);
+    return () => window.clearTimeout(timeout);
+  }, [actionStatus]);
+
   function updateTeamMode(nextMode: TeamMode) {
     const nextMembers = createInitialTeamMembers(nextMode);
     setMode(nextMode);
@@ -903,6 +914,7 @@ export function TeamBuilderPage() {
     setSavedBuilds(readSavedBuilds());
     setActiveSavedBuildId(savedBuild.id);
     setBuildName(savedBuild.name);
+    setActionStatus("Build saved locally.");
   }
 
   function applyLoadedBuild(build: Pick<SavedTeamBuild, "name" | "mode" | "trialPreset" | "bossId" | "teamMembers">, savedId = "") {
@@ -949,6 +961,7 @@ export function TeamBuilderPage() {
       JSON.stringify(payload, null, 2),
       "application/json",
     );
+    setActionStatus("JSON export ready.");
   }
 
   async function exportCurrentBuildExcel() {
@@ -965,6 +978,7 @@ export function TeamBuilderPage() {
       bossId,
       teamMembers,
     });
+    setActionStatus("Workbook export ready.");
   }
 
   async function importBuildFile(file: File) {
@@ -986,6 +1000,7 @@ export function TeamBuilderPage() {
 
     setSavedBuilds(readSavedBuilds());
     applyLoadedBuild(importedBuild, importedBuild.id);
+    setActionStatus("Build imported successfully.");
   }
 
   function updateMember(memberId: string, patch: Partial<TeamMember>) {
@@ -1412,9 +1427,14 @@ export function TeamBuilderPage() {
               />
             </div>
           </CardContent>
-          {importError ? (
-            <div className="border-t border-[var(--border)] px-6 pb-6 pt-4 text-sm text-[var(--baby-pink)]">
-              {importError}
+          {importError || actionStatus ? (
+            <div className="border-t border-[var(--border)] px-6 pb-6 pt-4">
+              {importError ? <p className="text-sm text-[var(--baby-pink)]">{importError}</p> : null}
+              {actionStatus ? (
+                <Reveal>
+                  <p className="text-sm text-black/76">{actionStatus}</p>
+                </Reveal>
+              ) : null}
             </div>
           ) : null}
         </Card>
@@ -1853,40 +1873,48 @@ export function TeamBuilderPage() {
 
         {selectedMember ? (
           <aside className="space-y-6 xl:sticky xl:top-[96px] xl:max-h-[calc(100vh-112px)] xl:overflow-y-auto xl:pr-1">
-          <PartyRoleSplitCard
-            mode={mode}
-            trialPreset={trialPreset}
-            roleSplit={partyRoleSplit}
-            teamMembers={teamMembers}
-          />
-          <SelectedSlotSidebarCard
-            member={selectedMember}
-            selectedClass={selectedClass}
-            raceOptions={raceOptions}
-            roleOptions={roleOptions}
-            onOpenInspector={() => setInspectorOpen(true)}
-            onClassChange={handleClassChange}
-            onParagonChange={handleParagonChange}
-            onUpdateMember={updateMember}
-            onUpdateCarry={updateCarry}
-            onOpenPicker={openPicker}
-          />
-          <MemberEffectPanel
-            title="Boss debuffs from this slot"
-            effects={selectedMemberEffects.boss}
-            hiddenCount={selectedMemberEffects.hiddenCount}
-            emptyLabel="No resolved boss debuffs on this slot yet."
-          />
-          <PowerLoadoutSidebarCard
-            member={selectedMember}
-            selectedClass={selectedClass}
-            classEncounters={classEncounters}
-            classDailies={classDailies}
-            classFeatures={classFeatures}
-            recommendedDebuffEncounters={recommendedDebuffEncounters}
-            onUpdateMember={updateMember}
-            onAssignEncounter={assignEncounter}
-          />
+            <Reveal>
+              <PartyRoleSplitCard
+                mode={mode}
+                trialPreset={trialPreset}
+                roleSplit={partyRoleSplit}
+                teamMembers={teamMembers}
+              />
+            </Reveal>
+            <Reveal key={`slot-sidebar-${selectedMember.id}`}>
+              <SelectedSlotSidebarCard
+                member={selectedMember}
+                selectedClass={selectedClass}
+                raceOptions={raceOptions}
+                roleOptions={roleOptions}
+                onOpenInspector={() => setInspectorOpen(true)}
+                onClassChange={handleClassChange}
+                onParagonChange={handleParagonChange}
+                onUpdateMember={updateMember}
+                onUpdateCarry={updateCarry}
+                onOpenPicker={openPicker}
+              />
+            </Reveal>
+            <Reveal key={`slot-effects-${selectedMember.id}`}>
+              <MemberEffectPanel
+                title="Boss debuffs from this slot"
+                effects={selectedMemberEffects.boss}
+                hiddenCount={selectedMemberEffects.hiddenCount}
+                emptyLabel="No resolved boss debuffs on this slot yet."
+              />
+            </Reveal>
+            <Reveal key={`slot-loadout-${selectedMember.id}`}>
+              <PowerLoadoutSidebarCard
+                member={selectedMember}
+                selectedClass={selectedClass}
+                classEncounters={classEncounters}
+                classDailies={classDailies}
+                classFeatures={classFeatures}
+                recommendedDebuffEncounters={recommendedDebuffEncounters}
+                onUpdateMember={updateMember}
+                onAssignEncounter={assignEncounter}
+              />
+            </Reveal>
           </aside>
         ) : null}
       </div>
@@ -2186,7 +2214,8 @@ function SummaryBreakdownDrawer({
         className="absolute inset-0 bg-[rgba(205,180,219,0.42)]"
         onClick={onClose}
       />
-      <aside className="absolute inset-y-0 right-0 flex w-full max-w-[38rem] min-w-0 flex-col border-l border-[var(--border-strong)] bg-[var(--surface-2)] shadow-[0_18px_80px_rgba(205,180,219,0.35)]">
+      <SlideInPanel side="right" className="absolute inset-y-0 right-0 w-full max-w-[38rem] min-w-0">
+      <aside className="flex h-full w-full flex-col border-l border-[var(--border-strong)] bg-[var(--surface-2)] shadow-[0_18px_80px_rgba(205,180,219,0.35)]">
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--border)] bg-[var(--surface-2)] px-6 py-5">
           <div>
             <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--sky-blue)]">Live summary breakdown</p>
@@ -2213,7 +2242,8 @@ function SummaryBreakdownDrawer({
               <Badge variant="teal">{resolvedItems.length}</Badge>
             </div>
             {resolvedItems.length > 0 ? (
-              resolvedItems.map((item) => (
+              <StaggerGroup className="space-y-3" deps={[resolvedItems.length, state.statLabel, state.type]}>
+              {resolvedItems.map((item) => (
                 <div key={item.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -2240,6 +2270,8 @@ function SummaryBreakdownDrawer({
                   </div>
                 </div>
               ))
+              }
+              </StaggerGroup>
             ) : (
               <EmptyState
                 title="No active sources"
@@ -2254,6 +2286,7 @@ function SummaryBreakdownDrawer({
                 <p className="text-[10px] uppercase tracking-[0.18em] text-black/68">Pending or unresolved</p>
                 <Badge variant="muted">{pendingItems.length}</Badge>
               </div>
+              <StaggerGroup className="space-y-3" deps={[pendingItems.length, state.statLabel, state.type]}>
               {pendingItems.map((item) => (
                 <div key={item.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
@@ -2281,10 +2314,12 @@ function SummaryBreakdownDrawer({
                   </div>
                 </div>
               ))}
+              </StaggerGroup>
             </section>
           ) : null}
         </div>
       </aside>
+      </SlideInPanel>
     </div>
   );
 }
@@ -2526,7 +2561,8 @@ function MemberInspectorDrawer({
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-[rgba(9,6,13,0.44)]">
-      <div className="absolute inset-y-0 left-0 w-full max-w-[520px] overflow-y-auto border-r border-[var(--border)] bg-[var(--background)] shadow-[0_24px_80px_rgba(205,180,219,0.35)]">
+      <SlideInPanel side="left" className="absolute inset-y-0 left-0 w-full max-w-[520px]">
+      <div className="h-full overflow-y-auto border-r border-[var(--border)] bg-[var(--background)] shadow-[0_24px_80px_rgba(205,180,219,0.35)]">
         <div className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--background)] px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -2722,6 +2758,7 @@ function MemberInspectorDrawer({
           />
         </div>
       </div>
+      </SlideInPanel>
       <button type="button" aria-label="Close inspector" onClick={onClose} className="absolute inset-0 left-[520px]" />
     </div>
   );
@@ -2753,6 +2790,7 @@ function SelectionOverlay({
   return (
     <div className="fixed inset-0 z-50 bg-[rgba(205,180,219,0.16)] backdrop-blur-sm">
       <div className="mx-auto flex h-full max-w-[1320px] items-center justify-center px-5 py-8">
+        <SlideInPanel side="right" className="w-full">
         <div className="flex max-h-full w-full flex-col overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] shadow-[0_36px_90px_rgba(205,180,219,0.35)]">
           <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-5">
             <div>
@@ -2795,7 +2833,8 @@ function SelectionOverlay({
           </div>
           <div className="space-y-3 overflow-y-auto p-6">
             {items.length > 0 ? (
-              items.map((item) => (
+              <StaggerGroup className="space-y-3" deps={[kind, activeFilter, query, items.length]}>
+              {items.map((item) => (
                 <div
                   key={item.id}
                   className="grid gap-4 border border-[var(--border)] bg-[rgba(205,180,219,0.08)] p-4 lg:grid-cols-[72px_minmax(0,1fr)_140px]"
@@ -2837,7 +2876,8 @@ function SelectionOverlay({
                     </Button>
                   </div>
                 </div>
-              ))
+              ))}
+              </StaggerGroup>
             ) : (
               <EmptyState
                 title="No matching entries"
@@ -2846,6 +2886,7 @@ function SelectionOverlay({
             )}
           </div>
         </div>
+        </SlideInPanel>
       </div>
     </div>
   );
@@ -2865,6 +2906,7 @@ function AutoSetupOverlay({
   return (
     <div className="fixed inset-0 z-50 bg-[rgba(205,180,219,0.42)] backdrop-blur-sm">
       <div className="mx-auto flex h-full max-w-[760px] items-center justify-center px-5 py-8">
+        <SlideInPanel side="right" className="w-full">
         <div className="w-full border border-[var(--border)] bg-[var(--surface-2)] p-6 shadow-[0_16px_40px_rgba(205,180,219,0.35)]">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -2920,6 +2962,7 @@ function AutoSetupOverlay({
             </button>
           </div>
         </div>
+        </SlideInPanel>
       </div>
     </div>
   );

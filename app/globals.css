@@ -27,6 +27,10 @@
   --radius-card: 0px;
   --radius-panel: 0px;
   --shadow-panel: 0 18px 44px rgba(3, 4, 94, 0.12);
+  --motion-duration-fast: 0.18s;
+  --motion-duration-base: 0.28s;
+  --motion-duration-slow: 0.42s;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
@@ -50,6 +54,33 @@ body {
   color: var(--foreground);
   font-feature-settings: "ss01" 1, "cv01" 1, "cv02" 1;
   line-height: 1.5;
+}
+
+@keyframes nw-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.56;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.nw-skeleton {
+  animation: nw-skeleton-pulse 1.35s ease-in-out infinite;
+}
+
+.nw-hover-lift {
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease),
+    border-color var(--motion-duration-fast) var(--motion-ease),
+    background-color var(--motion-duration-fast) var(--motion-ease),
+    box-shadow var(--motion-duration-fast) var(--motion-ease);
+}
+
+.nw-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(3, 4, 94, 0.08);
 }
 
 html[data-high-contrast="true"] {

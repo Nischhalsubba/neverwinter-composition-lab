@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, Gem, Shield, Sparkles, Swords } from "lucide-react";
 
+import { Reveal, StaggerGroup } from "@/components/motion/reveal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -134,7 +135,8 @@ export default function Page() {
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
-        <Card className="border-[var(--border-strong)]">
+        <Reveal>
+          <Card className="border-[var(--border-strong)] nw-hover-lift" data-reveal>
           <CardContent className="space-y-6 p-6 sm:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
               <div className="space-y-4">
@@ -239,9 +241,11 @@ export default function Page() {
               </div>
             </div>
           </CardContent>
-        </Card>
+          </Card>
+        </Reveal>
 
-        <Card>
+        <Reveal delay={0.06}>
+          <Card className="nw-hover-lift" data-reveal>
           <CardHeader>
             <CardTitle>Builder shortcuts</CardTitle>
             <CardDescription>Only the routes that directly support planning and slot decisions.</CardDescription>
@@ -276,11 +280,13 @@ export default function Page() {
               <ArrowRight className="h-4 w-4 text-[var(--sky-blue)]" />
             </Link>
           </CardContent>
-        </Card>
+          </Card>
+        </Reveal>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
-        <Card>
+        <Reveal delay={0.08}>
+          <Card className="nw-hover-lift" data-reveal>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Gem className="h-4 w-4 text-[var(--pastel-petal)]" />
@@ -289,6 +295,7 @@ export default function Page() {
             <CardDescription>Highest-value artifacts for the selected planning mode.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            <StaggerGroup deps={[mode]}>
             {topArtifacts.map(({ artifact, recommendation }) => (
               <Link
                 key={artifact.id}
@@ -304,10 +311,13 @@ export default function Page() {
                 <Badge variant="teal">#{recommendation?.rank}</Badge>
               </Link>
             ))}
+            </StaggerGroup>
           </CardContent>
-        </Card>
+          </Card>
+        </Reveal>
 
-        <Card>
+        <Reveal delay={0.12}>
+          <Card className="nw-hover-lift" data-reveal>
           <CardHeader>
             <div className="flex items-center gap-2">
               {mode === "trial" ? (
@@ -324,6 +334,7 @@ export default function Page() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            <StaggerGroup deps={[mode, trialPreset]}>
             {companionRows.map((row) => (
               <Link
                 key={row.id}
@@ -337,10 +348,13 @@ export default function Page() {
                 <Badge variant={row.badge === "Trial must" ? "teal" : "purple"}>{row.badge}</Badge>
               </Link>
             ))}
+            </StaggerGroup>
           </CardContent>
-        </Card>
+          </Card>
+        </Reveal>
 
-        <Card className="xl:col-span-2">
+        <Reveal delay={0.16} className="xl:col-span-2">
+          <Card className="xl:col-span-2 nw-hover-lift" data-reveal>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-[var(--baby-pink)]" />
@@ -349,6 +363,7 @@ export default function Page() {
             <CardDescription>Highest-value companion enhancements for builder setup and boss debuff coverage.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+            <StaggerGroup className="contents" deps={topEnhancements.map((entry) => entry.enhancement.id)}>
             {topEnhancements.map(({ enhancement, recommendation }) => (
               <Link
                 key={enhancement.id}
@@ -362,8 +377,10 @@ export default function Page() {
                 <Badge variant="red">#{recommendation?.rank}</Badge>
               </Link>
             ))}
+            </StaggerGroup>
           </CardContent>
-        </Card>
+          </Card>
+        </Reveal>
       </section>
     </div>
   );

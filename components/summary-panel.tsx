@@ -1,6 +1,44 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import type { LucideIcon } from "lucide-react";
+import gsap from "gsap";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { getMotionDuration, useReducedMotionSetting } from "@/lib/motion";
+
+function MetricValue({ value, className = "" }: { value: string; className?: string }) {
+  const ref = useRef<HTMLParagraphElement | null>(null);
+  const reducedMotion = useReducedMotionSetting();
+
+  useEffect(() => {
+    if (!ref.current) {
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        ref.current,
+        { autoAlpha: 0.42, y: reducedMotion ? 0 : 6 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: getMotionDuration(reducedMotion, 0.2),
+          ease: "power2.out",
+          clearProps: "opacity,visibility,transform",
+        },
+      );
+    }, ref);
+
+    return () => ctx.revert();
+  }, [reducedMotion, value]);
+
+  return (
+    <p ref={ref} className={className}>
+      {value}
+    </p>
+  );
+}
 
 export function SummaryPanel({
   icon: Icon,
@@ -18,7 +56,7 @@ export function SummaryPanel({
   onLineClick?: (label: string) => void;
 }) {
   return (
-    <Card>
+    <Card className="nw-hover-lift">
       <CardHeader className="pb-0">
         <button
           type="button"
@@ -38,7 +76,7 @@ export function SummaryPanel({
                 className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
               >
                 <p className="text-[10px] uppercase tracking-[0.16em] text-black/58">{item.label}</p>
-                <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-black">{item.value}</p>
+                <MetricValue className="mt-2 text-lg font-semibold tracking-[-0.04em] text-black" value={item.value} />
               </div>
             ))}
           </div>
@@ -52,7 +90,7 @@ export function SummaryPanel({
           >
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm text-black">{line.label}</p>
-              <p className="text-sm font-medium text-black">{line.value}</p>
+              <MetricValue className="text-sm font-medium text-black" value={line.value} />
             </div>
             <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-black/58">{line.detail}</p>
           </button>

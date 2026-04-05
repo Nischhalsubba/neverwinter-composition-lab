@@ -2163,6 +2163,95 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 29 - Added subtle GSAP motion, route transitions, and shaped loading skeletons
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `package.json`
+- `package-lock.json`
+- `app/globals.css`
+- `components/layout/app-shell.tsx`
+- `components/content-page.tsx`
+- `components/summary-panel.tsx`
+- `components/loading-state.tsx`
+- `components/motion/route-transition.tsx`
+- `components/motion/reveal.tsx`
+- `components/ui/skeleton.tsx`
+- `components/loading/page-skeletons.tsx`
+- `app/loading.tsx`
+- `app/team-builder/loading.tsx`
+- `app/reference/loading.tsx`
+- `app/reference/[entityType]/[itemId]/loading.tsx`
+- `app/search/loading.tsx`
+- `app/settings/loading.tsx`
+- `app/saved-builds/loading.tsx`
+- `app/classes/loading.tsx`
+- `app/companions/loading.tsx`
+- `app/mounts/loading.tsx`
+- `app/artifacts/loading.tsx`
+- `app/buffs-debuffs/loading.tsx`
+- `app/about/loading.tsx`
+- `app/glossary/loading.tsx`
+- `app/page.tsx`
+- `features/team-builder/team-builder-page.tsx`
+- `lib/motion.ts`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Added `gsap` as the motion runtime for client-side transitions and panel animations.
+- Created a shared route transition wrapper so page content fades and settles in on route changes while header and sidebar remain stable.
+- Added reusable motion primitives for:
+  - section reveals
+  - right/left slide-in panels
+  - staggered item groups
+- Added a reduced-motion-aware motion hook so all GSAP timing respects the existing settings toggle and browser preference.
+- Replaced the old generic loading treatment with reusable shaped skeleton blocks and page-specific loading layouts for:
+  - dashboard
+  - team builder
+  - reference lists
+  - detail pages
+  - utility pages
+- Added route-level `loading.tsx` files for the main app surfaces so navigation can show meaningful placeholders instead of a blank wait.
+- Updated dashboard sections to reveal in sequence and stagger ranked rows for artifacts, companions, and enhancements.
+- Added quick confirmation feedback for Team Builder save/import/export actions instead of silent state changes.
+- Animated the Team Builder right sidebar content when the selected slot changes so the selected-slot rail updates feel intentional instead of abrupt.
+- Animated the Team Builder summary breakdown drawer, picker modal results, auto-setup overlay, and member inspector entry so overlays no longer appear as hard jumps.
+- Added subtle animated value transitions to summary metrics instead of hard-swapping numbers.
+- Added reusable hover-lift styling for premium card interaction on key surfaces.
+
+Why:
+
+- The user wanted the next phase to focus on UX rather than static layout fixes.
+- The app had no motion system, no route-aware loading UX, and only a basic loading placeholder, which made page changes and builder interactions feel abrupt.
+- This pass improves clarity and perceived responsiveness without slowing the planner:
+  - fast route entry
+  - meaningful skeletons
+  - subtle panel motion
+  - immediate interaction with light feedback
+
+Notes:
+
+- Motion is intentionally subtle and productivity-first rather than decorative.
+- Reduced motion remains the source of truth for suppressing or simplifying transitions.
+- Lint warnings still come only from existing `tmp_*` scratch files, not the production app code.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` passed for production app code; remaining warnings are only from temporary scratch files such as `tmp_*`.
+
 ## Pass 26 - Fixed shell active-state contrast and rebuilt companion and mount libraries
 
 Date:

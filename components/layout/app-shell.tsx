@@ -8,6 +8,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { ArrowRight, HelpCircle, Menu, Search, Settings, Swords, X } from "lucide-react";
 
 import { appRoutes, referenceRoutes, utilityRoutes } from "@/config/navigation";
+import { SlideInPanel } from "@/components/motion/reveal";
+import { RouteTransition } from "@/components/motion/route-transition";
 import { Input } from "@/components/ui/input";
 import { readAppSettings } from "@/lib/app-settings";
 
@@ -162,10 +164,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="fixed inset-0 top-[72px] z-30 bg-[rgba(0,119,182,0.18)] lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <aside
-              className="h-full w-[88vw] max-w-[380px] overflow-y-auto border-r border-[var(--border)] bg-[var(--background)]"
-              onClick={(event) => event.stopPropagation()}
-            >
+            <SlideInPanel side="left" className="h-full w-[88vw] max-w-[380px]">
+              <aside
+                className="h-full overflow-y-auto border-r border-[var(--border)] bg-[var(--background)]"
+                onClick={(event) => event.stopPropagation()}
+              >
               <div className="border-b border-[var(--border)] px-5 py-5">
                 <div className="flex items-center gap-4">
                   <div className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[var(--panel)]">
@@ -212,7 +215,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </div>
                 ))}
               </div>
-            </aside>
+              </aside>
+            </SlideInPanel>
           </div>
         ) : null}
 
@@ -250,7 +254,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0">
+          <RouteTransition>{children}</RouteTransition>
+        </main>
       </div>
     </div>
   );
