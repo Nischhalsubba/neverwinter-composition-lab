@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
-import { Calculator, ExternalLink, ImageOff, Search, Swords, Target, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Calculator, ExternalLink, ImageOff, Save, Search, Swords, Target, Trash2, X } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { SummaryPanel } from "@/components/summary-panel";
@@ -34,6 +34,7 @@ import {
 } from "@/data/game-data";
 import { sanitizeUiText } from "@/lib/display-text";
 import { calculateMountHit, summarizeTeam } from "@/lib/effect-engine";
+import { deleteSavedBuild, readSavedBuilds, type SavedTeamBuild, upsertSavedBuild } from "@/lib/team-build-storage";
 import type { TeamMember, TeamMode } from "@/lib/types";
 import { formatPercent, titleCase } from "@/lib/utils";
 
@@ -261,9 +262,13 @@ function formatRoleLabel(role: TeamMember["role"]) {
       : titleCase(role);
 }
 
+function getMemberDisplayName(member: TeamMember) {
+  return member.label?.trim() ? member.label : `Player ${member.slot}`;
+}
+
 function getMemberTitle(member: TeamMember) {
   const className = classes.find((item) => item.id === member.class_id)?.name;
-  return className ? `${className}${member.paragon ? ` / ${member.paragon}` : ""}` : `Empty Slot ${member.slot}`;
+  return className ? `${className}${member.paragon ? ` / ${member.paragon}` : ""}` : "Class not selected";
 }
 
 function getInitials(value: string) {
@@ -471,6 +476,9 @@ export function TeamBuilderPage() {
   const [bossId, setBossId] = useState(bossPresets[0]?.id ?? "");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState("");
+  const [savedBuilds, setSavedBuilds] = useState<SavedTeamBuild[]>([]);
+  const [activeSavedBuildId, setActiveSavedBuildId] = useState("");
+  const [buildName, setBuildName] = useState("");
   const [autoSetupOpen, setAutoSetupOpen] = useState(false);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
@@ -558,6 +566,10 @@ export function TeamBuilderPage() {
     [includeBoss, includePersonal, includeTeam, teamState],
   );
 
+  useEffect(() => {
+    setSavedBuilds(readSavedBuilds());
+  }, []);
+
   function updateTeamMode(nextMode: TeamMode) {
     const nextMembers = createInitialTeamMembers(nextMode);
     setMode(nextMode);
@@ -566,9 +578,51 @@ export function TeamBuilderPage() {
     }
     setTeamMembers(nextMembers);
     setSelectedMemberId(nextMembers[0]?.id ?? "");
+    setActiveSavedBuildId("");
+    setBuildName("");
     setPickerState(null);
     setPickerQuery("");
     setPickerFilter("all");
+  }
+
+  function saveCurrentBuild() {
+    if (!mode) {
+      return;
+    }
+
+    const trimmedName = buildName.trim() || `${mode === "trial" ? "Trial" : "Dungeon"} build`;
+    const savedBuild = upsertSavedBuild({
+      id: activeSavedBuildId || undefined,
+      name: trimmedName,
+      mode,
+      trialPreset,
+      bossId,
+      teamMembers,
+    });
+
+    setSavedBuilds(readSavedBuilds());
+    setActiveSavedBuildId(savedBuild.id);
+    setBuildName(savedBuild.name);
+  }
+
+  function loadSavedBuild(build: SavedTeamBuild) {
+    setMode(build.mode);
+    setTrialPreset(build.trialPreset);
+    setBossId(build.bossId);
+    setTeamMembers(build.teamMembers);
+    setSelectedMemberId(build.teamMembers[0]?.id ?? "");
+    setActiveSavedBuildId(build.id);
+    setBuildName(build.name);
+  }
+
+  function removeSavedBuild(buildId: string) {
+    const next = deleteSavedBuild(buildId);
+    setSavedBuilds(next);
+
+    if (activeSavedBuildId === buildId) {
+      setActiveSavedBuildId("");
+      setBuildName("");
+    }
   }
 
   function updateMember(memberId: string, patch: Partial<TeamMember>) {
@@ -589,7 +643,6 @@ export function TeamBuilderPage() {
       daily_ids: powerLoadout.daily_ids,
       feature_ids: powerLoadout.feature_ids,
       role: getRoleForClassParagon(classId, defaultParagon),
-      label: classItem?.name ? `${classItem.name} Slot` : `Empty Slot ${memberId.replace("member-", "")}`,
     });
   }
 
@@ -892,7 +945,7 @@ export function TeamBuilderPage() {
         </div>
       </section>
         <Card>
-          <CardContent className="grid gap-4 xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)]">
+          <CardContent className="grid gap-4 xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)_minmax(220px,1fr)_auto]">
             <div className="flex flex-wrap gap-2">
               <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
                 Dungeon
@@ -918,21 +971,34 @@ export function TeamBuilderPage() {
               ))}
             </Select>
           </Field>
-          <Field label="Carry">
-            <Select value={carry?.id ?? ""} onChange={(event) => updateCarry(event.target.value)}>
-              <option value="">No carry selected</option>
-              {teamMembers.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.group}-{member.slot} {getMemberTitle(member)}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </CardContent>
-      </Card>
+            <Field label="Carry">
+              <Select value={carry?.id ?? ""} onChange={(event) => updateCarry(event.target.value)}>
+                <option value="">No carry selected</option>
+                {teamMembers.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.group}-{member.slot} {getMemberTitle(member)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Build name">
+              <Input
+                value={buildName}
+                onChange={(event) => setBuildName(event.target.value)}
+                placeholder="Name this setup"
+              />
+            </Field>
+            <div className="flex items-end">
+              <Button variant="primary" className="w-full xl:w-auto" onClick={saveCurrentBuild}>
+                <Save className="mr-2 h-4 w-4" />
+                Save build
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_288px]">
-        <div className="space-y-6">
+      <div className="grid gap-8 2xl:grid-cols-[minmax(0,1fr)_460px_288px]">
+        <div className="space-y-6 2xl:col-span-1">
           <div className={`grid gap-6 ${mode === "trial" ? "xl:grid-cols-2" : "xl:grid-cols-[minmax(0,1fr)_320px]"}`}>
             <ArchitectGroupCard
               title={mode === "trial" ? "Group A - Vanguard" : "Dungeon Party"}
@@ -984,15 +1050,15 @@ export function TeamBuilderPage() {
                       <div className="flex items-start gap-4">
                         <SelectionThumb
                           imageUrl={getClassImage(selectedMember.class_id)}
-                          label={getMemberTitle(selectedMember)}
+                          label={getMemberDisplayName(selectedMember)}
                           badgeText={getParagonBadge(selectedMember)}
                         />
                         <div>
                           <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
                             Selected slot {selectedMember.group}-{selectedMember.slot}
                           </p>
-                          <CardTitle className="mt-2">{getMemberTitle(selectedMember)}</CardTitle>
-                          <CardDescription>{buildMemberSummary(selectedMember)}</CardDescription>
+                          <CardTitle className="mt-2">{getMemberDisplayName(selectedMember)}</CardTitle>
+                          <CardDescription>{getMemberTitle(selectedMember)} • {buildMemberSummary(selectedMember)}</CardDescription>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -1367,7 +1433,159 @@ export function TeamBuilderPage() {
         </div>
       </div>
 
-        <div className="space-y-6">
+        <div className="order-first space-y-6 2xl:order-none 2xl:sticky 2xl:top-24 2xl:self-start">
+          {selectedMember ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Selected Slot Setup</CardTitle>
+                <CardDescription>
+                  Change the core slot choices here without scrolling into the lower loadout section.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Field label="Player name">
+                  <Input
+                    value={selectedMember.label}
+                    onChange={(event) => updateMember(selectedMember.id, { label: event.target.value })}
+                    placeholder={`Player ${selectedMember.slot}`}
+                  />
+                </Field>
+                <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-1">
+                  <Field label="Role">
+                    <Select
+                      value={selectedMember.role}
+                      onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
+                    >
+                      {roleOptions.map((role) => (
+                        <option key={role.value} value={role.value}>
+                          {role.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Race">
+                    <Select value={selectedMember.race} onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}>
+                      <option value="">Select race</option>
+                      {raceOptions.map((race) => (
+                        <option key={race} value={race}>
+                          {race}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+                <Field label="Artifact">
+                  <PickerField
+                    title={artifacts.find((item) => item.id === selectedMember.artifact_id)?.name ?? "Select artifact"}
+                    subtitle="Ranked artifact list"
+                    imageUrl={artifacts.find((item) => item.id === selectedMember.artifact_id)?.image_url}
+                    onClick={() => openPicker(selectedMember.id, "artifact")}
+                  />
+                </Field>
+                <Field label="Companion">
+                  <PickerField
+                    title={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Select companion"}
+                    subtitle="Support and damage companions"
+                    imageLabel={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Companion"}
+                    onClick={() => openPicker(selectedMember.id, "companion")}
+                  />
+                </Field>
+                <Field label="Enhancement">
+                  <PickerField
+                    title={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Select enhancement"}
+                    subtitle="Only proven values shown"
+                    imageLabel={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Enhancement"}
+                    onClick={() => openPicker(selectedMember.id, "enhancement")}
+                  />
+                </Field>
+                <Field label="Mount combat power">
+                  <PickerField
+                    title={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Select mount"}
+                    subtitle="Support or damage mount power"
+                    imageLabel={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Mount"}
+                    onClick={() => openPicker(selectedMember.id, "mount")}
+                  />
+                </Field>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant={selectedMember.is_carry ? "primary" : "secondary"} onClick={() => updateCarry(selectedMember.id)}>
+                    {selectedMember.is_carry ? "Selected carry" : "Mark as carry"}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      updateMember(selectedMember.id, {
+                        artifact_id: "",
+                        companion_id: "",
+                        enhancement_id: "",
+                        mount_combat_power_id: "",
+                      })
+                    }
+                  >
+                    Clear items
+                  </Button>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Mapped debuff encounters</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {recommendedDebuffEncounters.length > 0 ? (
+                      recommendedDebuffEncounters.map((power) => (
+                        <button
+                          key={power.id}
+                          type="button"
+                          onClick={() => assignEncounter(selectedMember.id, power.id)}
+                          className={`border px-3 py-2 text-xs uppercase tracking-[0.12em] transition ${
+                            selectedMember.encounter_ids.includes(power.id)
+                              ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
+                              : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-white/78 hover:border-[var(--sky-blue)]"
+                          }`}
+                        >
+                          {power.name}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-sm text-white/68">
+                        {selectedMember.class_id ? "No mapped debuff encounters for this class and paragon." : "Select class and paragon first."}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+          <Card>
+            <CardHeader>
+              <CardTitle>Saved Builds</CardTitle>
+              <CardDescription>Builds are stored locally in this browser so you can save and reload working setups.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {savedBuilds.length > 0 ? (
+                savedBuilds.slice(0, 6).map((build) => (
+                  <div key={build.id} className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{build.name}</p>
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                          {build.mode} / {build.trialPreset} / {build.teamMembers.length} slots
+                        </p>
+                      </div>
+                      {activeSavedBuildId === build.id ? <Badge variant="teal">Loaded</Badge> : null}
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => loadSavedBuild(build)}>
+                        Load
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => removeSavedBuild(build.id)}>
+                        <Trash2 className="mr-2 h-3.5 w-3.5" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm leading-6 text-white/68">No local builds saved yet. Save the current setup from the control bar above.</p>
+              )}
+            </CardContent>
+          </Card>
           <SummaryPanel
             icon={Target}
             title="Boss Debuffs"
@@ -1397,7 +1615,7 @@ export function TeamBuilderPage() {
           <Card>
             <CardHeader>
               <CardTitle>Carry Summary</CardTitle>
-              <CardDescription>{carry ? getMemberTitle(carry) : "No carry selected"}</CardDescription>
+              <CardDescription>{carry ? `${getMemberDisplayName(carry)} • ${getMemberTitle(carry)}` : "No carry selected"}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-white/80">
               <div className="grid gap-3 sm:grid-cols-2">
@@ -1566,10 +1784,10 @@ function ArchitectGroupCard({
                   />
                   <div className="min-w-0">
                     <p className="text-base font-semibold tracking-[-0.03em] text-white">
-                      {member.group}-{member.slot} {getMemberTitle(member)}
+                      {member.group}-{member.slot} {getMemberDisplayName(member)}
                     </p>
                     <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/62">
-                      {member.race || "Race pending"} / {formatRoleLabel(member.role)}
+                      {getMemberTitle(member)} / {member.race || "Race pending"} / {formatRoleLabel(member.role)}
                     </p>
                   </div>
                 </div>

@@ -1746,3 +1746,69 @@ Result:
 - `npm run build` passed.
 - `npm run lint` passed for the production app code changed in this pass.
 - Remaining lint warnings still come from temporary scratch files under `tmp_*`.
+
+## Pass 22 - Brought slot setup into view and added real local build saving
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `lib/team-build-storage.ts`
+- `app/saved-builds/page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Added a visible `Selected Slot Setup` card to the Team Builder right-side column so the user can immediately see and change:
+  - player name
+  - role
+  - race
+  - artifact
+  - companion
+  - enhancement
+  - mount combat power
+  - carry state
+  - mapped debuff encounters
+- Moved this fast-edit card ahead of the summary stack on smaller layouts and kept it sticky on very wide screens so it stays easier to reach without scrolling down into the lower power section.
+- Added player-name support using the existing `TeamMember.label` field and surfaced it in:
+  - the selected slot header
+  - the group cards
+  - carry summary context
+- Stopped forcing class selection to overwrite player names.
+- Added a real local save system in `lib/team-build-storage.ts` using browser local storage.
+- Added save/load/delete flow to Team Builder:
+  - build name field in the control bar
+  - save button
+  - saved-build list in the builder sidebar
+  - load and delete actions
+- Replaced the placeholder `Saved Builds` page with a functional browser-backed saved-build view.
+
+Why:
+
+- The user correctly pointed out that the current selected-slot equipment and debuff choices were too far below the main click target, which made the builder feel like the slot had no editable setup.
+- The most important actions in Team Builder are now in the visible zone:
+  - click slot
+  - see player setup immediately
+  - change key items immediately
+- Local save provides working persistence without adding backend complexity or breaking the current local-data-first v1 architecture.
+
+Notes / limitations:
+
+- Google login was not added in this pass because the repo still has no auth provider package, no OAuth credentials, and no backend/session configuration. The local save system now works fully without requiring auth.
+- If Google sync is still desired later, it should be added as a separate auth pass with real credentials and a persistence target.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` has no new app-code errors from this pass.
+- Remaining lint warnings still come from temporary scratch files under `tmp_*`.

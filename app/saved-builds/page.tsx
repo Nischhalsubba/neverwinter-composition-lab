@@ -1,17 +1,58 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+
 import { ContentPage } from "@/components/content-page";
 import { EmptyState } from "@/components/empty-state";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { deleteSavedBuild, readSavedBuilds, type SavedTeamBuild } from "@/lib/team-build-storage";
 
 export default function Page() {
+  const [builds, setBuilds] = useState<SavedTeamBuild[]>(() => readSavedBuilds());
+
   return (
     <ContentPage
       eyebrow="Saved Builds"
-      title="Saved build workspace"
-      description="This utility page exists in the navigation now to match the frontend spec. Local preset persistence is still a later implementation step."
+      title="Local saved build workspace"
+      description="Saved builds are stored in this browser for fast reloads during theorycrafting and roster planning."
     >
-      <EmptyState
-        title="No saved builds yet"
-        description="The utility route is in place so the shell and navigation do not have to be redesigned later when local save/load lands."
-      />
+      {builds.length > 0 ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {builds.map((build) => (
+            <Card key={build.id}>
+              <CardHeader>
+                <CardTitle>{build.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-white/74">
+                  {build.mode} / {build.trialPreset} / {build.teamMembers.length} members
+                </p>
+                <p className="text-xs uppercase tracking-[0.16em] text-white/56">Updated {new Date(build.updatedAt).toLocaleString()}</p>
+                <div className="flex gap-3">
+                  <Link href="/team-builder" className="inline-flex">
+                    <Button variant="primary">Open Builder</Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setBuilds(deleteSavedBuild(build.id));
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No saved builds yet"
+          description="Save a build from Team Builder and it will appear here."
+        />
+      )}
     </ContentPage>
   );
 }
