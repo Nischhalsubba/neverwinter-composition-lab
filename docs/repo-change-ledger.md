@@ -2163,6 +2163,61 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 31 - Added social share metadata and generated preview images
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/layout.tsx`
+- `app/opengraph-image.tsx`
+- `app/opengraph-image.alt.txt`
+- `app/twitter-image.tsx`
+- `app/twitter-image.alt.txt`
+- `public/icon.svg`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Added full root metadata so the deployed app exposes share-friendly Open Graph and Twitter card tags.
+- Set `metadataBase` to the production Vercel domain so relative metadata URLs resolve into absolute public URLs.
+- Added SEO and social fields:
+  - site title template
+  - application name
+  - keyword set
+  - canonical URL
+  - Open Graph title, description, site name, and image
+  - Twitter card title, description, and image
+- Added a generated `opengraph-image` route using `next/og` so shared links render a 1200x630 social thumbnail.
+- Added a matching generated `twitter-image` route instead of re-exporting the OG route, because this Next.js version rejects re-exported metadata route config.
+- Added alt text files for both generated social images so the metadata includes human-readable image descriptions.
+- Added a branded `public/icon.svg` and wired it into root metadata as the site icon.
+
+Why:
+
+- The user wanted `https://neverwinter-composition-lab.vercel.app/` to show a rich thumbnail and metadata preview when pasted into chat apps such as Messenger and Discord.
+- Root metadata alone was not enough because the app did not yet expose generated social images or icon metadata.
+- This Next.js version requires metadata image routes like `twitter-image.tsx` to define their own config exports directly rather than re-exporting them from another file.
+
+Notes:
+
+- The generated preview image uses the app's current blue palette and concise product messaging so the shared card reads cleanly outside the app.
+- The image route JSX was adjusted to satisfy `next/og` layout constraints during prerendering.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 29 - Added subtle GSAP motion, route transitions, and shaped loading skeletons
 
 Date:
@@ -2251,6 +2306,40 @@ Result:
 
 - `npm run build` passed.
 - `npm run lint` passed for production app code; remaining warnings are only from temporary scratch files such as `tmp_*`.
+
+## Pass 30 - Replaced the boilerplate README with a full GitHub-facing project document
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `README.md`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Replaced the default create-next-app README with a comprehensive repository overview.
+- Added a clear plain-language explanation of what Neverwinter Composition Lab is, including context for readers who do not play Neverwinter.
+- Documented the project goals, product philosophy, team-builder-first design direction, and source-aware data model.
+- Added sections explaining:
+  - the app's purpose
+  - key features
+  - design rationale
+  - color system reasoning
+  - frontend technology choices
+  - Neverwinter terms such as dungeon, trial, MSOD, buffs, debuffs, and carry / boost target
+  - project structure
+  - setup and run instructions
+  - contribution expectations
+- Wrote the README to be SEO-friendly around Neverwinter team building, trials, dungeons, artifacts, companions, buffs, debuffs, and planning.
+
+Why:
+
+- The repo needed a proper GitHub landing page instead of a generic framework template.
+- The user explicitly wanted a fancy, cool, complete README that explains the project to both Neverwinter players and non-players.
+- A strong README makes the repo easier to understand, share, maintain, and contribute to.
 
 ## Pass 26 - Fixed shell active-state contrast and rebuilt companion and mount libraries
 
