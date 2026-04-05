@@ -1605,3 +1605,70 @@ Result:
 - `npm run build` passed.
 - `npm run lint` completed without app-code errors.
 - Current lint warnings are still coming from temporary scratch files under `tmp_*`, not from the production app files changed in this pass.
+
+## Pass 20 - Rebuilt the app shell to match the frontend spec layout
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `components/layout/app-shell.tsx`
+- `components/content-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Replaced the top-navigation-heavy shell with a persistent-left-sidebar app shell that follows the frontend spec layout direction more closely.
+- Rebuilt `AppShell` around the documented three-zone structure:
+  - left sidebar for navigation
+  - dominant main content region
+  - page-level header row above page content
+- Added a full-height desktop sidebar with clear grouped sections:
+  - `Primary`
+  - `Reference`
+  - bottom utility links
+- Moved the identity block into the sidebar so the page header can focus on current page context instead of duplicating full app chrome.
+- Added a cleaner page header area above content with:
+  - current page title
+  - supporting line of context
+  - module/version tags
+  - global search field
+  - compact quick-access route row
+- Reworked route links into a single consistent tile pattern with:
+  - icon tile
+  - label
+  - stronger active state
+  - calmer spacing
+- Updated `ContentPage` spacing so page headers read more like design sections instead of stacked generic cards.
+- Increased `ContentPage` title rhythm and max text width so page intros feel closer to a designed product shell and less like generated scaffolding.
+- Kept the user-mandated palette unchanged:
+  - no design colors were copied from any external design
+  - only layout, spacing, shell structure, and element grouping were adapted
+
+Why:
+
+- The user explicitly asked for the app to follow the provided design's layout, spacing, and structural design patterns, while keeping the app's own colors.
+- The current shell still relied on a broad top-nav treatment, which conflicted with the frontend spec's persistent-sidebar layout system.
+- Re-centering the app on a left-sidebar shell makes the product easier to scan and gives the Team Builder and reference pages a more stable frame.
+- This pass intentionally changed structure, not color language, so it respects the user's instruction to avoid copying colors from the design.
+
+Notes / limitations:
+
+- No Stitch MCP tool was available in this session, so the implementation followed the repo's existing frontend design specification and shell rules rather than reading the pasted Stitch server configuration directly.
+- No external design asset file was found locally in the repo during this pass, so the shell refactor was derived from the documented layout rules already present in:
+  - `docs/neverwinter_frontend_design_spec.md`
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` completed without app-code errors.
+- Remaining lint warnings still come from temporary scratch files under `tmp_*`.

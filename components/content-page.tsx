@@ -21,21 +21,23 @@ export function ContentPage({
   metadata?: SourceMetadata;
 }) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="space-y-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
               <Badge variant="teal">{eyebrow}</Badge>
               {metadata ? <SourceBadge {...metadata} /> : null}
             </div>
-            <CardTitle className="text-3xl">{title}</CardTitle>
-            <CardDescription className="max-w-3xl text-base">{description}</CardDescription>
+            <div className="space-y-3">
+              <CardTitle className="text-[32px] leading-[1.05] tracking-[-0.04em]">{title}</CardTitle>
+              <CardDescription className="max-w-4xl text-base leading-7">{description}</CardDescription>
+            </div>
           </CardHeader>
         </Card>
         {children}
       </div>
-      {rightRail ? <div className="space-y-6">{rightRail}</div> : null}
+      {rightRail ? <aside className="space-y-6">{rightRail}</aside> : null}
     </div>
   );
 }
