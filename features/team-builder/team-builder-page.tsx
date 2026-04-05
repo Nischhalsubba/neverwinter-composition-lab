@@ -29,6 +29,8 @@ import {
   mountCombatPowers,
   mountEquipPowers,
   powers,
+  singleTargetCompanionRecommendationsById,
+  trialMandatoryCompanionById,
 } from "@/data/game-data";
 import { sanitizeUiText } from "@/lib/display-text";
 import { calculateMountHit, summarizeTeam } from "@/lib/effect-engine";
@@ -114,6 +116,25 @@ function getRecommendedArtifactIds(teamMode: TeamMode) {
 
 function getRecommendedCompanionIds() {
   return Object.entries(companionRecommendationsById)
+    .filter(([, value]) => Boolean(value))
+    .sort((left, right) => (left[1]?.rank ?? 999) - (right[1]?.rank ?? 999))
+    .map(([id]) => id);
+}
+
+function getRecommendedSupportCompanionIds(teamMode: TeamMode) {
+  const mandatoryIds =
+    teamMode === "trial"
+      ? Object.entries(trialMandatoryCompanionById)
+          .filter(([, value]) => Boolean(value))
+          .map(([id]) => id)
+      : [];
+
+  const rankedIds = getRecommendedCompanionIds();
+  return Array.from(new Set([...mandatoryIds, ...rankedIds]));
+}
+
+function getRecommendedDamageCompanionIds() {
+  return Object.entries(singleTargetCompanionRecommendationsById)
     .filter(([, value]) => Boolean(value))
     .sort((left, right) => (left[1]?.rank ?? 999) - (right[1]?.rank ?? 999))
     .map(([id]) => id);
@@ -221,19 +242,38 @@ function getPickerItems(kind: PickerKind): PickerItem[] {
 
   if (kind === "companion") {
     return companions.map((item) => {
-      const recommendation = companionRecommendationsById[item.id];
+      const supportRecommendation = companionRecommendationsById[item.id];
+      const stRecommendation = singleTargetCompanionRecommendationsById[item.id];
+      const trialMandatory = trialMandatoryCompanionById[item.id];
       return {
         id: item.id,
         name: item.name,
         subtitle: `${item.role_tag} / ${item.archetype}`,
-        description: recommendation
-          ? `${recommendation.benefit} Rough damage boost ${recommendation.roughDamageBoost?.toFixed(2) ?? "0.00"}%.`
-          : "Verified companion entry.",
+        description: [
+          trialMandatory ? `${trialMandatory.benefit}. Required trial utility coverage.` : null,
+          supportRecommendation
+            ? `${supportRecommendation.benefit} Rough damage boost ${supportRecommendation.roughDamageBoost?.toFixed(2) ?? "0.00"}%.`
+            : null,
+          stRecommendation
+            ? `ST rank #${stRecommendation.rank}.${stRecommendation.stDps != null ? ` ST DPS ${stRecommendation.stDps.toLocaleString()}.` : ""}${stRecommendation.maxHit != null ? ` Max hit ${stRecommendation.maxHit.toLocaleString()}.` : ""}`
+            : null,
+          !trialMandatory && !supportRecommendation && !stRecommendation ? "Verified companion entry." : null,
+        ]
+          .filter(Boolean)
+          .join(" "),
         sourceUrl: item.source_url,
-        filters: ["all", item.role_tag, recommendation ? "recommended" : "other"],
+        filters: [
+          "all",
+          item.role_tag,
+          supportRecommendation ? "recommended" : "other",
+          stRecommendation ? "st_recommended" : "other",
+          trialMandatory ? "trial_mandatory" : "other",
+        ],
         badges: [
           { label: item.role_tag, variant: "purple" },
-          ...(recommendation ? [{ label: `Support #${recommendation.rank}`, variant: "teal" as const }] : []),
+          ...(trialMandatory ? [{ label: "Trial Must", variant: "red" as const }] : []),
+          ...(supportRecommendation ? [{ label: `Support #${supportRecommendation.rank}`, variant: "teal" as const }] : []),
+          ...(stRecommendation ? [{ label: `ST #${stRecommendation.rank}`, variant: "blue" as const }] : []),
         ],
       };
     });
@@ -288,7 +328,9 @@ function getPickerFilters(kind: PickerKind) {
   if (kind === "companion") {
     return [
       { value: "all", label: "All" },
+      { value: "trial_mandatory", label: "Trial Must" },
       { value: "recommended", label: "Recommended" },
+      { value: "st_recommended", label: "ST Best" },
       { value: "support", label: "Support" },
       { value: "st", label: "Damage" },
       { value: "augment", label: "Augment" },
@@ -518,7 +560,9 @@ export function TeamBuilderPage() {
     const totalSlots = currentMode === "trial" ? 10 : 5;
     const nextMembers = createInitialTeamMembers(currentMode);
     const recommendedArtifacts = getRecommendedArtifactIds(currentMode);
-    const recommendedCompanions = getRecommendedCompanionIds();
+    const recommendedSupportCompanions = getRecommendedSupportCompanionIds(currentMode);
+    const recommendedDamageCompanions = getRecommendedDamageCompanionIds();
+    const fallbackCompanions = getRecommendedCompanionIds();
     const recommendedEnhancements = getRecommendedEnhancementIds();
     const supportMounts = getMountPowerIdByPriority(supportMountPriority);
     const damageMounts = getMountPowerIdByPriority(damageMountPriority);
@@ -538,7 +582,6 @@ export function TeamBuilderPage() {
 
     nextMembers.forEach((member, index) => {
       const artifactId = recommendedArtifacts[index % Math.max(recommendedArtifacts.length, 1)] ?? "";
-      const companionId = recommendedCompanions[index % Math.max(recommendedCompanions.length, 1)] ?? "";
       const enhancementId = recommendedEnhancements[index % Math.max(recommendedEnhancements.length, 1)] ?? "";
 
       if (goal === "boost_one_dps" && index === 0) {
@@ -549,7 +592,7 @@ export function TeamBuilderPage() {
         member.is_carry = true;
         member.race = "Human";
         member.artifact_id = artifactId;
-        member.companion_id = companionId;
+        member.companion_id = recommendedDamageCompanions[0] ?? fallbackCompanions[0] ?? "";
         member.enhancement_id = enhancementId;
         member.mount_combat_power_id = damageMounts[0] ?? supportMounts[0] ?? "";
         member.encounter_ids = carryLoadout.encounter_ids;
@@ -570,7 +613,7 @@ export function TeamBuilderPage() {
         member.label = `${classes.find((item) => item.id === balancedDamagePlan.classId)?.name ?? "DPS"} DPS`;
         member.race = "Human";
         member.artifact_id = artifactId;
-        member.companion_id = companionId;
+        member.companion_id = recommendedDamageCompanions[index] ?? fallbackCompanions[index] ?? "";
         member.enhancement_id = enhancementId;
         member.mount_combat_power_id = damageMounts[index % Math.max(damageMounts.length, 1)] ?? "";
         member.encounter_ids = loadout.encounter_ids;
@@ -597,7 +640,10 @@ export function TeamBuilderPage() {
       member.label = `${supportPlan.className} ${supportPlan.paragon}`;
       member.race = "Human";
       member.artifact_id = artifactId;
-      member.companion_id = companionId;
+      member.companion_id =
+        recommendedSupportCompanions[(goal === "boost_one_dps" ? index - 1 : index) % Math.max(recommendedSupportCompanions.length, 1)] ??
+        fallbackCompanions[index % Math.max(fallbackCompanions.length, 1)] ??
+        "";
       member.enhancement_id = enhancementId;
       member.mount_combat_power_id = supportMounts[(goal === "boost_one_dps" ? index - 1 : index) % Math.max(supportMounts.length, 1)] ?? "";
       member.encounter_ids = supportPlan.loadout.encounter_ids;

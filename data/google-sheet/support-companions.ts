@@ -17,3 +17,12 @@ export const recommendedSupportCompanionRows = [
   { rank: 9, name: "Minsc", benefit: "+2% Combat Advantage and Incoming Healing to all allies within 80 ft", stDps: 48549, roughDamageBoost: 0.88, notes: "adding this when at 118% combat advantage" },
   { rank: 10, name: "Rattigan the Wise", benefit: "makes the target take +1% increased damage", stDps: null, roughDamageBoost: 0.2, notes: "adding this when at 150% debuffs" },
 ] as const;
+
+export const trialMandatorySupportCompanionRows = [
+  {
+    name: "Black Death Scorpion",
+    benefit: "makes its target grant combat advantage, 100% uptime (excluding mechanics)",
+    usage: "Use in all trial setups for stable CA coverage on bossing compositions.",
+    notes: "User-provided ranking proof explicitly calls this out as mandatory in trials.",
+  },
+] as const;

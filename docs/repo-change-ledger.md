@@ -1321,3 +1321,67 @@ Checks run:
 Result:
 
 - Both passed after the flat-theme reset and best-setup automation pass.
+
+## Pass 16 - Support companion and ST companion ranking integration
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `data/google-sheet/support-companions.ts`
+- `data/google-sheet/companion-damage.ts`
+- `data/game-data.ts`
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Added a trial-mandatory support companion rule for `Black Death Scorpion` in `data/google-sheet/support-companions.ts`.
+- Created `data/google-sheet/companion-damage.ts` to preserve the recovered ST companion ranking proof as typed local data:
+  - rank
+  - archetype
+  - max hit
+  - ST DPS
+  - notes
+- Updated the normalized companion model in `data/game-data.ts` so companions can now carry:
+  - support ranking metadata
+  - ST ranking metadata
+  - trial-mandatory metadata
+- Added a dedicated `Black Death Scorpion` effect marker in the effect catalog as a non-numeric carry-coverage flag instead of inventing a fake percent value.
+- Exported new derived recommendation maps from `data/game-data.ts`:
+  - `recommendedSingleTargetCompanions`
+  - `singleTargetCompanionRecommendationsById`
+  - `trialMandatorySupportCompanions`
+  - `trialMandatoryCompanionById`
+- Updated Team Builder companion picker output so companions now show:
+  - `Trial Must` badge for Black Death Scorpion
+  - support rank badge where applicable
+  - ST rank badge where applicable
+  - concise ST DPS and max-hit text when recovered
+- Updated Team Builder companion picker filters to include:
+  - `Trial Must`
+  - `ST Best`
+- Updated Team Builder auto-fill logic so:
+  - trial support lineups start from the trial-mandatory Black Death Scorpion rule
+  - support slots use support-companion ranking
+  - DPS slots use the ST companion ranking
+  - the old single recommendation list is now only a fallback path
+
+Why:
+
+- The user supplied a clearer support-companion ranking image and explicitly stated that `Black Death Scorpion` must be used in all trials because it grants 100% CA uptime.
+- The user also supplied ST companion ranking proof and asked for deeper DPS understanding, which required separating support picks from damage picks.
+- Keeping support ranking and ST ranking as separate typed datasets makes the Team Builder's auto-setup behavior more accurate and easier to reason about.
+- The implementation preserves the user's "only proven values" rule by storing Black Death Scorpion as a mandatory utility rule without inventing a numeric combat-advantage percent.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- Both passed after integrating the support and ST companion ranking layers.

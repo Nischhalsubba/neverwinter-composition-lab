@@ -36,7 +36,13 @@ import {
   recommendedSupportCompanionRows,
   supportCompanionSheetSourceUrl,
   supportCompanionSheetSourceVersion,
+  trialMandatorySupportCompanionRows,
 } from "@/data/google-sheet/support-companions";
+import {
+  companionDamageSheetSourceUrl,
+  companionDamageSheetSourceVersion,
+  singleTargetCompanionRows,
+} from "@/data/google-sheet/companion-damage";
 import {
   nwHubCompanionEnhancementsRaw,
 } from "@/data/nw-hub/companion-enhancements";
@@ -372,6 +378,20 @@ const seededEffectCatalog: EffectDefinition[] = [
     source_version: moduleVersion,
     verification_status: "partially_recovered",
     notes: "Used as a carry-oriented support flag when numeric values are already represented elsewhere.",
+  },
+  {
+    id: "effect-black-death-scorpion-ca-coverage",
+    name: "Black Death Scorpion CA Coverage",
+    effect_category: "carry_only",
+    stat: "combat_advantage",
+    value: null,
+    stack_rule: "strongest_only",
+    scope: "carry",
+    source_type: "user_sheet",
+    source_url: supportCompanionSheetSourceUrl,
+    source_version: supportCompanionSheetSourceVersion,
+    verification_status: "verified",
+    notes: "Trial-mandatory support coverage flag. Grants combat advantage uptime, but no direct numeric CA percent is asserted here.",
   },
   {
     id: "effect-mythallar-defense",
@@ -1028,6 +1048,10 @@ const companionRoleMap = new Map<string, string[]>(
   nwHubCompanionPowersRaw.map((item) => [item.name, [...item.roles]]),
 );
 
+const stCompanionRankingByName = new Map(
+  singleTargetCompanionRows.map((row) => [normalizeLookup(row.name), row]),
+);
+
 const seededCompanionValueMap: Record<
   string,
   { st_dps: number | null; max_hit: number | null; effect_ids: string[]; notes: string; verification_status: Companion["verification_status"]; source_type: Companion["source_type"]; source_url: string; source_version: string }
@@ -1092,10 +1116,28 @@ const seededCompanionValueMap: Record<
     verification_status: "verified",
     notes: "Recovered directly from the ST ranking proof.",
   },
+  "Black Death Scorpion": {
+    st_dps: null,
+    max_hit: null,
+    effect_ids: ["effect-black-death-scorpion-ca-coverage"],
+    source_type: "user_sheet",
+    source_url: companionDamageSheetSourceUrl,
+    source_version: companionDamageSheetSourceVersion,
+    verification_status: "verified",
+    notes: "Trial CA support pick. ST damage was marked broken in training room in the recovered proof.",
+  },
 };
 
 function getSupportCompanionRecommendation(name: string) {
   return recommendedSupportCompanionRows.find((row) => matchesRecommendationLabel(name, row.name)) ?? null;
+}
+
+function getSingleTargetCompanionRecommendation(name: string) {
+  return stCompanionRankingByName.get(normalizeLookup(name)) ?? null;
+}
+
+function getTrialMandatorySupportCompanion(name: string) {
+  return trialMandatorySupportCompanionRows.find((row) => matchesRecommendationLabel(name, row.name)) ?? null;
 }
 
 function getCompanionRoleTag(type: string, playerBonusName: string): Companion["role_tag"] {
@@ -1119,26 +1161,46 @@ export const companions: Companion[] = nwHubCompanionsRaw.map((item) => {
   const seeded = seededCompanionValueMap[item.name];
   const roles = companionRoleMap.get(item.playerBonusName) ?? [];
   const recommendation = getSupportCompanionRecommendation(item.name);
+  const stRecommendation = getSingleTargetCompanionRecommendation(item.name);
+  const trialMandatory = getTrialMandatorySupportCompanion(item.name);
 
   return {
     id: makeEntityId("comp", item.name),
     name: item.name,
     role_tag: getCompanionRoleTag(item.type, item.playerBonusName),
     archetype: `${item.type} / ${roles.length ? roles.join(", ") : "mixed roles"}`,
-    st_dps: seeded?.st_dps ?? null,
-    max_hit: seeded?.max_hit ?? null,
+    st_dps: seeded?.st_dps ?? stRecommendation?.stDps ?? null,
+    max_hit: seeded?.max_hit ?? stRecommendation?.maxHit ?? null,
     effect_ids: seeded?.effect_ids ?? [],
-    source_type: recommendation ? "user_sheet" : (seeded?.source_type ?? "community_reference"),
-    source_url: recommendation ? supportCompanionSheetSourceUrl : (seeded?.source_url ?? item.source_url),
-    source_version: recommendation ? supportCompanionSheetSourceVersion : (seeded?.source_version ?? nwHubSourceVersion),
+    source_type:
+      recommendation || stRecommendation || trialMandatory ? "user_sheet" : (seeded?.source_type ?? "community_reference"),
+    source_url:
+      recommendation
+        ? supportCompanionSheetSourceUrl
+        : stRecommendation || trialMandatory
+          ? companionDamageSheetSourceUrl
+          : (seeded?.source_url ?? item.source_url),
+    source_version:
+      recommendation
+        ? supportCompanionSheetSourceVersion
+        : stRecommendation || trialMandatory
+          ? companionDamageSheetSourceVersion
+          : (seeded?.source_version ?? nwHubSourceVersion),
     verification_status: seeded?.verification_status ?? "verified",
     notes: [
       recommendation
         ? `Recommended support companion #${recommendation.rank}. Benefit: ${recommendation.benefit}. Rough damage boost ${recommendation.roughDamageBoost?.toFixed(2) ?? "pending"}%.`
         : null,
+      stRecommendation
+        ? `Single-target ranking #${stRecommendation.rank}.${stRecommendation.stDps != null ? ` ST DPS ${stRecommendation.stDps.toLocaleString()}.` : ""}${stRecommendation.maxHit != null ? ` Max hit ${stRecommendation.maxHit.toLocaleString()}.` : ""}`
+        : null,
+      trialMandatory
+        ? `Trial mandatory support pick. ${trialMandatory.benefit}. ${trialMandatory.usage}`
+        : null,
       seeded?.notes ??
         `Player bonus: ${item.playerBonusName}. Enhancement: ${item.enhancementPower}. Imported from the local NW Hub companion list snapshot.`,
       recommendation?.notes ?? null,
+      stRecommendation?.notes ?? null,
     ]
       .filter(Boolean)
       .join(" "),
@@ -1146,6 +1208,16 @@ export const companions: Companion[] = nwHubCompanionsRaw.map((item) => {
 });
 
 export const recommendedSupportCompanions = recommendedSupportCompanionRows.map((row) => ({
+  ...row,
+  companionIds: companions.filter((item) => matchesRecommendationLabel(item.name, row.name)).map((item) => item.id),
+}));
+
+export const recommendedSingleTargetCompanions = singleTargetCompanionRows.map((row) => ({
+  ...row,
+  companionIds: companions.filter((item) => matchesRecommendationLabel(item.name, row.name)).map((item) => item.id),
+}));
+
+export const trialMandatorySupportCompanions = trialMandatorySupportCompanionRows.map((row) => ({
   ...row,
   companionIds: companions.filter((item) => matchesRecommendationLabel(item.name, row.name)).map((item) => item.id),
 }));
@@ -1301,6 +1373,14 @@ export const artifactRecommendationsById = Object.fromEntries(
 
 export const companionRecommendationsById = Object.fromEntries(
   companions.map((companion) => [companion.id, getSupportCompanionRecommendation(companion.name)]),
+);
+
+export const singleTargetCompanionRecommendationsById = Object.fromEntries(
+  companions.map((companion) => [companion.id, getSingleTargetCompanionRecommendation(companion.name)]),
+);
+
+export const trialMandatoryCompanionById = Object.fromEntries(
+  companions.map((companion) => [companion.id, getTrialMandatorySupportCompanion(companion.name)]),
 );
 
 export const enhancementRecommendationsById = Object.fromEntries(
