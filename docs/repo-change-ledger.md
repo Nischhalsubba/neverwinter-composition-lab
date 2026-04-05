@@ -1556,6 +1556,56 @@ Result:
 - `npm run build` passed.
 - `npm run lint` reports no new app-code errors after this pass; remaining output is still from temporary `tmp_*` scratch files.
 
+## Pass 28 - Tightened auto-setup rules around support companions and explicit boost targets
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Changed the best-setup overlay so `Boost one DPS` now asks which slot should be the boosted player before applying the setup.
+- Updated the auto-setup callback signature to receive that selected boost target instead of always forcing slot 1 to be the boosted player.
+- Changed the generated boosted slot label from the older generic carry text to `Boost Target DPS`.
+- Enforced the user's planning rule that DPS members should still use support companions in dungeon and trial auto-setup flows, including boosted setups.
+- Removed ST summon companion assignment from the generator so the setup builder now rotates through support companions instead of damage companions for DPS slots.
+- Restricted the generated recommendation pools to the top 10 imported rows for:
+  - artifacts
+  - companion enhancements
+  - support companions
+- Kept damage mounts on DPS slots for the overall-damage shell while still using support companion coverage.
+- Added a total boss-debuff count to the Boss Debuffs summary by surfacing both active and pending debuff source counts as a combined total.
+- Updated Carry Summary to show the total boss debuff count instead of only the resolved active-source count.
+
+Why:
+
+- The user explicitly said all DPS members should use support companions in dungeon and trial setups, even when boosting one player.
+- The older setup overlay only let the app choose the boosted slot implicitly, which made the boost flow too rigid.
+- The user also asked for the boss-debuff total to be calculated and visible, not just the resolved percent total.
+
+Notes:
+
+- The app still preserves the concept of a single boosted target internally through the existing `is_carry` flag.
+- In user-facing terms, that is the one slot the rest of the composition is optimizing around.
+- Mount and insignia calculations are still limited by the currently imported typed values. The current generator structure is ready for a future pass that recalibrates values specifically for Celestial insignias and 125% bolster once those live values are loaded into the local dataset.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` has no new app-code errors from this pass; remaining output is still dominated by temporary `tmp_*` scratch files.
+
 ## Pass 31 - Added mobile navigation and replaced generic reference details with NW Hub-backed content
 
 Date:

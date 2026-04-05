@@ -163,13 +163,6 @@ function getRecommendedSupportCompanionIds(teamMode: TeamMode) {
   return Array.from(new Set([...mandatoryIds, ...rankedIds]));
 }
 
-function getRecommendedDamageCompanionIds() {
-  return Object.entries(singleTargetCompanionRecommendationsById)
-    .filter(([, value]) => Boolean(value))
-    .sort((left, right) => (left[1]?.rank ?? 999) - (right[1]?.rank ?? 999))
-    .map(([id]) => id);
-}
-
 function getRecommendedEnhancementIds() {
   return Object.entries(enhancementRecommendationsById)
     .filter(([, value]) => Boolean(value))
@@ -316,6 +309,7 @@ function getSummaryTotals(lines: { total: number; contributions: { id: string }[
     resolvedTotal: lines.reduce((sum, line) => sum + line.total, 0),
     activeSources: lines.reduce((sum, line) => sum + line.contributions.length, 0),
     unresolvedSources: lines.reduce((sum, line) => sum + line.unresolved.length, 0),
+    totalSources: lines.reduce((sum, line) => sum + line.contributions.length + line.unresolved.length, 0),
   };
 }
 
@@ -858,24 +852,33 @@ export function TeamBuilderPage() {
     closePicker();
   }
 
-  function applyAutoSetup(goal: AutoSetupGoal) {
+  function applyAutoSetup(goal: AutoSetupGoal, boostTargetMemberId?: string) {
     if (!mode) {
       return;
     }
 
     const currentMode = mode;
     const nextMembers = createInitialTeamMembers(currentMode);
-    const recommendedArtifacts = getRecommendedArtifactIds(currentMode);
-    const recommendedSupportCompanions = getRecommendedSupportCompanionIds(currentMode);
-    const recommendedDamageCompanions = getRecommendedDamageCompanionIds();
-    const fallbackCompanions = getRecommendedCompanionIds();
-    const recommendedEnhancements = getRecommendedEnhancementIds();
+    const recommendedArtifacts = getRecommendedArtifactIds(currentMode).slice(0, 10);
+    const recommendedSupportCompanions = getRecommendedSupportCompanionIds(currentMode).slice(0, 10);
+    const fallbackCompanions = getRecommendedCompanionIds().slice(0, 10);
+    const recommendedEnhancements = getRecommendedEnhancementIds().slice(0, 10);
     const supportMounts = getMountPowerIdByPriority(supportMountPriority);
     const damageMounts = getMountPowerIdByPriority(damageMountPriority);
     const supportInsignias = getInsigniaIdsByPriority(supportInsigniaPriority);
     const damageInsignias = getInsigniaIdsByPriority(damageInsigniaPriority);
     const supportPlans = getSupportClassPlans();
     const plannedRoles = getPlannedRoleDistribution(currentMode, trialPreset);
+    const boostTargetSlot =
+      goal === "boost_one_dps"
+        ? Math.max(
+            1,
+            Math.min(
+              nextMembers.length,
+              teamMembers.find((member) => member.id === boostTargetMemberId)?.slot ?? 1,
+            ),
+          )
+        : 1;
 
     const carryClassId = getClassIdByName("Rogue");
     const carryParagon = "Assassin";
@@ -922,15 +925,15 @@ export function TeamBuilderPage() {
       const enhancementId = recommendedEnhancements[index % Math.max(recommendedEnhancements.length, 1)] ?? "";
       const plannedRole = plannedRoles[index] ?? "dps";
 
-      if (goal === "boost_one_dps" && index === 0) {
+      if (goal === "boost_one_dps" && member.slot === boostTargetSlot) {
         member.class_id = carryClassId;
         member.paragon = carryParagon;
         member.role = "dps";
-        member.label = "Carry DPS";
+        member.label = "Boost Target DPS";
         member.is_carry = true;
         member.race = "Human";
         member.artifact_id = artifactId;
-        member.companion_id = recommendedDamageCompanions[0] ?? fallbackCompanions[0] ?? "";
+        member.companion_id = recommendedSupportCompanions[0] ?? fallbackCompanions[0] ?? "";
         member.enhancement_id = enhancementId;
         member.mount_combat_power_id = damageMounts[0] ?? supportMounts[0] ?? "";
         member.insignia_bonus_ids = getRotatedIds(damageInsignias, damageInsigniaIndex++);
@@ -964,9 +967,9 @@ export function TeamBuilderPage() {
         member.race = "Human";
         member.artifact_id = artifactId;
         member.companion_id =
-          plannedRole === "dps"
-            ? recommendedDamageCompanions[index % Math.max(recommendedDamageCompanions.length, 1)] ?? fallbackCompanions[index] ?? ""
-            : recommendedSupportCompanions[index % Math.max(recommendedSupportCompanions.length, 1)] ?? fallbackCompanions[index] ?? "";
+          recommendedSupportCompanions[index % Math.max(recommendedSupportCompanions.length, 1)] ??
+          fallbackCompanions[index % Math.max(fallbackCompanions.length, 1)] ??
+          "";
         member.enhancement_id = enhancementId;
         member.mount_combat_power_id =
           plannedRole === "dps"
@@ -979,7 +982,7 @@ export function TeamBuilderPage() {
         member.encounter_ids = selectedPlan.loadout.encounter_ids;
         member.daily_ids = selectedPlan.loadout.daily_ids;
         member.feature_ids = selectedPlan.loadout.feature_ids;
-        member.is_carry = index === 0;
+        member.is_carry = goal === "boost_one_dps" && member.slot === boostTargetSlot;
         return;
       }
 
@@ -1014,7 +1017,9 @@ export function TeamBuilderPage() {
     });
 
     setTeamMembers(nextMembers);
-    setSelectedMemberId(nextMembers[0]?.id ?? "");
+    setSelectedMemberId(
+      nextMembers.find((member) => member.slot === boostTargetSlot)?.id ?? nextMembers[0]?.id ?? "",
+    );
     setAutoSetupOpen(false);
   }
 
@@ -1678,8 +1683,10 @@ export function TeamBuilderPage() {
             icon={Target}
             title="Boss Debuffs"
             highlights={[
+              { label: "Total debuffs", value: `${bossTotals.totalSources}` },
               { label: "Resolved total", value: formatPercent(bossTotals.resolvedTotal) },
               { label: "Active sources", value: `${bossTotals.activeSources}` },
+              { label: "Pending sources", value: `${bossTotals.unresolvedSources}` },
             ]}
             lines={teamState.bossSummary.map((line) => ({
               label: titleCase(line.stat),
@@ -1713,7 +1720,7 @@ export function TeamBuilderPage() {
                 </div>
                 <div className="border border-[var(--border)] bg-[rgba(255,200,221,0.1)] px-4 py-3">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">Boss debuff sources</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{carryTotals.bossSources}</p>
+                  <p className="mt-2 text-lg font-semibold text-white">{bossTotals.totalSources}</p>
                 </div>
               </div>
               <p>Damage bonus: {formatPercent(teamState.carryState.outgoing_damage_bonus)}</p>
@@ -1795,6 +1802,7 @@ export function TeamBuilderPage() {
 
       {autoSetupOpen ? (
         <AutoSetupOverlay
+          members={teamMembers}
           onClose={() => setAutoSetupOpen(false)}
           onSelect={applyAutoSetup}
         />
@@ -2400,12 +2408,16 @@ function SelectionOverlay({
 }
 
 function AutoSetupOverlay({
+  members,
   onClose,
   onSelect,
 }: {
+  members: TeamMember[];
   onClose: () => void;
-  onSelect: (goal: AutoSetupGoal) => void;
+  onSelect: (goal: AutoSetupGoal, boostTargetMemberId?: string) => void;
 }) {
+  const [boostTargetMemberId, setBoostTargetMemberId] = useState(members[0]?.id ?? "");
+
   return (
     <div className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.78)] backdrop-blur-sm">
       <div className="mx-auto flex h-full max-w-[760px] items-center justify-center px-5 py-8">
@@ -2429,16 +2441,29 @@ function AutoSetupOverlay({
             </button>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => onSelect("boost_one_dps")}
-              className="border border-[rgba(162,210,255,0.95)] bg-[rgba(162,210,255,0.15)] p-5 text-left transition hover:bg-[rgba(162,210,255,0.22)]"
-            >
+            <div className="border border-[rgba(162,210,255,0.95)] bg-[rgba(162,210,255,0.15)] p-5">
               <p className="text-lg font-semibold text-white">Boost one DPS</p>
               <p className="mt-2 text-sm leading-6 text-white/75">
-                One carry DPS. The rest of the team is filled with support classes, debuff encounters, support mounts, support artifacts, and top support companions.
+                Pick the boosted player first. The selected slot becomes the boost target, and every DPS still gets a support companion instead of an ST summon.
               </p>
-            </button>
+              <div className="mt-4 space-y-3">
+                <Field label="Boost target">
+                  <Select
+                    value={boostTargetMemberId}
+                    onChange={(event) => setBoostTargetMemberId(event.target.value)}
+                  >
+                    {members.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.group}-{member.slot} {getMemberDisplayName(member)}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Button variant="primary" className="w-full" onClick={() => onSelect("boost_one_dps", boostTargetMemberId)}>
+                  Build boosted setup
+                </Button>
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => onSelect("overall_team_damage")}
@@ -2446,7 +2471,7 @@ function AutoSetupOverlay({
             >
               <p className="text-lg font-semibold text-white">Overall team damage</p>
               <p className="mt-2 text-sm leading-6 text-white/75">
-                Balanced damage lineup. Multiple DPS slots receive 4000-magnitude-style damage mounts while the rest of the team still carries support and debuff coverage.
+                Balanced damage lineup. The generator rotates through the top 10 support companions, top 10 debuff artifacts, and top 10 debuff enhancements while still applying damage mounts to DPS slots.
               </p>
             </button>
           </div>
