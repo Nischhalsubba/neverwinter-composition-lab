@@ -31,13 +31,13 @@ export default function Page() {
               {effects.map((effect) => (
                 <div key={effect.id} className="border border-[var(--border)] bg-[var(--surface)] p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link href={`/reference/effects/${effect.id}`} className="text-sm font-medium text-white hover:text-white/84">
+                    <Link href={`/reference/effects/${effect.id}`} className="text-sm font-medium text-black hover:text-black/84">
                       {effect.name}
                     </Link>
                     <Badge variant="blue">{titleCase(effect.stat)}</Badge>
                     <Badge variant="muted">{effect.stack_rule.replaceAll("_", " ")}</Badge>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-white/74">
+                  <p className="mt-3 text-sm leading-6 text-black/74">
                     {effect.value !== null ? formatPercent(effect.value) : "Pending verified value"} • {effect.notes}
                   </p>
                 </div>

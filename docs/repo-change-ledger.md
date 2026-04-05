@@ -2163,6 +2163,59 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 26 - Comprehensive color-contrast audit and control readability pass
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/globals.css`
+- `app/settings/page.tsx`
+- `app/page.tsx`
+- `app/reference/[entityType]/[itemId]/page.tsx`
+- `app/artifacts/page.tsx`
+- `components/layout/app-shell.tsx`
+- `components/summary-panel.tsx`
+- `components/ui/input.tsx`
+- `components/ui/select.tsx`
+- `components/ui/textarea.tsx`
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Ran a contrast-focused audit across the app shell, dashboard, Team Builder, summary panels, reference detail pages, and form controls.
+- Standardized form-control text to readable black text on the lighter approved palette surfaces so dropdowns, inputs, and textareas remain legible.
+- Kept the global select styling in a light-theme state so native option menus and focused select fields use visible text and selection states.
+- Replaced the remaining non-palette settings toggle thumb fill with a palette-only fill so the settings page no longer used a white UI surface.
+- Kept black only where contrast is actually required for text readability against the approved pastel palette.
+- Verified there were no remaining non-text black or white surface fills in the production app files.
+
+Why:
+
+- The user asked for a comprehensive QA audit focused on visibility and readability.
+- The app palette is intentionally light, which means many earlier white-text choices became unreadable once the surfaces changed.
+- Inputs, dropdowns, detail panels, and summary cards all need a single readable contrast strategy instead of per-page drift.
+
+Notes:
+
+- The audit focused on production app files only.
+- Temporary scratch files such as `tmp_*` remain outside the product surface and were not treated as blockers.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 30 - Repaired the summary drawer, rebuilt settings, and raised the contrast floor
 
 Date:

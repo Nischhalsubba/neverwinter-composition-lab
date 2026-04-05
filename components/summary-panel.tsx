@@ -23,7 +23,7 @@ export function SummaryPanel({
         <button
           type="button"
           onClick={onHeaderClick}
-          className="flex items-center gap-2 text-left text-white"
+          className="flex items-center gap-2 text-left text-black"
         >
           <Icon className="h-4 w-4 text-[var(--sky-blue)]" />
           <p className="text-[10px] uppercase tracking-[0.22em]">{title}</p>
@@ -37,8 +37,8 @@ export function SummaryPanel({
                 key={item.label}
                 className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
               >
-                <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">{item.label}</p>
-                <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-white">{item.value}</p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-black/58">{item.label}</p>
+                <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-black">{item.value}</p>
               </div>
             ))}
           </div>
@@ -51,10 +51,10 @@ export function SummaryPanel({
             className="block w-full border border-[var(--border)] bg-[var(--surface)] px-5 py-4 text-left"
           >
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-white">{line.label}</p>
-              <p className="text-sm font-medium text-white">{line.value}</p>
+              <p className="text-sm text-black">{line.label}</p>
+              <p className="text-sm font-medium text-black">{line.value}</p>
             </div>
-            <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-white/58">{line.detail}</p>
+            <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-black/58">{line.detail}</p>
           </button>
         ))}
       </CardContent>

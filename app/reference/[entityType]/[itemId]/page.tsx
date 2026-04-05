@@ -78,8 +78,8 @@ function DetailStat({
 }) {
   return (
     <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-      <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-white">{value == null || value === "" ? "Not listed" : value}</p>
+      <p className="text-[10px] uppercase tracking-[0.16em] text-black/58">{label}</p>
+      <p className="mt-2 text-sm font-semibold text-black">{value == null || value === "" ? "Not listed" : value}</p>
     </div>
   );
 }
@@ -97,7 +97,7 @@ function DetailTextCard({
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm leading-7 text-white/82">{description}</p>
+        <p className="text-sm leading-7 text-black/82">{description}</p>
       </CardContent>
     </Card>
   );
@@ -135,9 +135,9 @@ function renderArtifactDetail(itemId: string): DetailPayload | null {
           </div>
           {snapshot?.powertext ? (
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Power text</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-black/58">Power text</p>
               <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
-                <p className="whitespace-pre-line text-sm leading-7 text-white/84">{snapshot.powertext}</p>
+                <p className="whitespace-pre-line text-sm leading-7 text-black/84">{snapshot.powertext}</p>
               </div>
             </div>
           ) : null}
@@ -179,8 +179,8 @@ function renderArtifactDetail(itemId: string): DetailPayload | null {
             {Object.entries(snapshot.ranks).map(([rank, rankData]) => (
               <div key={rank} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-white">{rank}</p>
-                  <p className="text-xs uppercase tracking-[0.16em] text-white/62">
+                  <p className="text-sm font-semibold text-black">{rank}</p>
+                  <p className="text-xs uppercase tracking-[0.16em] text-black/62">
                     Item level {rankData.itemLevel} • Combined {rankData.combinedRating}
                   </p>
                 </div>
@@ -304,8 +304,8 @@ function renderClassDetail(itemId: string): DetailPayload | null {
               key={paragon.name}
               className={`border px-4 py-4 ${activeParagon === paragon.name ? "border-[var(--sky-blue)] bg-[var(--surface-2)]" : "border-[var(--border)] bg-[var(--surface)]"}`}
             >
-              <p className="text-sm font-semibold text-white">{paragon.name}</p>
-              <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-white/62">{paragon.role}</p>
+              <p className="text-sm font-semibold text-black">{paragon.name}</p>
+              <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-black/62">{paragon.role}</p>
             </div>
           ))}
         </CardContent>
@@ -322,11 +322,11 @@ function renderClassDetail(itemId: string): DetailPayload | null {
             .map((power) => (
               <div key={power.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-white">{power.name}</p>
+                  <p className="text-sm font-semibold text-black">{power.name}</p>
                   <Badge variant="muted">{power.power_type}</Badge>
                   {power.paragon_path ? <Badge variant="purple">{power.paragon_path}</Badge> : null}
                 </div>
-                <p className="mt-2 text-sm text-white/76">{sanitizeUiText(power.notes, "Imported class power record.")}</p>
+                <p className="mt-2 text-sm text-black/76">{sanitizeUiText(power.notes, "Imported class power record.")}</p>
               </div>
             ))}
         </CardContent>
@@ -617,12 +617,12 @@ export default async function Page({
             <CardContent className="space-y-3">
               <Link href={listPageMap[entityType] ?? "/reference"}>
                 <Card className="transition hover:border-[var(--sky-blue)]">
-                  <CardContent className="p-4 text-sm text-white/80">Back to list page</CardContent>
+                  <CardContent className="p-4 text-sm text-black/80">Back to list page</CardContent>
                 </Card>
               </Link>
               <Link href={`/search?q=${encodeURIComponent(item.title)}`}>
                 <Card className="transition hover:border-[var(--sky-blue)]">
-                  <CardContent className="p-4 text-sm text-white/80">Find related results</CardContent>
+                  <CardContent className="p-4 text-sm text-black/80">Find related results</CardContent>
                 </Card>
               </Link>
             </CardContent>
@@ -647,7 +647,7 @@ export default async function Page({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm leading-7 text-white/82">{item.description}</p>
+          <p className="text-sm leading-7 text-black/82">{item.description}</p>
           {item.source ? <SourceBadge {...item.source} /> : null}
         </CardContent>
       </Card>

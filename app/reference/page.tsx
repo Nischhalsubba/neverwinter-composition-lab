@@ -72,7 +72,7 @@ export default function Page() {
                   </div>
                   <CardDescription>{summary.preview}</CardDescription>
                 </CardHeader>
-                <CardContent className="text-sm text-white/78">
+                <CardContent className="text-sm text-black/78">
                   Open the live reference page for {route.label.toLowerCase()}.
                 </CardContent>
               </Card>

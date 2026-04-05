@@ -12,7 +12,7 @@ export default function Page() {
         <CardHeader>
           <CardTitle>Current note</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm leading-6 text-white/74">
+        <CardContent className="text-sm leading-6 text-black/74">
           Neverwinter values in this repo remain split into verified, partially recovered, inferred, and pending live checks. This page now exists so those notes have a stable product home.
         </CardContent>
       </Card>

@@ -91,9 +91,9 @@ function DashboardStatCard({
 }) {
   return (
     <div className="border border-[var(--border)] bg-[var(--surface)] px-5 py-5">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-white/62">{label}</p>
-      <p className="mt-3 text-3xl font-semibold tracking-[-0.06em] text-white">{value}</p>
-      <p className="mt-3 text-sm leading-6 text-white/76">{note}</p>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-black/62">{label}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-[-0.06em] text-black">{value}</p>
+      <p className="mt-3 text-sm leading-6 text-black/76">{note}</p>
     </div>
   );
 }
@@ -141,10 +141,10 @@ export default function Page() {
                 <Badge variant="teal">Builder command board</Badge>
                 <div className="space-y-3">
                   <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--sky-blue)]">Neverwinter team planner</p>
-                  <h1 className="text-4xl font-semibold uppercase tracking-[-0.08em] text-white sm:text-5xl">
+                  <h1 className="text-4xl font-semibold uppercase tracking-[-0.08em] text-black sm:text-5xl">
                     {mode === "trial" ? "Trial setup" : "Dungeon setup"}
                   </h1>
-                  <p className="max-w-3xl text-sm leading-7 text-white/82 sm:text-base">
+                  <p className="max-w-3xl text-sm leading-7 text-black/82 sm:text-base">
                     Keep only the planning signals that feed the builder: role shell, top debuff artifacts, top support
                     companions, and the strongest purple debuffs.
                   </p>
@@ -158,7 +158,7 @@ export default function Page() {
                   className={`border px-4 py-4 text-left transition ${
                     mode === "trial"
                       ? "border-[var(--border-strong)] bg-[var(--panel-2)] text-black"
-                      : "border-[var(--border)] bg-[var(--surface)] text-white hover:border-[var(--border-strong)]"
+                      : "border-[var(--border)] bg-[var(--surface)] text-black hover:border-[var(--border-strong)]"
                   }`}
                 >
                   <p className="text-[10px] uppercase tracking-[0.18em] opacity-70">Mode</p>
@@ -170,7 +170,7 @@ export default function Page() {
                   className={`border px-4 py-4 text-left transition ${
                     mode === "dungeon"
                       ? "border-[var(--border-strong)] bg-[var(--panel-2)] text-black"
-                      : "border-[var(--border)] bg-[var(--surface)] text-white hover:border-[var(--border-strong)]"
+                      : "border-[var(--border)] bg-[var(--surface)] text-black hover:border-[var(--border-strong)]"
                   }`}
                 >
                   <p className="text-[10px] uppercase tracking-[0.18em] opacity-70">Mode</p>
@@ -188,8 +188,8 @@ export default function Page() {
               <div className="border border-[var(--border)] bg-[var(--surface)] px-5 py-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-white/62">Role split</p>
-                    <p className="mt-3 text-2xl font-semibold tracking-[-0.06em] text-white">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-black/62">Role split</p>
+                    <p className="mt-3 text-2xl font-semibold tracking-[-0.06em] text-black">
                       {mode === "trial" && trialPreset === "msod" ? "MSOD" : mode === "trial" ? "Standard trial" : "Dungeon"}
                     </p>
                   </div>
@@ -219,18 +219,18 @@ export default function Page() {
                 </div>
               </div>
               <div className="border border-[var(--border)] bg-[var(--surface)] px-5 py-5">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/62">Builder actions</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-black/62">Builder actions</p>
                 <div className="mt-4 grid gap-3">
                   <Link
                     href="/team-builder"
-                    className="flex items-center justify-between border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm font-medium text-white transition hover:border-[var(--border-strong)]"
+                    className="flex items-center justify-between border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm font-medium text-black transition hover:border-[var(--border-strong)]"
                   >
                     Open Team Builder
                     <ArrowRight className="h-4 w-4 text-[var(--sky-blue)]" />
                   </Link>
                   <Link
                     href="/reference"
-                    className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-white transition hover:border-[var(--border-strong)]"
+                    className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-black transition hover:border-[var(--border-strong)]"
                   >
                     Open Reference Hub
                     <ArrowRight className="h-4 w-4 text-[var(--sky-blue)]" />
@@ -249,28 +249,28 @@ export default function Page() {
           <CardContent className="space-y-3 text-sm">
             <Link
               href="/artifacts"
-              className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-white transition hover:border-[var(--border-strong)]"
+              className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-black transition hover:border-[var(--border-strong)]"
             >
               Artifact list
               <ArrowRight className="h-4 w-4 text-[var(--sky-blue)]" />
             </Link>
             <Link
               href="/companions"
-              className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-white transition hover:border-[var(--border-strong)]"
+              className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-black transition hover:border-[var(--border-strong)]"
             >
               Companion list
               <ArrowRight className="h-4 w-4 text-[var(--sky-blue)]" />
             </Link>
             <Link
               href="/buffs-debuffs"
-              className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-white transition hover:border-[var(--border-strong)]"
+              className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-black transition hover:border-[var(--border-strong)]"
             >
               Buff and debuff library
               <ArrowRight className="h-4 w-4 text-[var(--sky-blue)]" />
             </Link>
             <Link
               href="/classes"
-              className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-white transition hover:border-[var(--border-strong)]"
+              className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-black transition hover:border-[var(--border-strong)]"
             >
               Class and paragon list
               <ArrowRight className="h-4 w-4 text-[var(--sky-blue)]" />
@@ -296,8 +296,8 @@ export default function Page() {
                 className="flex items-start justify-between gap-3 border border-[var(--border)] bg-[var(--surface)] px-4 py-4 transition hover:border-[var(--border-strong)]"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">{artifact.name}</p>
-                  <p className="mt-2 text-sm text-white/78">
+                  <p className="truncate text-sm font-semibold text-black">{artifact.name}</p>
+                  <p className="mt-2 text-sm text-black/78">
                     {(recommendation?.damageBoost ?? 0).toFixed(2)}% estimated damage gain
                   </p>
                 </div>
@@ -331,8 +331,8 @@ export default function Page() {
                 className="flex items-start justify-between gap-3 border border-[var(--border)] bg-[var(--surface)] px-4 py-4 transition hover:border-[var(--border-strong)]"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">{row.name}</p>
-                  <p className="mt-2 text-sm leading-6 text-white/78">{row.detail}</p>
+                  <p className="truncate text-sm font-semibold text-black">{row.name}</p>
+                  <p className="mt-2 text-sm leading-6 text-black/78">{row.detail}</p>
                 </div>
                 <Badge variant={row.badge === "Trial must" ? "teal" : "purple"}>{row.badge}</Badge>
               </Link>
@@ -356,8 +356,8 @@ export default function Page() {
                 className="flex items-start justify-between gap-3 border border-[var(--border)] bg-[var(--surface)] px-4 py-4 transition hover:border-[var(--border-strong)]"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">{enhancement.name}</p>
-                  <p className="mt-2 text-sm leading-6 text-white/78">{enhancement.notes}</p>
+                  <p className="truncate text-sm font-semibold text-black">{enhancement.name}</p>
+                  <p className="mt-2 text-sm leading-6 text-black/78">{enhancement.notes}</p>
                 </div>
                 <Badge variant="red">#{recommendation?.rank}</Badge>
               </Link>

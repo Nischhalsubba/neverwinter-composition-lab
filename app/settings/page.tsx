@@ -34,8 +34,8 @@ function SettingToggle({
   return (
     <div className="flex items-start justify-between gap-4 border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-white">{label}</p>
-        <p className="mt-1 text-sm leading-6 text-white/78">{description}</p>
+        <p className="text-sm font-medium text-black">{label}</p>
+        <p className="mt-1 text-sm leading-6 text-black/78">{description}</p>
       </div>
       <button
         type="button"
@@ -48,7 +48,7 @@ function SettingToggle({
         }`}
       >
         <span
-          className={`absolute top-1 h-5 w-5 bg-white transition ${checked ? "left-8" : "left-1"}`}
+          className={`absolute top-1 h-5 w-5 border border-[var(--border)] bg-[var(--pastel-petal)] transition ${checked ? "left-8" : "left-1"}`}
         />
       </button>
     </div>
@@ -121,28 +121,28 @@ export default function Page() {
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/62">Default mode</label>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-black/62">Default mode</label>
                 <Select value={settings.defaultTeamMode} onChange={(event) => updateSettings("defaultTeamMode", event.target.value as AppSettings["defaultTeamMode"])}>
                   <option value="dungeon">Dungeon</option>
                   <option value="trial">Trial</option>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/62">Default trial preset</label>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-black/62">Default trial preset</label>
                 <Select value={settings.defaultTrialPreset} onChange={(event) => updateSettings("defaultTrialPreset", event.target.value as AppSettings["defaultTrialPreset"])}>
                   <option value="standard">Standard trial</option>
                   <option value="msod">MSOD</option>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/62">Best setup default</label>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-black/62">Best setup default</label>
                 <Select value={settings.defaultAutoSetupGoal} onChange={(event) => updateSettings("defaultAutoSetupGoal", event.target.value as AppSettings["defaultAutoSetupGoal"])}>
                   <option value="boost_one_dps">Boost one DPS</option>
                   <option value="overall_team_damage">Overall team damage</option>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/62">Interface density</label>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-black/62">Interface density</label>
                 <Select value={settings.interfaceDensity} onChange={(event) => updateSettings("interfaceDensity", event.target.value as AppSettings["interfaceDensity"])}>
                   <option value="comfortable">Comfortable</option>
                   <option value="compact">Compact</option>
@@ -158,7 +158,7 @@ export default function Page() {
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/62">Default crit assumption</label>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-black/62">Default crit assumption</label>
                 <Input
                   type="number"
                   step="0.05"
@@ -167,7 +167,7 @@ export default function Page() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/62">Default CA assumption</label>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-black/62">Default CA assumption</label>
                 <Input
                   type="number"
                   step="0.05"
@@ -271,19 +271,19 @@ export default function Page() {
               <CardTitle>Status</CardTitle>
               <CardDescription>Current browser state for settings and saved builds.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm text-white/80">
+            <CardContent className="space-y-4 text-sm text-black/80">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/62">Saved builds</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{savedBuildCount}</p>
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-black/62">Saved builds</p>
+                  <p className="mt-2 text-lg font-semibold text-black">{savedBuildCount}</p>
                 </div>
                 <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/62">Contrast mode</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{settings.highContrastMode ? "Enabled" : "Disabled"}</p>
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-black/62">Contrast mode</p>
+                  <p className="mt-2 text-lg font-semibold text-black">{settings.highContrastMode ? "Enabled" : "Disabled"}</p>
                 </div>
               </div>
               <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
-                <p className="text-sm leading-6 text-white">{status}</p>
+                <p className="text-sm leading-6 text-black">{status}</p>
               </div>
             </CardContent>
           </Card>
@@ -294,16 +294,16 @@ export default function Page() {
               <CardDescription>Jump to the pages that are most often used together.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <Link href="/team-builder" className="block border border-[var(--border)] px-4 py-3 text-white transition hover:border-[var(--sky-blue)]">
+              <Link href="/team-builder" className="block border border-[var(--border)] px-4 py-3 text-black transition hover:border-[var(--sky-blue)]">
                 Team Builder
               </Link>
-              <Link href="/saved-builds" className="block border border-[var(--border)] px-4 py-3 text-white transition hover:border-[var(--sky-blue)]">
+              <Link href="/saved-builds" className="block border border-[var(--border)] px-4 py-3 text-black transition hover:border-[var(--sky-blue)]">
                 Saved Builds
               </Link>
-              <Link href="/reference" className="block border border-[var(--border)] px-4 py-3 text-white transition hover:border-[var(--sky-blue)]">
+              <Link href="/reference" className="block border border-[var(--border)] px-4 py-3 text-black transition hover:border-[var(--sky-blue)]">
                 Reference Hub
               </Link>
-              <Link href="/about" className="block border border-[var(--border)] px-4 py-3 text-white transition hover:border-[var(--sky-blue)]">
+              <Link href="/about" className="block border border-[var(--border)] px-4 py-3 text-black transition hover:border-[var(--sky-blue)]">
                 Data Notes
               </Link>
             </CardContent>

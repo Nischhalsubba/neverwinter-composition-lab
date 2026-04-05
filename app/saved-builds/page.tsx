@@ -26,10 +26,10 @@ export default function Page() {
                 <CardTitle>{build.name}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-white/74">
+                <p className="text-sm text-black/74">
                   {build.mode} / {build.trialPreset} / {build.teamMembers.length} members
                 </p>
-                <p className="text-xs uppercase tracking-[0.16em] text-white/56">Updated {new Date(build.updatedAt).toLocaleString()}</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-black/56">Updated {new Date(build.updatedAt).toLocaleString()}</p>
                 <div className="flex gap-3">
                   <Link href="/team-builder" className="inline-flex">
                     <Button variant="primary">Open Builder</Button>

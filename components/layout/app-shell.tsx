@@ -27,11 +27,11 @@ function ShellLink({
       href={href}
       className={`flex items-center gap-4 border-l-2 px-6 py-3 text-[11px] uppercase tracking-[0.18em] transition ${
         active
-          ? "border-[var(--sky-blue)] bg-[rgba(205,180,219,0.08)] text-white"
-          : "border-transparent text-white/66 hover:text-white"
+          ? "border-[var(--sky-blue)] bg-[rgba(205,180,219,0.08)] text-black"
+          : "border-transparent text-black/66 hover:text-black"
       }`}
     >
-      <Icon className={`h-4 w-4 ${active ? "text-[var(--sky-blue)]" : "text-white/58"}`} />
+      <Icon className={`h-4 w-4 ${active ? "text-[var(--sky-blue)]" : "text-black/58"}`} />
       <span>{label}</span>
     </Link>
   );
@@ -68,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-white">
+    <div className="min-h-screen bg-[var(--background)] text-black">
       <header className="fixed inset-x-0 top-0 z-40 h-[72px] border-b border-[var(--border)] bg-[var(--background)]">
         <div className="flex h-full w-full items-center justify-between px-4 md:px-6 xl:px-8 2xl:px-10">
           <div className="flex items-center gap-10">
@@ -79,9 +79,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onClick={() => setMobileMenuOpen((value) => !value)}
                 className="flex h-9 w-9 items-center justify-center border border-[var(--border)] bg-[var(--panel)] lg:hidden"
               >
-                {mobileMenuOpen ? <X className="h-4 w-4 text-white" /> : <Menu className="h-4 w-4 text-white" />}
+                {mobileMenuOpen ? <X className="h-4 w-4 text-black" /> : <Menu className="h-4 w-4 text-black" />}
               </button>
-              <Link href="/" className="text-xl font-semibold uppercase tracking-[-0.05em] text-white">
+              <Link href="/" className="text-xl font-semibold uppercase tracking-[-0.05em] text-black">
                 Neverwinter Lab
               </Link>
             </div>
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 href="/"
                 className={`border-b-2 px-0 py-2 text-xs uppercase tracking-[0.14em] ${
-                  pathname === "/" ? "border-[var(--sky-blue)] text-white" : "border-transparent text-white/62"
+                  pathname === "/" ? "border-[var(--sky-blue)] text-black" : "border-transparent text-black/62"
                 }`}
               >
                 Dashboard
@@ -98,8 +98,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 href="/team-builder"
                 className={`border-b-2 px-0 py-2 text-xs uppercase tracking-[0.14em] ${
                   pathname === "/team-builder"
-                    ? "border-[var(--sky-blue)] text-white"
-                    : "border-transparent text-white/62"
+                    ? "border-[var(--sky-blue)] text-black"
+                    : "border-transparent text-black/62"
                 }`}
               >
                 Team Builder
@@ -109,7 +109,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div className="flex items-center gap-4">
             <form onSubmit={handleSearchSubmit} className="relative hidden w-64 lg:block">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/50" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-black/50" />
               <Input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
@@ -119,14 +119,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             </form>
             <div className="hidden items-center gap-3 sm:flex">
               <Link href="/reference" aria-label="Reference hub">
-                <HelpCircle className="h-4 w-4 text-white/72 transition hover:text-white" />
+                <HelpCircle className="h-4 w-4 text-black/72 transition hover:text-black" />
               </Link>
               <Link href="/settings" aria-label="Settings">
-                <Settings className="h-4 w-4 text-white/72 transition hover:text-white" />
+                <Settings className="h-4 w-4 text-black/72 transition hover:text-black" />
               </Link>
             </div>
             <Link href="/team-builder" className="flex h-8 w-8 items-center justify-center border border-[var(--border)] bg-[var(--panel)]">
-              <Swords className="h-4 w-4 text-white" />
+              <Swords className="h-4 w-4 text-black" />
             </Link>
           </div>
         </div>
@@ -145,12 +145,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <Swords className="h-4 w-4 text-[var(--sky-blue)]" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-white/62">Elite endgame</p>
-                    <p className="mt-1 text-sm font-semibold uppercase tracking-[0.04em] text-white">Strategist Hub</p>
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-black/62">Elite endgame</p>
+                    <p className="mt-1 text-sm font-semibold uppercase tracking-[0.04em] text-black">Strategist Hub</p>
                   </div>
                 </div>
                 <form onSubmit={handleSearchSubmit} className="relative mt-5">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/50" />
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-black/50" />
                   <Input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
@@ -206,8 +206,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Swords className="h-4 w-4 text-[var(--sky-blue)]" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/62">Elite endgame</p>
-                <p className="mt-1 text-sm font-semibold uppercase tracking-[0.04em] text-white">Strategist Hub</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-black/62">Elite endgame</p>
+                <p className="mt-1 text-sm font-semibold uppercase tracking-[0.04em] text-black">Strategist Hub</p>
               </div>
             </div>
           </div>

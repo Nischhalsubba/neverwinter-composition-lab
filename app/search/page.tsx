@@ -36,7 +36,7 @@ export default async function Page({
                 </div>
                 <CardDescription>{item.description}</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-white/76">Open detail page</CardContent>
+              <CardContent className="text-sm text-black/76">Open detail page</CardContent>
             </Card>
           </Link>
         ))}

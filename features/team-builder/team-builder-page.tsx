@@ -1202,7 +1202,7 @@ export function TeamBuilderPage() {
       <div className="w-full space-y-8 px-4 py-8 md:px-6 xl:px-8 2xl:px-10 xl:py-10">
         <Card>
           <CardHeader>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-white/58">Professional architect</p>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-black/58">Professional architect</p>
             <CardTitle className="text-[40px] uppercase tracking-[-0.08em]">Choose party size</CardTitle>
             <CardDescription>
               Start with dungeon for 5 players or trial for 10 players. Every slot begins empty and the builder uses the real role split for that mode.
@@ -1214,18 +1214,18 @@ export function TeamBuilderPage() {
               onClick={() => updateTeamMode("dungeon")}
               className="border border-[var(--border)] bg-[var(--surface)] p-10 text-left transition hover:border-[var(--sky-blue)]"
             >
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">5 players</p>
-              <p className="mt-4 text-[34px] font-semibold uppercase tracking-[-0.07em] text-white">Dungeon</p>
-              <p className="mt-4 text-sm leading-7 text-white/74">Single party with 1 tank, 1 healer, and 3 DPS.</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-black/55">5 players</p>
+              <p className="mt-4 text-[34px] font-semibold uppercase tracking-[-0.07em] text-black">Dungeon</p>
+              <p className="mt-4 text-sm leading-7 text-black/74">Single party with 1 tank, 1 healer, and 3 DPS.</p>
             </button>
             <button
               type="button"
               onClick={() => updateTeamMode("trial")}
               className="border border-[var(--border)] bg-[var(--surface)] p-10 text-left transition hover:border-[var(--sky-blue)]"
             >
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">10 players</p>
-              <p className="mt-4 text-[34px] font-semibold uppercase tracking-[-0.07em] text-white">Trial</p>
-              <p className="mt-4 text-sm leading-7 text-white/74">Two groups of five with the default 2 tank, 2 healer, 6 DPS split.</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-black/55">10 players</p>
+              <p className="mt-4 text-[34px] font-semibold uppercase tracking-[-0.07em] text-black">Trial</p>
+              <p className="mt-4 text-sm leading-7 text-black/74">Two groups of five with the default 2 tank, 2 healer, 6 DPS split.</p>
             </button>
           </CardContent>
         </Card>
@@ -1238,11 +1238,11 @@ export function TeamBuilderPage() {
       <section className="border-b border-[var(--border)] pb-6">
         <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-end 2xl:justify-between">
           <div className="space-y-3">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-white/58">Professional trial architect</p>
-            <h1 className="text-[44px] font-semibold uppercase leading-[0.95] tracking-[-0.09em] text-white">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-black/58">Professional trial architect</p>
+            <h1 className="text-[44px] font-semibold uppercase leading-[0.95] tracking-[-0.09em] text-black">
               {mode === "trial" ? "Trial Architect" : "Dungeon Architect"}
             </h1>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/56">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-black/56">
               Instance: {boss?.name ?? "Boss preset"}
             </p>
           </div>
@@ -1381,7 +1381,7 @@ export function TeamBuilderPage() {
                           badgeText={getParagonBadge(selectedMember)}
                         />
                         <div>
-                          <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
+                          <p className="text-[11px] uppercase tracking-[0.22em] text-black/70">
                             Selected slot {selectedMember.group}-{selectedMember.slot}
                           </p>
                           <CardTitle className="mt-2">{getMemberDisplayName(selectedMember)}</CardTitle>
@@ -1415,8 +1415,8 @@ export function TeamBuilderPage() {
                                 >
                                   <SelectionThumb imageUrl={item.image_url} label={item.name} />
                                   <div className="min-w-0">
-                                    <p className="text-sm font-medium text-white">{item.name}</p>
-                                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/80">
+                                    <p className="text-sm font-medium text-black">{item.name}</p>
+                                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-black/80">
                                       {item.role_focus.map(formatRoleLabel).join(" / ")}
                                     </p>
                                   </div>
@@ -1444,8 +1444,8 @@ export function TeamBuilderPage() {
                                 >
                                   <SelectionThumb imageUrl={selectedClass?.image_url} label={paragon} />
                                   <div>
-                                    <p className="text-sm font-medium text-white">{paragon}</p>
-                                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/80">
+                                    <p className="text-sm font-medium text-black">{paragon}</p>
+                                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-black/80">
                                       {formatRoleLabel(getRoleForClassParagon(selectedClass?.id ?? "", paragon))}
                                     </p>
                                   </div>
@@ -1453,7 +1453,7 @@ export function TeamBuilderPage() {
                               );
                             })}
                             {!selectedClass ? (
-                              <div className="border border-[var(--border)] bg-[rgba(205,180,219,0.08)] p-4 text-sm text-white/80">
+                              <div className="border border-[var(--border)] bg-[rgba(205,180,219,0.08)] p-4 text-sm text-black/80">
                                 Select a class first to choose a paragon path.
                               </div>
                             ) : null}
@@ -1576,7 +1576,7 @@ export function TeamBuilderPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/60">Recommended debuff encounters</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-black/60">Recommended debuff encounters</p>
                     {recommendedDebuffEncounters.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {recommendedDebuffEncounters.map((power) => {
@@ -1588,8 +1588,8 @@ export function TeamBuilderPage() {
                               onClick={() => assignEncounter(selectedMember.id, power.id)}
                               className={`border px-3 py-2 text-sm transition ${
                                 isSelected
-                                  ? "border-[rgba(162,210,255,0.9)] bg-[rgba(162,210,255,0.16)] text-white"
-                                  : "border-[var(--border)] bg-[var(--surface)] text-white/80 hover:border-[var(--border-strong)]"
+                                  ? "border-[rgba(162,210,255,0.9)] bg-[rgba(162,210,255,0.16)] text-black"
+                                  : "border-[var(--border)] bg-[var(--surface)] text-black/80 hover:border-[var(--border-strong)]"
                               }`}
                             >
                               {power.name}
@@ -1598,7 +1598,7 @@ export function TeamBuilderPage() {
                         })}
                       </div>
                     ) : (
-                      <p className="mt-3 text-sm text-white/70">
+                      <p className="mt-3 text-sm text-black/70">
                         {selectedMember.class_id ? "No mapped debuff encounters for this class and paragon." : "Select class and paragon first."}
                       </p>
                     )}
@@ -1830,8 +1830,8 @@ export function TeamBuilderPage() {
                   <div key={build.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-white">{build.name}</p>
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                        <p className="text-sm font-semibold text-black">{build.name}</p>
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-black/58">
                           {build.mode} / {build.trialPreset} / {build.teamMembers.length} slots
                         </p>
                       </div>
@@ -1849,7 +1849,7 @@ export function TeamBuilderPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm leading-6 text-white/68">No local builds saved yet. Save the current setup from the control bar above.</p>
+                <p className="text-sm leading-6 text-black/68">No local builds saved yet. Save the current setup from the control bar above.</p>
               )}
             </CardContent>
           </Card>
@@ -1895,14 +1895,14 @@ export function TeamBuilderPage() {
             <CardContent className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Perfect overlap burst</p>
-                  <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-white">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-black/58">Perfect overlap burst</p>
+                  <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-black">
                     {formatPercent(artifactOverlap.burstTotal)}
                   </p>
                 </div>
                 <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Average 60s cycle</p>
-                  <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-white">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-black/58">Average 60s cycle</p>
+                  <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-black">
                     {formatPercent(artifactOverlap.averageCycleTotal)}
                   </p>
                 </div>
@@ -1916,21 +1916,21 @@ export function TeamBuilderPage() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-medium text-white">{entry.artifactName}</p>
-                          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                          <p className="text-sm font-medium text-black">{entry.artifactName}</p>
+                          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-black/58">
                             {entry.slotLabel} • {entry.duration ? `${entry.duration}s duration / 60s CD` : "60s CD assumed"}
                           </p>
                         </div>
-                        <p className="text-sm font-semibold text-white">{formatPercent(entry.burstTotal)}</p>
+                        <p className="text-sm font-semibold text-black">{formatPercent(entry.burstTotal)}</p>
                       </div>
-                      <p className="mt-3 text-xs text-white/68">
+                      <p className="mt-3 text-xs text-black/68">
                         Average cycle contribution: {formatPercent(entry.averageCycleTotal)}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-white/68">No active artifact debuffs found on the current team.</p>
+                <p className="text-sm text-black/68">No active artifact debuffs found on the current team.</p>
               )}
             </CardContent>
           </Card>
@@ -1939,15 +1939,15 @@ export function TeamBuilderPage() {
               <CardTitle>Carry Summary</CardTitle>
               <CardDescription>{carry ? `${getMemberDisplayName(carry)} • ${getMemberTitle(carry)}` : "No carry selected"}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-white/80">
+            <CardContent className="space-y-3 text-sm text-black/80">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="border border-[var(--border)] bg-[rgba(189,224,254,0.1)] px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">Team buff sources</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{carryTotals.teamSources}</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-black/80">Team buff sources</p>
+                  <p className="mt-2 text-lg font-semibold text-black">{carryTotals.teamSources}</p>
                 </div>
                 <div className="border border-[var(--border)] bg-[rgba(255,200,221,0.1)] px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">Boss debuff sources</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{bossTotals.totalSources}</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-black/80">Boss debuff sources</p>
+                  <p className="mt-2 text-lg font-semibold text-black">{bossTotals.totalSources}</p>
                 </div>
               </div>
               <p>Damage bonus: {formatPercent(teamState.carryState.outgoing_damage_bonus)}</p>
@@ -1959,7 +1959,7 @@ export function TeamBuilderPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Calculator className="h-4 w-4 text-white" />
+                <Calculator className="h-4 w-4 text-black" />
                 <CardTitle>Mount Hit Calculator</CardTitle>
               </div>
               <CardDescription>Simple breakdown for the currently selected carry setup.</CardDescription>
@@ -2003,15 +2003,15 @@ export function TeamBuilderPage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="border border-[var(--border)] bg-[rgba(189,224,254,0.1)] px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">Applied stages</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{mountTotals.appliedStages}</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-black/80">Applied stages</p>
+                  <p className="mt-2 text-lg font-semibold text-black">{mountTotals.appliedStages}</p>
                 </div>
                 <div className="border border-[var(--border)] bg-[rgba(205,180,219,0.1)] px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">Resolved debuff total</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{formatPercent(bossTotals.resolvedTotal)}</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-black/80">Resolved debuff total</p>
+                  <p className="mt-2 text-lg font-semibold text-black">{formatPercent(bossTotals.resolvedTotal)}</p>
                 </div>
               </div>
-              <div className="grid gap-3 text-sm text-white/80">
+              <div className="grid gap-3 text-sm text-black/80">
                 <p>Personal bonus used: {formatPercent(mountTotals.personalBonus)}</p>
                 <p>Team bonus used: {formatPercent(mountTotals.teamBonus)}</p>
                 <p>Boss debuff used: {formatPercent(mountTotals.bossBonus)}</p>
@@ -2019,7 +2019,7 @@ export function TeamBuilderPage() {
                 <p>After personal: {Math.round(mountCalc.afterPersonalBuffs).toLocaleString()}</p>
                 <p>After team: {Math.round(mountCalc.afterTeamBuffs).toLocaleString()}</p>
                 <p>After boss: {Math.round(mountCalc.afterBossDebuffs).toLocaleString()}</p>
-                <p className="text-base font-semibold text-white">
+                <p className="text-base font-semibold text-black">
                   Final estimated hit: {Math.round(mountCalc.finalEstimatedHit).toLocaleString()}
                 </p>
               </div>
@@ -2117,8 +2117,8 @@ function SummaryBreakdownDrawer({
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--border)] bg-[var(--surface-2)] px-6 py-5">
           <div>
             <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--sky-blue)]">Live summary breakdown</p>
-            <h3 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-white">{title}</h3>
-            <p className="mt-2 text-sm leading-6 text-white/78">
+            <h3 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-black">{title}</h3>
+            <p className="mt-2 text-sm leading-6 text-black/78">
               {subtitle}. Each source shows where the effect comes from and the recovered uptime window.
             </p>
           </div>
@@ -2136,7 +2136,7 @@ function SummaryBreakdownDrawer({
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/68">Active sources</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-black/68">Active sources</p>
               <Badge variant="teal">{resolvedItems.length}</Badge>
             </div>
             {resolvedItems.length > 0 ? (
@@ -2144,25 +2144,25 @@ function SummaryBreakdownDrawer({
                 <div key={item.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white">{item.effectName}</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/68">
+                      <p className="text-sm font-semibold text-black">{item.effectName}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-black/68">
                         {item.slotLabel} • {item.playerName}
                       </p>
                     </div>
-                    <p className="shrink-0 text-sm font-semibold text-white">{item.valueLabel}</p>
+                    <p className="shrink-0 text-sm font-semibold text-black">{item.valueLabel}</p>
                   </div>
-                  <div className="mt-3 grid gap-2 text-sm leading-6 text-white/84">
+                  <div className="mt-3 grid gap-2 text-sm leading-6 text-black/84">
                     <p>
-                      <span className="text-white/62">From:</span> {item.entityName}
+                      <span className="text-black/62">From:</span> {item.entityName}
                     </p>
                     <p>
-                      <span className="text-white/62">Stat:</span> {item.statLabel}
+                      <span className="text-black/62">Stat:</span> {item.statLabel}
                     </p>
                     <p>
-                      <span className="text-white/62">Uptime:</span> {item.uptimeLabel}
+                      <span className="text-black/62">Uptime:</span> {item.uptimeLabel}
                     </p>
                     <p>
-                      <span className="text-white/62">Notes:</span> {item.notes}
+                      <span className="text-black/62">Notes:</span> {item.notes}
                     </p>
                   </div>
                 </div>
@@ -2178,32 +2178,32 @@ function SummaryBreakdownDrawer({
           {pendingItems.length > 0 ? (
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/68">Pending or unresolved</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-black/68">Pending or unresolved</p>
                 <Badge variant="muted">{pendingItems.length}</Badge>
               </div>
               {pendingItems.map((item) => (
                 <div key={item.id} className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white">{item.effectName}</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/68">
+                      <p className="text-sm font-semibold text-black">{item.effectName}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-black/68">
                         {item.slotLabel} • {item.playerName}
                       </p>
                     </div>
-                    <p className="shrink-0 text-sm font-semibold text-white/78">{item.valueLabel}</p>
+                    <p className="shrink-0 text-sm font-semibold text-black/78">{item.valueLabel}</p>
                   </div>
-                  <div className="mt-3 grid gap-2 text-sm leading-6 text-white/80">
+                  <div className="mt-3 grid gap-2 text-sm leading-6 text-black/80">
                     <p>
-                      <span className="text-white/62">From:</span> {item.entityName}
+                      <span className="text-black/62">From:</span> {item.entityName}
                     </p>
                     <p>
-                      <span className="text-white/62">Stat:</span> {item.statLabel}
+                      <span className="text-black/62">Stat:</span> {item.statLabel}
                     </p>
                     <p>
-                      <span className="text-white/62">Uptime:</span> {item.uptimeLabel}
+                      <span className="text-black/62">Uptime:</span> {item.uptimeLabel}
                     </p>
                     <p>
-                      <span className="text-white/62">Notes:</span> {item.notes}
+                      <span className="text-black/62">Notes:</span> {item.notes}
                     </p>
                   </div>
                 </div>
@@ -2237,7 +2237,7 @@ function ArchitectGroupCard({
             <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--sky-blue)]">{title}</p>
             <CardDescription className="mt-2 max-w-md">{subtitle}</CardDescription>
           </div>
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/48">{members.length} members</p>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-black/48">{members.length} members</p>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -2268,13 +2268,13 @@ function ArchitectGroupCard({
                     size="sm"
                   />
                   <div className="min-w-0">
-                    <p className="text-lg font-semibold tracking-[-0.03em] text-white">
+                    <p className="text-lg font-semibold tracking-[-0.03em] text-black">
                       {member.group}-{member.slot} {getMemberDisplayName(member)}
                     </p>
-                    <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/62">
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-black/62">
                       {getMemberTitle(member)}
                     </p>
-                    <p className="mt-2 text-sm text-white/74">
+                    <p className="mt-2 text-sm text-black/74">
                       {member.race || "Race pending"} • {formatRoleLabel(member.role)}
                     </p>
                   </div>
@@ -2297,8 +2297,8 @@ function ArchitectGroupCard({
 function LoadoutRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-      <p className="text-[10px] uppercase tracking-[0.16em] text-white/52">{label}</p>
-      <p className="min-w-0 text-right text-sm font-medium text-white">{value}</p>
+      <p className="text-[10px] uppercase tracking-[0.16em] text-black/52">{label}</p>
+      <p className="min-w-0 text-right text-sm font-medium text-black">{value}</p>
     </div>
   );
 }
@@ -2306,7 +2306,7 @@ function LoadoutRow({ label, value }: { label: string; value: string }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block space-y-2">
-      <span className="text-xs uppercase tracking-[0.18em] text-white/60">{label}</span>
+      <span className="text-xs uppercase tracking-[0.18em] text-black/60">{label}</span>
       {children}
     </label>
   );
@@ -2345,7 +2345,7 @@ function SelectionThumb({
   }
 
   return (
-    <div className={`relative flex shrink-0 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-sm font-semibold text-white ${sizeClass}`}>
+    <div className={`relative flex shrink-0 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-sm font-semibold text-black ${sizeClass}`}>
       {getInitials(label)}
       {badgeText ? (
         <span className="absolute -bottom-1 -right-1 border border-[var(--border)] bg-[rgba(162,210,255,0.92)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-black">
@@ -2378,11 +2378,11 @@ function PickerField({
       <div className="flex min-w-0 items-center gap-3">
         <SelectionThumb imageUrl={imageUrl} label={imageLabel ?? title} />
         <div className="min-w-0">
-        <p className="text-sm font-medium text-white">{title}</p>
-        <p className="mt-1 text-xs text-white/70">{subtitle}</p>
+        <p className="text-sm font-medium text-black">{title}</p>
+        <p className="mt-1 text-xs text-black/70">{subtitle}</p>
         </div>
       </div>
-      <Search className="h-4 w-4 text-white" />
+      <Search className="h-4 w-4 text-black" />
     </button>
   );
 }
@@ -2400,22 +2400,22 @@ function MemberEffectPanel({
 }) {
   return (
     <div className="border border-[var(--border)] bg-[var(--surface)] p-4">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-white/58">{title}</p>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-black/58">{title}</p>
       {effects.length > 0 ? (
         <div className="mt-3 space-y-2">
           {effects.map((effect) => (
             <div key={effect.id} className="border border-[var(--border)] bg-[rgba(205,180,219,0.08)] px-3 py-2">
-              <p className="text-sm font-medium text-white">{formatEffectLabel(effect)}</p>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+              <p className="text-sm font-medium text-black">{formatEffectLabel(effect)}</p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-black/58">
                 {titleCase(effect.effect_category)} • {titleCase(effect.stack_rule)}
               </p>
             </div>
           ))}
         </div>
       ) : (
-        <p className="mt-3 text-sm text-white/70">{emptyLabel}</p>
+        <p className="mt-3 text-sm text-black/70">{emptyLabel}</p>
       )}
-      {hiddenCount > 0 ? <p className="mt-3 text-xs text-white/58">{hiddenCount} unresolved entries are hidden until proven.</p> : null}
+      {hiddenCount > 0 ? <p className="mt-3 text-xs text-black/58">{hiddenCount} unresolved entries are hidden until proven.</p> : null}
     </div>
   );
 }
@@ -2459,17 +2459,17 @@ function MemberInspectorDrawer({
             <div className="flex items-start gap-3">
               <SelectionThumb imageUrl={getClassImage(member.class_id)} label={getMemberDisplayName(member)} badgeText={getParagonBadge(member)} />
               <div>
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/60">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-black/60">
                   Slot {member.group}-{member.slot}
                 </p>
-                <p className="mt-1 text-lg font-semibold text-white">{getMemberDisplayName(member)}</p>
-                <p className="mt-1 text-sm text-white/74">{getMemberTitle(member)}</p>
+                <p className="mt-1 text-lg font-semibold text-black">{getMemberDisplayName(member)}</p>
+                <p className="mt-1 text-sm text-black/74">{getMemberTitle(member)}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-white"
+              className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-black"
             >
               <X className="h-4 w-4" />
             </button>
@@ -2502,8 +2502,8 @@ function MemberInspectorDrawer({
                   >
                     <SelectionThumb imageUrl={item.image_url} label={item.name} size="sm" />
                     <div>
-                      <p className="text-sm font-medium text-white">{item.name}</p>
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">
+                      <p className="text-sm font-medium text-black">{item.name}</p>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-black/60">
                         {item.role_focus.map(formatRoleLabel).join(" / ")}
                       </p>
                     </div>
@@ -2530,8 +2530,8 @@ function MemberInspectorDrawer({
                   >
                     <SelectionThumb imageUrl={selectedClass?.image_url} label={paragon} size="sm" />
                     <div>
-                      <p className="text-sm font-medium text-white">{paragon}</p>
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">
+                      <p className="text-sm font-medium text-black">{paragon}</p>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-black/60">
                         {formatRoleLabel(getRoleForClassParagon(selectedClass?.id ?? "", paragon))}
                       </p>
                     </div>
@@ -2606,7 +2606,7 @@ function MemberInspectorDrawer({
           </div>
 
           <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Mapped debuff encounters</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-black/58">Mapped debuff encounters</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {recommendedDebuffEncounters.length > 0 ? (
                 recommendedDebuffEncounters.map((power) => (
@@ -2616,15 +2616,15 @@ function MemberInspectorDrawer({
                     onClick={() => onAssignEncounter(member.id, power.id)}
                     className={`border px-3 py-2 text-xs uppercase tracking-[0.12em] ${
                       member.encounter_ids.includes(power.id)
-                        ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
-                        : "border-[var(--border)] bg-[var(--surface)] text-white/78"
+                        ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-black"
+                        : "border-[var(--border)] bg-[var(--surface)] text-black/78"
                     }`}
                   >
                     {power.name}
                   </button>
                 ))
               ) : (
-                <p className="text-sm text-white/68">
+                <p className="text-sm text-black/68">
                   {member.class_id ? "No mapped debuff encounters for this class and paragon." : "Select class and paragon first."}
                 </p>
               )}
@@ -2683,23 +2683,23 @@ function SelectionOverlay({
         <div className="flex max-h-full w-full flex-col overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] shadow-[0_36px_90px_rgba(205,180,219,0.35)]">
           <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-5">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-black/70">
                 {getPickerLabel(kind)} for {member.group}-{member.slot}
               </p>
-              <h3 className="mt-2 text-2xl font-semibold text-white">{getPickerLabel(kind)}</h3>
-              <p className="mt-2 text-sm text-white/70">Only concise, proven values are shown in this picker.</p>
+              <h3 className="mt-2 text-2xl font-semibold text-black">{getPickerLabel(kind)}</h3>
+              <p className="mt-2 text-sm text-black/70">Only concise, proven values are shown in this picker.</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-white transition hover:border-[var(--sky-blue)]"
+              className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-black transition hover:border-[var(--sky-blue)]"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
           <div className="space-y-4 border-b border-[var(--border)] px-6 py-4">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-black/70" />
               <Input
                 value={query}
                 onChange={(event) => onQueryChange(event.target.value)}
@@ -2737,15 +2737,15 @@ function SelectionOverlay({
                         className="h-16 w-16 border border-[var(--border)] bg-[rgba(205,180,219,0.12)] object-cover"
                       />
                     ) : (
-                      <div className="flex h-16 w-16 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-sm font-semibold text-white">
-                        {getInitials(item.name) || <ImageOff className="h-4 w-4 text-white/70" />}
+                      <div className="flex h-16 w-16 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-sm font-semibold text-black">
+                        {getInitials(item.name) || <ImageOff className="h-4 w-4 text-black/70" />}
                       </div>
                     )}
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-base font-semibold text-white">{item.name}</p>
-                      {item.subtitle ? <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/60">{item.subtitle}</p> : null}
+                      <p className="text-base font-semibold text-black">{item.name}</p>
+                      {item.subtitle ? <p className="mt-1 text-xs uppercase tracking-[0.16em] text-black/60">{item.subtitle}</p> : null}
                     </div>
                     {item.badges.length ? (
                       <div className="flex flex-wrap gap-2">
@@ -2756,7 +2756,7 @@ function SelectionOverlay({
                         ))}
                       </div>
                     ) : null}
-                    <p className="text-sm leading-6 text-white/80">{item.description}</p>
+                    <p className="text-sm leading-6 text-black/80">{item.description}</p>
                   </div>
                   <div className="flex flex-col items-stretch justify-between gap-3">
                     <Button variant="primary" onClick={() => onSelect(item.id)}>
@@ -2795,26 +2795,26 @@ function AutoSetupOverlay({
         <div className="w-full border border-[var(--border)] bg-[var(--surface-2)] p-6 shadow-[0_16px_40px_rgba(205,180,219,0.35)]">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Best setup</p>
-              <h3 className="mt-2 text-2xl font-semibold text-white">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-black/70">Best setup</p>
+              <h3 className="mt-2 text-2xl font-semibold text-black">
                 Are you bossing one DPS or do you want overall team damage?
               </h3>
-              <p className="mt-3 text-sm leading-6 text-white/70">
+              <p className="mt-3 text-sm leading-6 text-black/70">
                 The first option stacks the group around one carry. The second spreads damage across multiple DPS slots and uses damage mounts on those DPS members.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[var(--surface)] text-white transition hover:border-[var(--border-strong)]"
+              className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[var(--surface)] text-black transition hover:border-[var(--border-strong)]"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div className="border border-[rgba(162,210,255,0.95)] bg-[rgba(162,210,255,0.15)] p-5">
-              <p className="text-lg font-semibold text-white">Boost one DPS</p>
-              <p className="mt-2 text-sm leading-6 text-white/75">
+              <p className="text-lg font-semibold text-black">Boost one DPS</p>
+              <p className="mt-2 text-sm leading-6 text-black/75">
                 Pick the boosted player first. The selected slot becomes the boost target, and every DPS still gets a support companion instead of an ST summon.
               </p>
               <div className="mt-4 space-y-3">
@@ -2840,8 +2840,8 @@ function AutoSetupOverlay({
               onClick={() => onSelect("overall_team_damage")}
               className="border border-[rgba(205,180,219,0.95)] bg-[rgba(205,180,219,0.15)] p-5 text-left transition hover:bg-[rgba(205,180,219,0.22)]"
             >
-              <p className="text-lg font-semibold text-white">Overall team damage</p>
-              <p className="mt-2 text-sm leading-6 text-white/75">
+              <p className="text-lg font-semibold text-black">Overall team damage</p>
+              <p className="mt-2 text-sm leading-6 text-black/75">
                 Balanced damage lineup. The generator rotates through the top 10 support companions, top 10 debuff artifacts, and top 10 debuff enhancements while still applying damage mounts to DPS slots.
               </p>
             </button>
@@ -2893,30 +2893,30 @@ function PartyRoleSplitCard({
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Tank</p>
-            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-white">{roleSplit.tank}</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">Tank</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-black">{roleSplit.tank}</p>
           </div>
           <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Healer</p>
-            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-white">{roleSplit.healer}</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">Healer</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-black">{roleSplit.healer}</p>
           </div>
           <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">DPS</p>
-            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-white">{roleSplit.dps}</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">DPS</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-black">{roleSplit.dps}</p>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Support</p>
-            <p className="mt-2 text-base font-semibold text-white">{roleSplit.support}</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">Support</p>
+            <p className="mt-2 text-base font-semibold text-black">{roleSplit.support}</p>
           </div>
           <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Support DPS</p>
-            <p className="mt-2 text-base font-semibold text-white">{roleSplit.supportDps}</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">Support DPS</p>
+            <p className="mt-2 text-base font-semibold text-black">{roleSplit.supportDps}</p>
           </div>
           <div className="border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/64">Boost</p>
-            <p className="mt-2 text-base font-semibold text-white">{roleSplit.boost}</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-black/64">Boost</p>
+            <p className="mt-2 text-base font-semibold text-black">{roleSplit.boost}</p>
           </div>
         </div>
       </CardContent>
@@ -2958,7 +2958,7 @@ function SelectedSlotSidebarCard({
               badgeText={getParagonBadge(member)}
             />
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-black/60">
                 Selected slot {member.group}-{member.slot}
               </p>
               <CardTitle className="mt-2">{getMemberDisplayName(member)}</CardTitle>
@@ -3098,7 +3098,7 @@ function PowerLoadoutSidebarCard({
       </CardHeader>
       <CardContent className="space-y-5">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-white/60">Recommended debuff encounters</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-black/60">Recommended debuff encounters</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {recommendedDebuffEncounters.length > 0 ? (
               recommendedDebuffEncounters.map((power) => {
@@ -3110,8 +3110,8 @@ function PowerLoadoutSidebarCard({
                     onClick={() => onAssignEncounter(member.id, power.id)}
                     className={`border px-3 py-2 text-xs uppercase tracking-[0.12em] ${
                       active
-                        ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
-                        : "border-[var(--border)] bg-[var(--surface)] text-white/78"
+                        ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-black"
+                        : "border-[var(--border)] bg-[var(--surface)] text-black/78"
                     }`}
                   >
                     {power.name}
@@ -3119,7 +3119,7 @@ function PowerLoadoutSidebarCard({
                 );
               })
             ) : (
-              <p className="text-sm text-white/68">
+              <p className="text-sm text-black/68">
                 {selectedClass ? "No mapped debuff encounters for this class and paragon." : "Select class and paragon first."}
               </p>
             )}
