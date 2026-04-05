@@ -1,10 +1,11 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { ContentPage } from "@/components/content-page";
 import { SourceBadge } from "@/components/source-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { classSnapshots, powers } from "@/data/game-data";
+import { classes, classSnapshots, powers } from "@/data/game-data";
 
 export default function Page() {
   return (
@@ -18,7 +19,8 @@ export default function Page() {
           const classPowerCount = powers.filter((power) => power.class_name === item.className).length;
 
           return (
-            <Card key={item.className}>
+            <Link key={item.className} href={`/reference/classes/${classes.find((entry) => entry.name === item.className)?.id ?? ""}`}>
+            <Card className="h-full transition hover:border-[var(--sky-blue)]">
               <CardHeader>
                 <div className="flex items-start gap-4">
                   <Image
@@ -54,6 +56,7 @@ export default function Page() {
                 </p>
               </CardContent>
             </Card>
+            </Link>
           );
         })}
       </div>

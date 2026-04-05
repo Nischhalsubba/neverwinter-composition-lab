@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ContentPage } from "@/components/content-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dungeons } from "@/data/game-data";
@@ -13,7 +15,9 @@ export default function Page() {
         {dungeons.map((dungeon) => (
           <Card key={dungeon.id}>
             <CardHeader>
-              <CardTitle>{dungeon.name}</CardTitle>
+              <CardTitle>
+                <Link href={`/reference/dungeons/${dungeon.id}`}>{dungeon.name}</Link>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm leading-6 text-stone-400">
               <p>Party size: {dungeon.size}</p>

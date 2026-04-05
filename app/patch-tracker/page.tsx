@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ContentPage } from "@/components/content-page";
 import { SourceBadge } from "@/components/source-badge";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +37,9 @@ export default function Page() {
                 <Badge variant="blue">{patch.category}</Badge>
                 <Badge variant="orange">{patch.importance}</Badge>
               </div>
-              <CardTitle>{patch.name}</CardTitle>
+              <CardTitle>
+                <Link href={`/reference/patches/${patch.id}`}>{patch.name}</Link>
+              </CardTitle>
               <CardDescription>{patch.affected_entity}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">

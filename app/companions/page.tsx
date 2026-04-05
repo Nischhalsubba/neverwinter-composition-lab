@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ContentPage } from "@/components/content-page";
 import { SourceBadge } from "@/components/source-badge";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +46,9 @@ export default function Page() {
                 return (
                   <div key={companion.id} className="border border-white/10 bg-white/[0.03] p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-medium text-stone-100">{companion.name}</p>
+                      <Link href={`/reference/companions/${companion.id}`} className="text-sm font-medium text-stone-100 hover:text-white">
+                        {companion.name}
+                      </Link>
                       <Badge variant="teal">Rank #{recommendation?.rank}</Badge>
                       <Badge variant="purple">{companion.role_tag}</Badge>
                     </div>
@@ -83,7 +87,9 @@ export default function Page() {
                         </Badge>
                       ))}
                     </div>
-                    <p className="mt-3 text-sm font-medium text-stone-100">{item.name}</p>
+                    <Link href={`/reference/companion-powers/${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`} className="mt-3 block text-sm font-medium text-stone-100 hover:text-white">
+                      {item.name}
+                    </Link>
                     <p className="mt-2 text-sm leading-6 text-stone-400">
                       {sanitizeUiText(item.text, "Verified slot-bonus entry. Exact variable tooltip values are hidden until fully proven.")}
                     </p>
@@ -112,7 +118,9 @@ export default function Page() {
                   return (
                     <div key={item.name} className="border border-white/10 bg-white/[0.03] p-4">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-medium text-stone-100">{item.name}</p>
+                        <Link href={`/reference/enhancements/${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`} className="text-sm font-medium text-stone-100 hover:text-white">
+                          {item.name}
+                        </Link>
                         {recommendation ? <Badge variant="teal">Rank #{recommendation.rank}</Badge> : null}
                       </div>
                       <p className="mt-2 text-sm leading-6 text-stone-400">

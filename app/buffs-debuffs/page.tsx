@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ContentPage } from "@/components/content-page";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +31,9 @@ export default function Page() {
               {effects.map((effect) => (
                 <div key={effect.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-medium text-stone-100">{effect.name}</p>
+                    <Link href={`/reference/effects/${effect.id}`} className="text-sm font-medium text-stone-100 hover:text-white">
+                      {effect.name}
+                    </Link>
                     <Badge variant="blue">{titleCase(effect.stat)}</Badge>
                     <Badge variant="muted">{effect.stack_rule.replaceAll("_", " ")}</Badge>
                   </div>

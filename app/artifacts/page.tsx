@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { ContentPage } from "@/components/content-page";
 import { SourceBadge } from "@/components/source-badge";
@@ -66,7 +67,9 @@ export default function Page() {
                             />
                           ) : null}
                           <div>
-                            <p className="font-medium text-stone-100">{artifact.name}</p>
+                            <Link href={`/reference/artifacts/${artifact.id}`} className="font-medium text-stone-100 hover:text-white">
+                              {artifact.name}
+                            </Link>
                             <p className="mt-1 text-sm text-stone-400">{artifact.category}</p>
                           </div>
                         </div>

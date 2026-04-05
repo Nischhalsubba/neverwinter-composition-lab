@@ -2,7 +2,9 @@
 
 import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { FormEvent, useState } from "react";
 import { Bell, HelpCircle, Search, Settings, Swords } from "lucide-react";
 
 import { appRoutes, referenceRoutes, utilityRoutes } from "@/config/navigation";
@@ -36,6 +38,13 @@ function ShellLink({
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+
+  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+  }
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-white">
@@ -68,24 +77,35 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative hidden w-64 lg:block">
+            <form onSubmit={handleSearchSubmit} className="relative hidden w-64 lg:block">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/50" />
-              <Input placeholder="Search builds, items, notes..." className="pl-10 text-[11px] uppercase tracking-[0.14em]" />
-            </div>
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search builds, items, notes..."
+                className="pl-10 text-[11px] uppercase tracking-[0.14em]"
+              />
+            </form>
             <div className="hidden items-center gap-3 sm:flex">
-              <Bell className="h-4 w-4 text-white/72" />
-              <HelpCircle className="h-4 w-4 text-white/72" />
-              <Settings className="h-4 w-4 text-white/72" />
+              <Link href="/patch-tracker" aria-label="Patch tracker">
+                <Bell className="h-4 w-4 text-white/72 transition hover:text-white" />
+              </Link>
+              <Link href="/reference" aria-label="Reference hub">
+                <HelpCircle className="h-4 w-4 text-white/72 transition hover:text-white" />
+              </Link>
+              <Link href="/settings" aria-label="Settings">
+                <Settings className="h-4 w-4 text-white/72 transition hover:text-white" />
+              </Link>
             </div>
-            <div className="flex h-8 w-8 items-center justify-center border border-[var(--border)] bg-[var(--panel)]">
+            <Link href="/team-builder" className="flex h-8 w-8 items-center justify-center border border-[var(--border)] bg-[var(--panel)]">
               <Swords className="h-4 w-4 text-white" />
-            </div>
+            </Link>
           </div>
         </div>
       </header>
 
-      <div className="grid min-h-screen w-full grid-cols-1 pt-[72px] lg:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="hidden min-h-[calc(100vh-72px)] border-r border-[var(--border)] bg-[rgba(255,255,255,0.015)] lg:flex lg:flex-col">
+      <div className="min-h-screen w-full pt-[72px] lg:pl-[248px]">
+        <aside className="hidden lg:fixed lg:inset-y-[72px] lg:left-0 lg:flex lg:w-[248px] lg:flex-col lg:overflow-hidden lg:border-r lg:border-[var(--border)] lg:bg-[rgba(255,255,255,0.015)]">
           <div className="border-b border-[var(--border)] px-6 py-6">
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[var(--panel)]">

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ContentPage } from "@/components/content-page";
 import { SourceBadge } from "@/components/source-badge";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +23,9 @@ export default function Page() {
             {mounts.map((mount) => (
               <div key={mount.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-medium text-stone-100">{mount.name}</p>
+                  <Link href={`/reference/mounts/${mount.id}`} className="text-sm font-medium text-stone-100 hover:text-white">
+                    {mount.name}
+                  </Link>
                   <Badge variant="orange">{mount.mount_type}</Badge>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-stone-400">{mount.notes}</p>
@@ -41,7 +45,9 @@ export default function Page() {
             {mountCombatPowers.map((power) => (
               <div key={power.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-medium text-stone-100">{power.name}</p>
+                  <Link href={`/reference/mounts/${power.id}`} className="text-sm font-medium text-stone-100 hover:text-white">
+                    {power.name}
+                  </Link>
                   <Badge variant="blue">{power.damage_type}</Badge>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-stone-400">

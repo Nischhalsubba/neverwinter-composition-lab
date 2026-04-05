@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ContentPage } from "@/components/content-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trials } from "@/data/game-data";
@@ -13,7 +15,9 @@ export default function Page() {
         {trials.map((trial) => (
           <Card key={trial.id}>
             <CardHeader>
-              <CardTitle>{trial.name}</CardTitle>
+              <CardTitle>
+                <Link href={`/reference/trials/${trial.id}`}>{trial.name}</Link>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm leading-6 text-stone-400">
               <p>Raid size: {trial.size}</p>

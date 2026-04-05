@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { referenceRoutes } from "@/config/navigation";
 import { ContentPage } from "@/components/content-page";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,6 @@ import {
   mountCombatPowers,
   patchChanges,
 } from "@/data/game-data";
-import { referenceRoutes } from "@/config/navigation";
 
 const routeSummaries: Record<string, { count: string; preview: string }> = {
   "/buffs-debuffs": {
@@ -21,23 +21,38 @@ const routeSummaries: Record<string, { count: string; preview: string }> = {
   },
   "/classes": {
     count: `${classes.length} classes`,
-    preview: classes.slice(0, 3).map((item) => item.name).join(" • "),
+    preview: classes
+      .slice(0, 3)
+      .map((item) => item.name)
+      .join(" / "),
   },
   "/companions": {
     count: `${companions.length} companions / ${companionEnhancements.length} enhancements`,
-    preview: companions.slice(0, 3).map((item) => item.name).join(" • "),
+    preview: companions
+      .slice(0, 3)
+      .map((item) => item.name)
+      .join(" / "),
   },
   "/mounts": {
     count: `${mountCombatPowers.length} mount powers`,
-    preview: mountCombatPowers.slice(0, 3).map((item) => item.name).join(" • "),
+    preview: mountCombatPowers
+      .slice(0, 3)
+      .map((item) => item.name)
+      .join(" / "),
   },
   "/artifacts": {
     count: `${artifacts.length} artifacts`,
-    preview: artifacts.slice(0, 3).map((item) => item.name).join(" • "),
+    preview: artifacts
+      .slice(0, 3)
+      .map((item) => item.name)
+      .join(" / "),
   },
   "/patch-tracker": {
     count: `${patchChanges.length} patch notes`,
-    preview: patchChanges.slice(0, 2).map((item) => item.name).join(" • "),
+    preview: patchChanges
+      .slice(0, 2)
+      .map((item) => item.name)
+      .join(" / "),
   },
 };
 

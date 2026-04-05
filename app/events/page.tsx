@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ContentPage } from "@/components/content-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { events } from "@/data/game-data";
@@ -13,7 +15,9 @@ export default function Page() {
         {events.map((event) => (
           <Card key={event.id}>
             <CardHeader>
-              <CardTitle>{event.name}</CardTitle>
+              <CardTitle>
+                <Link href={`/reference/events/${event.id}`}>{event.name}</Link>
+              </CardTitle>
             </CardHeader>
             <CardContent className="text-sm leading-6 text-stone-400">{event.notes}</CardContent>
           </Card>

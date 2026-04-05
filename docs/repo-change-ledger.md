@@ -1946,6 +1946,86 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 26 - Fixed shell navigation and added list/detail/search flow for clickable reference surfaces
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `components/layout/app-shell.tsx`
+- `lib/reference-index.ts`
+- `app/search/page.tsx`
+- `app/reference/page.tsx`
+- `app/reference/[entityType]/[itemId]/page.tsx`
+- `app/settings/page.tsx`
+- `app/classes/page.tsx`
+- `app/artifacts/page.tsx`
+- `app/companions/page.tsx`
+- `app/mounts/page.tsx`
+- `app/buffs-debuffs/page.tsx`
+- `app/dungeons/page.tsx`
+- `app/trials/page.tsx`
+- `app/events/page.tsx`
+- `app/glossary/page.tsx`
+- `app/patch-tracker/page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Made the desktop sidebar fixed under the header so it no longer scrolls with the main page content.
+- Converted the shell search box into a real form that routes to a new `/search` results page.
+- Wired the header utility icons into functional routes:
+  - patch tracker
+  - reference hub
+  - settings
+  - team builder
+- Added `lib/reference-index.ts` as a shared typed index of reference entities so list pages, search, and generic detail pages can all use the same source of truth.
+- Added a new `/search` page that searches the shared reference index and returns linked results.
+- Added a new generic detail route at `/reference/[entityType]/[itemId]`.
+- Replaced brittle list-page fallback logic in the detail route with an explicit entity-to-list-page map so detail pages always route back to a real page.
+- Updated the `Reference Hub` page so it acts as a functional launch surface into the live list pages rather than a loose placeholder.
+- Turned major list pages into actual list-to-detail flows by linking visible entity names into the generic detail route:
+  - classes
+  - artifacts
+  - companions
+  - companion powers
+  - companion enhancements
+  - mounts
+  - effects
+  - dungeons
+  - trials
+  - events
+  - glossary terms
+  - patch changes
+- Replaced the old placeholder-style settings screen with a functional utility page that links into saved builds, team builder, reference, data notes, and patch tracking.
+- Normalized some newly touched strings to remove encoding artifacts and apostrophe lint issues from the new routing surfaces.
+
+Why:
+
+- The user explicitly wanted every clickable UI surface to lead somewhere real instead of stopping in dead ends or placeholder screens.
+- The shell controls were visually present but not functionally complete, which made the app feel unfinished.
+- A shared reference index prevents duplicated routing logic and makes it easier to keep future list/detail pages consistent.
+- The fixed sidebar change supports the user's requirement that the navigation remain stable while the page content scrolls.
+
+Notes:
+
+- This pass focuses on making the existing clickable information surfaces functional and connected.
+- Lint warnings still come from temporary scratch files under `tmp_*`, not from the production app files updated here.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` passed for production app code and still reports warnings only from temporary scratch files such as `tmp_*`.
+
 ## Pass 25 - Reflowed Team Builder into a full-width top-first composition layout
 
 Date:
