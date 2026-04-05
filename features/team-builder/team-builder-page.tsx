@@ -834,33 +834,33 @@ export function TeamBuilderPage() {
 
   if (!mode) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8 px-6 py-8 xl:px-8 xl:py-10">
         <Card>
           <CardHeader>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Team Builder Start</p>
-            <CardTitle className="text-[32px]">Choose party size</CardTitle>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-white/58">Professional architect</p>
+            <CardTitle className="text-[40px] uppercase tracking-[-0.08em]">Choose party size</CardTitle>
             <CardDescription>
-              Start with dungeon for 5 players or trial for 10 players. Every slot begins empty. Dungeon presets assume 1 tank and 1 healer. Trial presets assume 6 DPS, 2 healers, and 2 tanks.
+              Start with dungeon for 5 players or trial for 10 players. Every slot begins empty and the builder uses the real role split for that mode.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-6 md:grid-cols-2">
             <button
               type="button"
               onClick={() => updateTeamMode("dungeon")}
-              className="border border-white/10 bg-white/[0.03] p-8 text-left transition hover:border-[rgba(162,210,255,0.9)]"
+              className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-10 text-left transition hover:border-[var(--sky-blue)]"
             >
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">5 players</p>
-              <p className="mt-3 text-2xl font-semibold text-white">Dungeon</p>
-              <p className="mt-3 text-sm text-white/75">Single party with 1 tank, 1 healer, and 3 DPS.</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">5 players</p>
+              <p className="mt-4 text-[34px] font-semibold uppercase tracking-[-0.07em] text-white">Dungeon</p>
+              <p className="mt-4 text-sm leading-7 text-white/74">Single party with 1 tank, 1 healer, and 3 DPS.</p>
             </button>
             <button
               type="button"
               onClick={() => updateTeamMode("trial")}
-              className="border border-white/10 bg-white/[0.03] p-8 text-left transition hover:border-[rgba(162,210,255,0.9)]"
+              className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-10 text-left transition hover:border-[var(--sky-blue)]"
             >
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">10 players</p>
-              <p className="mt-3 text-2xl font-semibold text-white">Trial</p>
-              <p className="mt-3 text-sm text-white/75">Two groups of five with the default 2 tank, 2 healer, 6 DPS split.</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">10 players</p>
+              <p className="mt-4 text-[34px] font-semibold uppercase tracking-[-0.07em] text-white">Trial</p>
+              <p className="mt-4 text-sm leading-7 text-white/74">Two groups of five with the default 2 tank, 2 healer, 6 DPS split.</p>
             </button>
           </CardContent>
         </Card>
@@ -869,9 +869,30 @@ export function TeamBuilderPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 px-6 py-8 xl:px-8 xl:py-10">
+      <section className="border-b border-[var(--border)] pb-6">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="space-y-3">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-white/58">Professional trial architect</p>
+            <h1 className="text-[44px] font-semibold uppercase leading-[0.95] tracking-[-0.09em] text-white">
+              {mode === "trial" ? "Trial Architect" : "Dungeon Architect"}
+            </h1>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-white/56">
+              Instance: {boss?.name ?? "Boss preset"}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="primary" onClick={() => setAutoSetupOpen(true)}>
+              Best Setup
+            </Button>
+            <Button variant="secondary" onClick={() => updateTeamMode(mode)}>
+              Reset
+            </Button>
+          </div>
+        </div>
+      </section>
         <Card>
-          <CardContent className="grid gap-4 p-6 xl:grid-cols-[auto_auto_auto_minmax(220px,1fr)_minmax(220px,1fr)]">
+          <CardContent className="grid gap-4 xl:grid-cols-[auto_auto_minmax(220px,1fr)_minmax(220px,1fr)]">
             <div className="flex flex-wrap gap-2">
               <Button variant={mode === "dungeon" ? "primary" : "secondary"} onClick={() => updateTeamMode("dungeon")}>
                 Dungeon
@@ -888,12 +909,6 @@ export function TeamBuilderPage() {
                 </Select>
               </Field>
             ) : null}
-            <Button variant="secondary" onClick={() => updateTeamMode(mode)}>
-              Reset
-            </Button>
-          <Button variant="secondary" onClick={() => setAutoSetupOpen(true)}>
-            Best Setup
-          </Button>
           <Field label="Boss preset">
             <Select value={bossId} onChange={(event) => setBossId(event.target.value)}>
               {bossPresets.map((preset) => (
@@ -916,31 +931,51 @@ export function TeamBuilderPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Roster</CardTitle>
-            <CardDescription>Click a slot. Everything for that slot is visible immediately in the middle panel.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <RosterGroup
-              title="Group A"
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_288px]">
+        <div className="space-y-6">
+          <div className={`grid gap-6 ${mode === "trial" ? "xl:grid-cols-2" : "xl:grid-cols-[minmax(0,1fr)_320px]"}`}>
+            <ArchitectGroupCard
+              title={mode === "trial" ? "Group A - Vanguard" : "Dungeon Party"}
+              subtitle={mode === "trial" ? "Frontline pressure, carry setup, and main support coverage." : "Five-player shell with one tank, one healer, and three DPS."}
               members={teamMembers.filter((member) => member.group === "A")}
               selectedMemberId={selectedMemberId}
               onSelect={setSelectedMemberId}
             />
             {mode === "trial" ? (
-              <RosterGroup
-                title="Group B"
+              <ArchitectGroupCard
+                title="Group B - Rearguard"
+                subtitle="Backline pressure, support layering, and duplicate control."
                 members={teamMembers.filter((member) => member.group === "B")}
                 selectedMemberId={selectedMemberId}
                 onSelect={setSelectedMemberId}
               />
-            ) : null}
-          </CardContent>
-        </Card>
+            ) : (
+              <Card className="h-fit">
+                <CardHeader>
+                  <CardTitle>Party Role Split</CardTitle>
+                  <CardDescription>Current dungeon role coverage based on the selected slots.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                    <span className="text-sm text-white">Tank</span>
+                    <span className="text-sm font-semibold text-white">{teamMembers.filter((member) => member.role === "tank").length}</span>
+                  </div>
+                  <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                    <span className="text-sm text-white">Healer</span>
+                    <span className="text-sm font-semibold text-white">{teamMembers.filter((member) => member.role === "healer").length}</span>
+                  </div>
+                  <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                    <span className="text-sm text-white">Damage / support</span>
+                    <span className="text-sm font-semibold text-white">
+                      {teamMembers.filter((member) => member.role !== "tank" && member.role !== "healer").length}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-        <div className="space-y-6">
+          <div className="space-y-6">
           {selectedMember ? (
             <>
               <Card>
@@ -1330,6 +1365,7 @@ export function TeamBuilderPage() {
             </>
           ) : null}
         </div>
+      </div>
 
         <div className="space-y-6">
           <SummaryPanel
@@ -1477,53 +1513,87 @@ export function TeamBuilderPage() {
   );
 }
 
-function RosterGroup({
+function ArchitectGroupCard({
   title,
+  subtitle,
   members,
   selectedMemberId,
   onSelect,
 }: {
   title: string;
+  subtitle: string;
   members: TeamMember[];
   selectedMemberId: string;
   onSelect: (memberId: string) => void;
 }) {
   return (
-    <section className="space-y-3">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-white/60">{title}</p>
-      <div className="space-y-2">
-        {members.map((member) => (
-          <button
-            key={member.id}
-            type="button"
-            onClick={() => onSelect(member.id)}
-            className={`block w-full border p-3 text-left transition ${
-              member.id === selectedMemberId
-                ? "border-[rgba(162,210,255,0.9)] bg-[rgba(162,210,255,0.12)]"
-                : "border-white/10 bg-white/[0.03] hover:border-white/20"
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <SelectionThumb
-                imageUrl={getClassImage(member.class_id)}
-                label={getMemberTitle(member)}
-                badgeText={getParagonBadge(member)}
-                size="sm"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-medium text-white">
-                    {member.group}-{member.slot} {getMemberTitle(member)}
-                  </p>
-                  {member.is_carry ? <Badge variant="teal">Carry</Badge> : null}
+    <Card className="h-fit">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--sky-blue)]">{title}</p>
+            <CardDescription className="mt-2 max-w-md">{subtitle}</CardDescription>
+          </div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/48">{members.length} members</p>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {members.map((member) => {
+          const artifactName = artifacts.find((item) => item.id === member.artifact_id)?.name ?? "No artifact";
+          const companionName = companions.find((item) => item.id === member.companion_id)?.name ?? "No companion";
+          const mountName = mountCombatPowers.find((item) => item.id === member.mount_combat_power_id)?.name ?? "No mount";
+
+          return (
+            <button
+              key={member.id}
+              type="button"
+              onClick={() => onSelect(member.id)}
+              className={`block w-full border p-4 text-left transition ${
+                member.id === selectedMemberId
+                  ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.1)]"
+                  : member.is_carry
+                    ? "border-[var(--pastel-petal)] bg-[rgba(255,200,221,0.08)]"
+                    : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] hover:border-[var(--sky-blue)]"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <SelectionThumb
+                    imageUrl={getClassImage(member.class_id)}
+                    label={getMemberTitle(member)}
+                    badgeText={getParagonBadge(member)}
+                    size="sm"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold tracking-[-0.03em] text-white">
+                      {member.group}-{member.slot} {getMemberTitle(member)}
+                    </p>
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/62">
+                      {member.race || "Race pending"} / {formatRoleLabel(member.role)}
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm text-white/70">{buildMemberSummary(member)}</p>
+                {member.is_carry ? <Badge variant="teal">Carry DPS</Badge> : null}
               </div>
-            </div>
-          </button>
-        ))}
-      </div>
-    </section>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="border border-[var(--border)] bg-black/20 px-3 py-2">
+                  <p className="text-[9px] uppercase tracking-[0.16em] text-white/52">Companion</p>
+                  <p className="mt-1 text-xs font-medium text-white">{companionName}</p>
+                </div>
+                <div className="border border-[var(--border)] bg-black/20 px-3 py-2">
+                  <p className="text-[9px] uppercase tracking-[0.16em] text-white/52">Artifact</p>
+                  <p className="mt-1 text-xs font-medium text-white">{artifactName}</p>
+                </div>
+                <div className="border border-[var(--border)] bg-black/20 px-3 py-2">
+                  <p className="text-[9px] uppercase tracking-[0.16em] text-white/52">Mount</p>
+                  <p className="mt-1 text-xs font-medium text-white">{mountName}</p>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </CardContent>
+    </Card>
   );
 }
 

@@ -21,17 +21,19 @@ export function ContentPage({
   metadata?: SourceMetadata;
 }) {
   return (
-    <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader className="space-y-4">
+    <div className="grid gap-8 px-6 py-8 xl:grid-cols-[minmax(0,1fr)_288px] xl:px-8 xl:py-10">
+      <div className="min-w-0 space-y-8">
+        <Card className="bg-[rgba(255,255,255,0.015)]">
+          <CardHeader className="space-y-5 p-8">
             <div className="flex flex-wrap items-center gap-3">
               <Badge variant="teal">{eyebrow}</Badge>
               {metadata ? <SourceBadge {...metadata} /> : null}
             </div>
             <div className="space-y-3">
-              <CardTitle className="text-[32px] leading-[1.05] tracking-[-0.04em]">{title}</CardTitle>
-              <CardDescription className="max-w-4xl text-base leading-7">{description}</CardDescription>
+              <CardTitle className="max-w-4xl text-[34px] uppercase leading-[1.02] tracking-[-0.06em]">
+                {title}
+              </CardTitle>
+              <CardDescription className="max-w-3xl text-sm leading-7">{description}</CardDescription>
             </div>
           </CardHeader>
         </Card>

@@ -1672,3 +1672,77 @@ Result:
 - `npm run build` passed.
 - `npm run lint` completed without app-code errors.
 - Remaining lint warnings still come from temporary scratch files under `tmp_*`.
+
+## Pass 21 - Applied the Figma shell, dashboard, and architect layout patterns
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `components/layout/app-shell.tsx`
+- `components/content-page.tsx`
+- `components/ui/card.tsx`
+- `components/summary-panel.tsx`
+- `app/page.tsx`
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Used the Figma nodes `1:2` and `1:307` from file `K2WoR5v0ra8eCwcnLN5Tki` as layout references.
+- Rebuilt the shared app shell around the Figma structure:
+  - fixed top header
+  - fixed left navigation rail
+  - calmer utility area
+  - more rigid desktop canvas proportions
+- Updated the shared `ContentPage` wrapper to match the Figma spacing rhythm with a larger intro block and a dedicated right-rail width.
+- Flattened shared card treatment so content surfaces read more like the Figma system:
+  - lighter visual noise
+  - more consistent padding
+  - stronger title hierarchy
+- Rebuilt the home dashboard to follow the `1:2` layout direction:
+  - hero banner first
+  - bento-style artifact and patch analysis row
+  - saved-loadout row
+  - right intelligence rail
+- Reworked Team Builder toward the `1:307` architect layout without removing its existing planning logic:
+  - top architect header
+  - compact control bar
+  - two main group panels for trial mode
+  - simplified dungeon split panel
+  - selected-slot configuration below the group view
+  - right-side intelligence/summaries rail
+- Added a new `ArchitectGroupCard` component so roster selection is visual and spatial like the design instead of being hidden in a long left-side list.
+- Kept the app’s own palette and did not copy the Figma colors.
+
+Why:
+
+- The user explicitly asked for the app to follow the Figma layout, spacing, and design elements, but not the Figma colors.
+- The previous shell and Team Builder still felt custom and patch-layered rather than intentionally designed from a consistent layout system.
+- Matching the shell and page structure to the Figma references makes the app easier to scan and gives the dashboard and Team Builder a clearer visual hierarchy.
+
+Notes / limitations:
+
+- This pass intentionally copied structure only:
+  - spacing
+  - proportions
+  - grouping
+  - information hierarchy
+  - page composition
+- This pass did not copy the Figma color language.
+- `npm run lint` still reports warnings from temporary scratch files such as `tmp_*`, not from the production app files updated here.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` passed for the production app code changed in this pass.
+- Remaining lint warnings still come from temporary scratch files under `tmp_*`.
