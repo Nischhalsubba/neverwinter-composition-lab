@@ -1501,3 +1501,107 @@ Result:
 
 - `npm run build` passed.
 - `npm run lint` passed after removing the temporary unused-variable warning from the role-distribution refactor.
+
+## Pass 19 - Fixed Team Builder summaries, roster icons, insignia data, and select contrast
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `data/nw-hub/insignia-bonuses.ts`
+- `data/game-data.ts`
+- `lib/effect-engine.ts`
+- `app/globals.css`
+- `components/summary-panel.tsx`
+- `features/team-builder/team-builder-page.tsx`
+
+Changes:
+
+- Added a new local extracted data file for NW Hub insignia bonuses:
+  - `data/nw-hub/insignia-bonuses.ts`
+  - includes the real mount-bonus / insignia-bonus records from `https://nw-hub.com/mounts/bonuses`
+  - includes support and damage-relevant entries such as:
+    - `Artificer's Persuasion`
+    - `Cavalry's Warning`
+    - `Combatant's Maneuver`
+    - `Gladiator's Guile`
+    - `Protector's Camaraderie`
+    - `Shepherd's Devotion`
+    - `Warlord's Motivation`
+    - `Predator's Instinct`
+- Replaced the old 3-item placeholder `insigniaBonuses` list in `data/game-data.ts` with the real NW Hub-derived insignia bonus set.
+- Added a real exported `entityEffectLookup` in `data/game-data.ts` so the effect engine can resolve:
+  - powers
+  - artifacts
+  - companions
+  - enhancements
+  - companion bonuses
+  - mount combat powers
+  - mount equip powers
+  - insignia bonuses
+- Updated `lib/effect-engine.ts` to use that local entity lookup instead of reading from `globalThis.__NW_ENTITY_EFFECTS__`.
+- Fixed the Team Builder roster cards in `features/team-builder/team-builder-page.tsx`:
+  - each roster slot now shows a left-side class icon
+  - the roster icon now also carries a small paragon badge so the path is easier to identify at a glance
+  - selected-slot header now also shows the path badge
+- Fixed the broken member summary separator in Team Builder display output.
+- Added aggregate total cards to the right-rail summaries:
+  - `Boss Debuffs` now shows:
+    - resolved total
+    - active source count
+  - `Team Buffs` now shows:
+    - resolved total
+    - active source count
+  - per-line summary rows now show:
+    - active sources
+    - pending unresolved sources
+- Expanded `Carry Summary` so it now shows:
+  - team buff source count
+  - boss debuff source count
+  - carry-facing resolved totals
+- Expanded `Mount Hit Calculator` so it now shows:
+  - applied stage count
+  - resolved debuff total
+  - personal/team/boss bonus values used in the final estimate
+- Updated Team Builder auto-setup so insignia bonuses are no longer left empty:
+  - support-oriented runs rotate through support-signaling insignia bonuses
+  - damage-oriented runs rotate through damage-signaling insignia bonuses
+  - the rotation intentionally spreads bonuses across members instead of blindly repeating one bonus on every slot
+- Updated `components/summary-panel.tsx` so summary panels can render high-level stat cards above the detailed rows.
+- Fixed native select/dropdown contrast in `app/globals.css`:
+  - dropdown options now render on a dark background with white text
+  - checked / hovered options now switch to accent background with black text for readable contrast
+
+Why:
+
+- The user explicitly asked for:
+  - class/paragon icon visibility in the roster
+  - fixed alignment and readability across the app
+  - real debuff / buff totals in the major summary panels
+  - corrected dropdown contrast
+  - real insignia bonus data from `https://nw-hub.com/mounts/bonuses`
+- The biggest hidden bug was that the effect engine was still looking for entity effect mappings on `globalThis`, but the app never populated that global lookup. That kept many summary totals at zero even when the loadout was full. Replacing that with a local exported lookup fixes the planner at the data-model level instead of hiding the issue in UI.
+- The old insignia layer was only a placeholder and could not support real support-vs-damage decisions. Importing the NW Hub insignia bonus data gives the planner a trustworthy local source-aware reference without inventing values.
+- The roster previously forced players to read multiple lines of text just to know what each slot was. Adding the class image and a paragon badge makes the left-side roster scannable in a way endgame players can use immediately.
+- Native browser dropdowns were failing contrast in the open state, which was directly visible in the screenshot. Explicit option styling fixes that instead of relying on browser defaults.
+
+Notes / assumptions:
+
+- The NW Hub insignia bonus source provides exact names, set requirements, and descriptions. The app stores those as verified source-aware local data.
+- The current effect engine still treats many mount equip powers and insignia bonuses as non-normalized stat packages rather than percent-based combat effects. Where no safe normalized percent conversion exists, the planner keeps the source data without inventing a percent value.
+- Auto-setup insignia allocation now spreads known support or damage bonuses across the team, but this remains a planner heuristic and should be refined further if the user wants a stricter per-trial optimization model.
+
+### Verification
+
+Checks run:
+
+- `npm run lint`
+- `npm run build`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` completed without app-code errors.
+- Current lint warnings are still coming from temporary scratch files under `tmp_*`, not from the production app files changed in this pass.

@@ -101,6 +101,26 @@ const damageMountPriority = [
   "Bigby's Hand",
 ];
 
+const supportInsigniaPriority = [
+  "Shepherd's Devotion",
+  "Artificer's Persuasion",
+  "Cavalry's Warning",
+  "Gladiator's Guile",
+  "Protector's Camaraderie",
+  "Warlord's Motivation",
+  "Combatant's Maneuver",
+  "Survivalist's Expertise",
+];
+
+const damageInsigniaPriority = [
+  "Combatant's Maneuver",
+  "Predator's Instinct",
+  "Master's Precision",
+  "Master's Cruelty",
+  "Executioner's Covenant",
+  "Assassin's Covenant",
+];
+
 function getClassIdByName(name: string) {
   return classes.find((item) => item.name === name)?.id ?? "";
 }
@@ -152,6 +172,20 @@ function getMountPowerIdByPriority(priority: string[]) {
   return priority
     .map((name) => mountCombatPowers.find((item) => item.name === name)?.id)
     .filter(Boolean) as string[];
+}
+
+function getInsigniaIdsByPriority(priority: string[]) {
+  return priority
+    .map((name) => insigniaBonuses.find((item) => item.name === name)?.id)
+    .filter(Boolean) as string[];
+}
+
+function getRotatedIds(priority: string[], startIndex: number, size = 3) {
+  if (!priority.length) {
+    return Array.from({ length: size }, () => "");
+  }
+
+  return Array.from({ length: size }, (_, offset) => priority[(startIndex + offset) % priority.length] ?? "");
 }
 
 function getSupportClassPlans() {
@@ -254,6 +288,22 @@ function getMemberSummary(member: TeamMember) {
   ].filter(Boolean);
 
   return parts.join(" • ");
+}
+
+function buildMemberSummary(member: TeamMember) {
+  return getMemberSummary(member).replace("â€¢", "•");
+}
+
+function getParagonBadge(member: TeamMember) {
+  return member.paragon ? getInitials(member.paragon).slice(0, 2) : "";
+}
+
+function getSummaryTotals(lines: { total: number; contributions: { id: string }[]; unresolved: { id: string }[] }[]) {
+  return {
+    resolvedTotal: lines.reduce((sum, line) => sum + line.total, 0),
+    activeSources: lines.reduce((sum, line) => sum + line.contributions.length, 0),
+    unresolvedSources: lines.reduce((sum, line) => sum + line.unresolved.length, 0),
+  };
 }
 
 function getPickerItems(kind: PickerKind): PickerItem[] {
@@ -437,6 +487,18 @@ export function TeamBuilderPage() {
   const selectedClass = classes.find((item) => item.id === selectedMember?.class_id);
   const carry = teamMembers.find((member) => member.is_carry);
   const teamState = useMemo(() => summarizeTeam(teamMembers, boss), [boss, teamMembers]);
+  const bossTotals = useMemo(() => getSummaryTotals(teamState.bossSummary), [teamState.bossSummary]);
+  const teamTotals = useMemo(() => getSummaryTotals(teamState.teamSummary), [teamState.teamSummary]);
+  const carryTotals = useMemo(
+    () => ({
+      teamSources: teamTotals.activeSources,
+      bossSources: bossTotals.activeSources,
+      outgoingDamage: teamState.carryState.outgoing_damage_bonus,
+      effectiveCa: teamState.carryState.effective_ca,
+      effectivePower: teamState.carryState.effective_power,
+    }),
+    [bossTotals.activeSources, teamState.carryState, teamTotals.activeSources],
+  );
   const pickerMember = teamMembers.find((member) => member.id === pickerState?.memberId);
   const pickerItems = useMemo(() => {
     if (!pickerState) {
@@ -484,6 +546,16 @@ export function TeamBuilderPage() {
         caAssumption,
       }),
     [caAssumption, critAssumption, includeBoss, includePersonal, includeTeam, mountBaseHitOverride, teamState],
+  );
+  const mountTotals = useMemo(
+    () => ({
+      appliedStages:
+        Number(includePersonal) + Number(includeTeam) + Number(includeBoss),
+      personalBonus: includePersonal ? teamState.carryState.outgoing_damage_bonus : 0,
+      teamBonus: includeTeam ? (teamState.teamSummary.find((line) => line.stat === "damage_bonus")?.total ?? 0) : 0,
+      bossBonus: includeBoss ? (teamState.bossSummary.find((line) => line.stat === "incoming_damage")?.total ?? 0) : 0,
+    }),
+    [includeBoss, includePersonal, includeTeam, teamState],
   );
 
   function updateTeamMode(nextMode: TeamMode) {
@@ -614,6 +686,8 @@ export function TeamBuilderPage() {
     const recommendedEnhancements = getRecommendedEnhancementIds();
     const supportMounts = getMountPowerIdByPriority(supportMountPriority);
     const damageMounts = getMountPowerIdByPriority(damageMountPriority);
+    const supportInsignias = getInsigniaIdsByPriority(supportInsigniaPriority);
+    const damageInsignias = getInsigniaIdsByPriority(damageInsigniaPriority);
     const supportPlans = getSupportClassPlans();
     const plannedRoles = getPlannedRoleDistribution(currentMode, trialPreset);
 
@@ -654,6 +728,8 @@ export function TeamBuilderPage() {
     ].filter(Boolean);
 
     const usedSupportPlans = new Set<string>();
+    let supportInsigniaIndex = 0;
+    let damageInsigniaIndex = 0;
 
     nextMembers.forEach((member, index) => {
       const artifactId = recommendedArtifacts[index % Math.max(recommendedArtifacts.length, 1)] ?? "";
@@ -671,6 +747,7 @@ export function TeamBuilderPage() {
         member.companion_id = recommendedDamageCompanions[0] ?? fallbackCompanions[0] ?? "";
         member.enhancement_id = enhancementId;
         member.mount_combat_power_id = damageMounts[0] ?? supportMounts[0] ?? "";
+        member.insignia_bonus_ids = getRotatedIds(damageInsignias, damageInsigniaIndex++);
         member.encounter_ids = carryLoadout.encounter_ids;
         member.daily_ids = carryLoadout.daily_ids;
         member.feature_ids = carryLoadout.feature_ids;
@@ -709,6 +786,10 @@ export function TeamBuilderPage() {
           plannedRole === "dps"
             ? damageMounts[index % Math.max(damageMounts.length, 1)] ?? supportMounts[0] ?? ""
             : supportMounts[index % Math.max(supportMounts.length, 1)] ?? "";
+        member.insignia_bonus_ids =
+          plannedRole === "dps"
+            ? getRotatedIds(damageInsignias, damageInsigniaIndex++)
+            : getRotatedIds(supportInsignias, supportInsigniaIndex++);
         member.encounter_ids = selectedPlan.loadout.encounter_ids;
         member.daily_ids = selectedPlan.loadout.daily_ids;
         member.feature_ids = selectedPlan.loadout.feature_ids;
@@ -739,6 +820,7 @@ export function TeamBuilderPage() {
         "";
       member.enhancement_id = enhancementId;
       member.mount_combat_power_id = supportMounts[(goal === "boost_one_dps" ? index - 1 : index) % Math.max(supportMounts.length, 1)] ?? "";
+      member.insignia_bonus_ids = getRotatedIds(supportInsignias, supportInsigniaIndex++);
       member.encounter_ids = supportPlan.loadout.encounter_ids;
       member.daily_ids = supportPlan.loadout.daily_ids;
       member.feature_ids = supportPlan.loadout.feature_ids;
@@ -865,13 +947,17 @@ export function TeamBuilderPage() {
                   <CardHeader>
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="flex items-start gap-4">
-                        <SelectionThumb imageUrl={getClassImage(selectedMember.class_id)} label={getMemberTitle(selectedMember)} />
+                        <SelectionThumb
+                          imageUrl={getClassImage(selectedMember.class_id)}
+                          label={getMemberTitle(selectedMember)}
+                          badgeText={getParagonBadge(selectedMember)}
+                        />
                         <div>
                           <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
                             Selected slot {selectedMember.group}-{selectedMember.slot}
                           </p>
                           <CardTitle className="mt-2">{getMemberTitle(selectedMember)}</CardTitle>
-                          <CardDescription>{getMemberSummary(selectedMember)}</CardDescription>
+                          <CardDescription>{buildMemberSummary(selectedMember)}</CardDescription>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -1249,19 +1335,27 @@ export function TeamBuilderPage() {
           <SummaryPanel
             icon={Target}
             title="Boss Debuffs"
+            highlights={[
+              { label: "Resolved total", value: formatPercent(bossTotals.resolvedTotal) },
+              { label: "Active sources", value: `${bossTotals.activeSources}` },
+            ]}
             lines={teamState.bossSummary.map((line) => ({
               label: titleCase(line.stat),
               value: formatPercent(line.total),
-              detail: `${line.contributions.length} active sources`,
+              detail: `${line.contributions.length} active • ${line.unresolved.length} pending`,
             }))}
           />
           <SummaryPanel
             icon={Swords}
             title="Team Buffs"
+            highlights={[
+              { label: "Resolved total", value: formatPercent(teamTotals.resolvedTotal) },
+              { label: "Active sources", value: `${teamTotals.activeSources}` },
+            ]}
             lines={teamState.teamSummary.map((line) => ({
               label: titleCase(line.stat),
               value: formatPercent(line.total),
-              detail: `${line.contributions.length} active sources`,
+              detail: `${line.contributions.length} active • ${line.unresolved.length} pending`,
             }))}
           />
           <Card>
@@ -1270,6 +1364,16 @@ export function TeamBuilderPage() {
               <CardDescription>{carry ? getMemberTitle(carry) : "No carry selected"}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-white/80">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="border border-[var(--border)] bg-[rgba(189,224,254,0.1)] px-4 py-3">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">Team buff sources</p>
+                  <p className="mt-2 text-lg font-semibold text-white">{carryTotals.teamSources}</p>
+                </div>
+                <div className="border border-[var(--border)] bg-[rgba(255,200,221,0.1)] px-4 py-3">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">Boss debuff sources</p>
+                  <p className="mt-2 text-lg font-semibold text-white">{carryTotals.bossSources}</p>
+                </div>
+              </div>
               <p>Damage bonus: {formatPercent(teamState.carryState.outgoing_damage_bonus)}</p>
               <p>Combat advantage: {formatPercent(teamState.carryState.effective_ca)}</p>
               <p>Power: {formatPercent(teamState.carryState.effective_power)}</p>
@@ -1321,7 +1425,20 @@ export function TeamBuilderPage() {
                   Boss
                 </Button>
               </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="border border-[var(--border)] bg-[rgba(189,224,254,0.1)] px-4 py-3">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">Applied stages</p>
+                  <p className="mt-2 text-lg font-semibold text-white">{mountTotals.appliedStages}</p>
+                </div>
+                <div className="border border-[var(--border)] bg-[rgba(205,180,219,0.1)] px-4 py-3">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">Resolved debuff total</p>
+                  <p className="mt-2 text-lg font-semibold text-white">{formatPercent(bossTotals.resolvedTotal)}</p>
+                </div>
+              </div>
               <div className="grid gap-3 text-sm text-white/80">
+                <p>Personal bonus used: {formatPercent(mountTotals.personalBonus)}</p>
+                <p>Team bonus used: {formatPercent(mountTotals.teamBonus)}</p>
+                <p>Boss debuff used: {formatPercent(mountTotals.bossBonus)}</p>
                 <p>After owner: {Math.round(mountCalc.afterOwnerScaling).toLocaleString()}</p>
                 <p>After personal: {Math.round(mountCalc.afterPersonalBuffs).toLocaleString()}</p>
                 <p>After team: {Math.round(mountCalc.afterTeamBuffs).toLocaleString()}</p>
@@ -1380,19 +1497,29 @@ function RosterGroup({
             key={member.id}
             type="button"
             onClick={() => onSelect(member.id)}
-            className={`block w-full border p-4 text-left transition ${
+            className={`block w-full border p-3 text-left transition ${
               member.id === selectedMemberId
                 ? "border-[rgba(162,210,255,0.9)] bg-[rgba(162,210,255,0.12)]"
                 : "border-white/10 bg-white/[0.03] hover:border-white/20"
             }`}
           >
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-white">
-                {member.group}-{member.slot} {getMemberTitle(member)}
-              </p>
-              {member.is_carry ? <Badge variant="teal">Carry</Badge> : null}
+            <div className="flex items-start gap-3">
+              <SelectionThumb
+                imageUrl={getClassImage(member.class_id)}
+                label={getMemberTitle(member)}
+                badgeText={getParagonBadge(member)}
+                size="sm"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-medium text-white">
+                    {member.group}-{member.slot} {getMemberTitle(member)}
+                  </p>
+                  {member.is_carry ? <Badge variant="teal">Carry</Badge> : null}
+                </div>
+                <p className="mt-2 text-sm text-white/70">{buildMemberSummary(member)}</p>
+              </div>
             </div>
-            <p className="mt-2 text-sm text-white/70">{getMemberSummary(member)}</p>
           </button>
         ))}
       </div>
@@ -1412,25 +1539,43 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function SelectionThumb({
   imageUrl,
   label,
+  badgeText,
+  size = "md",
 }: {
   imageUrl?: string;
   label: string;
+  badgeText?: string;
+  size?: "sm" | "md";
 }) {
+  const sizeClass = size === "sm" ? "h-12 w-12" : "h-14 w-14";
+
   if (imageUrl) {
     return (
-      <Image
-        src={imageUrl}
-        alt={label}
-        width={56}
-        height={56}
-        className="h-14 w-14 border border-[var(--border)] bg-[rgba(205,180,219,0.1)] object-cover"
-      />
+      <div className={`relative shrink-0 ${sizeClass}`}>
+        <Image
+          src={imageUrl}
+          alt={label}
+          width={size === "sm" ? 48 : 56}
+          height={size === "sm" ? 48 : 56}
+          className={`${sizeClass} border border-[var(--border)] bg-[rgba(205,180,219,0.1)] object-cover`}
+        />
+        {badgeText ? (
+          <span className="absolute -bottom-1 -right-1 border border-[var(--border)] bg-[rgba(162,210,255,0.92)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-black">
+            {badgeText}
+          </span>
+        ) : null}
+      </div>
     );
   }
 
   return (
-    <div className="flex h-14 w-14 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-sm font-semibold text-white">
+    <div className={`relative flex shrink-0 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-sm font-semibold text-white ${sizeClass}`}>
       {getInitials(label)}
+      {badgeText ? (
+        <span className="absolute -bottom-1 -right-1 border border-[var(--border)] bg-[rgba(162,210,255,0.92)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-black">
+          {badgeText}
+        </span>
+      ) : null}
     </div>
   );
 }

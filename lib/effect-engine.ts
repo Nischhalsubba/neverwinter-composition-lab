@@ -1,4 +1,4 @@
-import { effectCatalog } from "@/data/game-data";
+import { effectCatalog, entityEffectLookup } from "@/data/game-data";
 import type {
   BossPreset,
   DuplicateRuleWarning,
@@ -44,9 +44,6 @@ function createLine(stat: EffectStat, effects: EffectDefinition[]): StatSummaryL
 }
 
 export function collectMemberEffects(member: TeamMember, selectedCarryId?: string) {
-  const entityLookup = (globalThis as unknown as { __NW_ENTITY_EFFECTS__?: Record<string, string[]> })
-    .__NW_ENTITY_EFFECTS__;
-
   const ids = [
     ...member.encounter_ids,
     ...member.daily_ids,
@@ -64,7 +61,7 @@ export function collectMemberEffects(member: TeamMember, selectedCarryId?: strin
   const directEffectIds = new Set<string>();
 
   ids.forEach((id) => {
-    entityLookup?.[id]?.forEach((effectId) => directEffectIds.add(effectId));
+    entityEffectLookup[id]?.forEach((effectId) => directEffectIds.add(effectId));
   });
 
   directEffectIds.forEach((effectId) => {

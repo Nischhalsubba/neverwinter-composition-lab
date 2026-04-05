@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 export function SummaryPanel({
   icon: Icon,
   title,
+  highlights,
   lines,
 }: {
   icon: LucideIcon;
   title: string;
+  highlights?: { label: string; value: string }[];
   lines: { label: string; value: string; detail: string }[];
 }) {
   return (
@@ -20,6 +22,19 @@ export function SummaryPanel({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {highlights && highlights.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {highlights.map((item) => (
+              <div
+                key={item.label}
+                className="border border-[var(--border)] bg-[rgba(189,224,254,0.1)] px-4 py-3"
+              >
+                <p className="text-[11px] uppercase tracking-[0.16em] text-white/80">{item.label}</p>
+                <p className="mt-2 text-lg font-semibold text-white">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
         {lines.map((line) => (
           <div
             key={line.label}

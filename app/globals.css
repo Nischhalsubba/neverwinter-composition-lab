@@ -60,6 +60,22 @@ textarea {
   font: inherit;
 }
 
+select {
+  color: #ffffff;
+}
+
+select option {
+  background: #09060d;
+  color: #ffffff;
+}
+
+select option:checked,
+select option:hover,
+select option:focus-visible {
+  background: var(--sky-blue);
+  color: #000000;
+}
+
 input::placeholder,
 textarea::placeholder {
   color: rgba(255, 255, 255, 0.45);

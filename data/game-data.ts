@@ -50,6 +50,9 @@ import {
   nwHubCompanionPowersRaw,
 } from "@/data/nw-hub/companion-powers";
 import {
+  nwHubInsigniaBonusesRaw,
+} from "@/data/nw-hub/insignia-bonuses";
+import {
   type Artifact,
   type BossPreset,
   type Companion,
@@ -1546,38 +1549,16 @@ export const mounts: Mount[] = Array.from(
   };
 });
 
-export const insigniaBonuses: InsigniaBonus[] = [
-  {
-    id: "insignia-warlord",
-    name: "Warlord's Inspiration",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Recovered from the 4-slot mount seed.",
-  },
-  {
-    id: "insignia-shepherd",
-    name: "Shepherd's Devotion",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Recovered from the 4-slot mount seed.",
-  },
-  {
-    id: "insignia-gladiator",
-    name: "Gladiator's Guile",
-    effect_ids: [],
-    source_type: "connected_build_doc",
-    source_url: "https://neverwinter_final_ai_master_context.md",
-    source_version: moduleVersion,
-    verification_status: "partially_recovered",
-    notes: "Recovered from the 4-slot mount seed.",
-  },
-];
+export const insigniaBonuses: InsigniaBonus[] = nwHubInsigniaBonusesRaw.map((item) => ({
+  id: makeEntityId("insignia", item.name),
+  name: item.name,
+  effect_ids: [],
+  source_type: "community_reference",
+  source_url: "https://nw-hub.com/mounts/bonuses",
+  source_version: nwHubSourceVersion,
+  verification_status: "verified",
+  notes: item.description,
+}));
 
 export const bossPresets: BossPreset[] = [
   {
@@ -1790,3 +1771,16 @@ export function createInitialTeamMembers(mode: "dungeon" | "trial"): TeamMember[
     };
   });
 }
+
+export const entityEffectLookup: Record<string, string[]> = Object.fromEntries(
+  [
+    ...powers,
+    ...artifacts,
+    ...companions,
+    ...companionEnhancements,
+    ...companionBonuses,
+    ...mountCombatPowers,
+    ...mountEquipPowers,
+    ...insigniaBonuses,
+  ].map((entity) => [entity.id, entity.effect_ids]),
+);
