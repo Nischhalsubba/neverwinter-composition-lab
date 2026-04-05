@@ -18,7 +18,7 @@ export default function Page() {
     <ContentPage
       eyebrow="Artifact Library"
       title="Artifact rankings with trial and dungeon recommendations"
-      description="Artifacts now show the imported Google Sheet recommendation ranks alongside the local NW Hub snapshot. Trial and dungeon rankings remain separate so the builder stays mode-aware."
+      description="Artifacts now show imported recommendation ranks alongside the local artifact snapshot. Trial and dungeon rankings remain separate so the builder stays mode-aware."
     >
       <Card>
         <CardHeader>

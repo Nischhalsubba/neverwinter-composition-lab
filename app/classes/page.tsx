@@ -11,8 +11,8 @@ export default function Page() {
   return (
     <ContentPage
       eyebrow="Classes"
-      title="NW Hub class roster with paragon paths and imported power trees"
-      description="The class page now reflects the locally stored NW Hub class snapshot, including emblems, paragons, and the count of imported class powers/features used by the Team Builder."
+      title="Class roster with paragon paths and imported power trees"
+      description="The class page reflects the imported class snapshot, including emblems, paragons, and the count of imported class powers and features used by Team Builder."
     >
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {classSnapshots.map((item) => {

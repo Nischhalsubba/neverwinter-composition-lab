@@ -24,7 +24,7 @@ export default function Page() {
     <ContentPage
       eyebrow="Companions"
       title="Support companion and enhancement reference"
-      description="The companion reference now combines the NW Hub snapshot with the imported Google Sheet support and enhancement rankings used by Team Builder."
+      description="The companion reference now combines the imported companion snapshot with support and enhancement rankings used by Team Builder."
     >
       <div className="grid gap-6">
         <Card>

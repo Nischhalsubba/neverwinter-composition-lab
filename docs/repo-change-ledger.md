@@ -1501,6 +1501,61 @@ Result:
 
 - `npm run build` passed.
 
+## Pass 27 - Collapsed Team Builder to a real 2-column layout and removed visible source branding
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `app/page.tsx`
+- `components/source-badge.tsx`
+- `app/reference/[entityType]/[itemId]/page.tsx`
+- `app/classes/page.tsx`
+- `app/artifacts/page.tsx`
+- `app/companions/page.tsx`
+- `app/patch-tracker/page.tsx`
+- `app/endgame-guide/page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Removed the extra visual third column from Team Builder by moving `Party Role Split` into the fixed right sidebar.
+- Applied that right-rail role split to both dungeon and trial, including MSOD trial mode.
+- Kept the main builder area as a true 2-column layout:
+  - left = group canvas
+  - right = role split, selected slot, slot debuffs, and power loadout
+- Removed visible source links from the Team Builder selection overlays.
+- Removed visible source badges from the frontend while keeping the underlying source-aware data model intact.
+- Removed visible source labels and outbound source links from the live dashboard cards.
+- Reworded visible page copy so the frontend no longer calls out NW Hub or source branding directly, while still using the imported content underneath.
+- Hid the generic source-link card on reference detail pages so detail views stay gameplay-focused.
+
+Why:
+
+- The user explicitly wanted a 2-column Team Builder instead of the lingering 3-column feel.
+- The user also wanted `Party Role Split` available in trial mode, not only dungeon mode.
+- The user asked for source and NW Hub branding to be removed from the frontend while still using that imported content to drive the app.
+
+Notes:
+
+- The underlying typed data, verification fields, and source metadata are still preserved in the model and logic layer.
+- This pass only removed the visible frontend branding and links, not the provenance data itself.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` reports no new app-code errors after this pass; remaining output is still from temporary `tmp_*` scratch files.
+
 ## Pass 31 - Added mobile navigation and replaced generic reference details with NW Hub-backed content
 
 Date:

@@ -104,31 +104,8 @@ function DetailTextCard({
 }
 
 function SourceLinkList({ urls }: { urls: string[] }) {
-  if (!urls.length) {
-    return null;
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Source Links</CardTitle>
-        <CardDescription>Direct source pages for this record.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {urls.map((url) => (
-          <a
-            key={url}
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3 text-sm text-white/82 transition hover:border-[var(--sky-blue)]"
-          >
-            {url}
-          </a>
-        ))}
-      </CardContent>
-    </Card>
-  );
+  void urls;
+  return null;
 }
 
 function renderArtifactDetail(itemId: string): DetailPayload | null {
@@ -146,8 +123,8 @@ function renderArtifactDetail(itemId: string): DetailPayload | null {
     sections: [
       <Card key="artifact-overview">
         <CardHeader>
-          <CardTitle>NW Hub Artifact Record</CardTitle>
-          <CardDescription>Live artifact text and rank stats imported from the NW Hub artifact list snapshot.</CardDescription>
+          <CardTitle>Artifact Record</CardTitle>
+          <CardDescription>Imported artifact text and rank stats used by the builder.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -196,7 +173,7 @@ function renderArtifactDetail(itemId: string): DetailPayload | null {
         <Card key="artifact-ranks">
           <CardHeader>
             <CardTitle>Rank Stats</CardTitle>
-            <CardDescription>Raw rank progression from the NW Hub snapshot.</CardDescription>
+            <CardDescription>Raw imported rank progression for this artifact.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {Object.entries(snapshot.ranks).map(([rank, rankData]) => (
@@ -239,8 +216,8 @@ function renderCompanionDetail(itemId: string): DetailPayload | null {
     sections: [
       <Card key="companion-overview">
         <CardHeader>
-          <CardTitle>NW Hub Companion Record</CardTitle>
-          <CardDescription>Player bonus and enhancement data imported from the NW Hub companion list snapshot.</CardDescription>
+          <CardTitle>Companion Record</CardTitle>
+          <CardDescription>Player bonus and enhancement data imported into the app&apos;s companion dataset.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <DetailStat label="Type" value={snapshot?.type ?? companion.archetype} />
@@ -253,7 +230,7 @@ function renderCompanionDetail(itemId: string): DetailPayload | null {
         <Card key="companion-ranking">
           <CardHeader>
             <CardTitle>Build Relevance</CardTitle>
-            <CardDescription>Support and ST recommendations layered on top of the base NW Hub entry.</CardDescription>
+            <CardDescription>Support and ST recommendations layered on top of the base companion entry.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <DetailStat
@@ -306,8 +283,8 @@ function renderClassDetail(itemId: string): DetailPayload | null {
     sections: [
       <Card key="class-overview">
         <CardHeader>
-          <CardTitle>NW Hub Class Record</CardTitle>
-          <CardDescription>Paragon paths and class emblem sourced from the NW Hub class snapshot.</CardDescription>
+          <CardTitle>Class Record</CardTitle>
+          <CardDescription>Paragon paths and class emblem imported into the class dataset.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <DetailStat label="Class" value={gameClass.name} />
@@ -319,7 +296,7 @@ function renderClassDetail(itemId: string): DetailPayload | null {
       <Card key="class-paragons">
         <CardHeader>
           <CardTitle>Paragon Paths</CardTitle>
-          <CardDescription>Imported directly from NW Hub class metadata.</CardDescription>
+          <CardDescription>Imported directly from the class metadata dataset.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           {(snapshot?.paragons ?? []).map((paragon) => (
@@ -533,7 +510,7 @@ function renderSimpleEntityDetail(entityType: string, itemId: string): DetailPay
         <Card key="enh-overview">
           <CardHeader>
             <CardTitle>Companion Enhancement</CardTitle>
-            <CardDescription>NW Hub base text with sheet-backed recommendation overlays where available.</CardDescription>
+            <CardDescription>Imported base text with ranking overlays where available.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <DetailStat label="Name" value={typed?.name ?? snapshot?.name ?? "Unknown"} />
@@ -547,7 +524,7 @@ function renderSimpleEntityDetail(entityType: string, itemId: string): DetailPay
           title="Verified Detail"
           description={
             recommendation?.benefit ??
-            sanitizeUiText(snapshot?.text ?? typed?.notes ?? "No verified detail recovered.", "NW Hub text imported but unresolved placeholders are hidden.")
+            sanitizeUiText(snapshot?.text ?? typed?.notes ?? "No verified detail recovered.", "Imported text is shown only when unresolved placeholders are removed.")
           }
         />,
       ],
@@ -563,7 +540,7 @@ function renderSimpleEntityDetail(entityType: string, itemId: string): DetailPay
         <Card key="comp-power">
           <CardHeader>
             <CardTitle>Companion Bonus Power</CardTitle>
-            <CardDescription>Imported from the NW Hub companion powers page.</CardDescription>
+            <CardDescription>Imported from the companion powers dataset.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <DetailStat label="Name" value={typed?.name ?? snapshot?.name ?? "Unknown"} />
@@ -666,7 +643,7 @@ export default async function Page({
           </div>
           <CardTitle>Reference Detail</CardTitle>
           <CardDescription>
-            This page uses typed app data plus imported NW Hub snapshot content where available, instead of a blank generic shell.
+            This page uses typed app data plus imported gameplay content where available, instead of a blank generic shell.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

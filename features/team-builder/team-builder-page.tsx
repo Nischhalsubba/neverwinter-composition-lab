@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Calculator, Download, ExternalLink, ImageOff, Import, Save, Search, Swords, Target, Trash2, X } from "lucide-react";
+import { Calculator, Download, ImageOff, Import, Save, Search, Swords, Target, Trash2, X } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { SummaryPanel } from "@/components/summary-panel";
@@ -319,6 +319,17 @@ function getSummaryTotals(lines: { total: number; contributions: { id: string }[
   };
 }
 
+function getPartyRoleSplit(teamMembers: TeamMember[]) {
+  return {
+    tank: teamMembers.filter((member) => member.role === "tank").length,
+    healer: teamMembers.filter((member) => member.role === "healer").length,
+    dps: teamMembers.filter((member) => member.role === "dps").length,
+    support: teamMembers.filter((member) => member.role === "support").length,
+    supportDps: teamMembers.filter((member) => member.role === "support_dps").length,
+    boost: teamMembers.filter((member) => member.role === "boost").length,
+  };
+}
+
 function formatEffectLabel(effect: EffectDefinition) {
   const statLabel = titleCase(effect.stat);
   const valueLabel = effect.value !== null ? formatPercent(effect.value) : "Pending";
@@ -541,6 +552,7 @@ export function TeamBuilderPage() {
   const boss = bossPresets.find((item) => item.id === bossId) ?? bossPresets[0];
   const selectedMember = teamMembers.find((member) => member.id === selectedMemberId) ?? teamMembers[0];
   const selectedClass = classes.find((item) => item.id === selectedMember?.class_id);
+  const partyRoleSplit = getPartyRoleSplit(teamMembers);
   const carry = teamMembers.find((member) => member.is_carry);
   const teamState = useMemo(() => summarizeTeam(teamMembers, boss), [boss, teamMembers]);
   const bossTotals = useMemo(() => getSummaryTotals(teamState.bossSummary), [teamState.bossSummary]);
@@ -1158,7 +1170,7 @@ export function TeamBuilderPage() {
 
       <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start xl:gap-8">
         <div className="space-y-8">
-          <div className={`grid gap-6 ${mode === "trial" ? "2xl:grid-cols-2" : "2xl:grid-cols-[minmax(0,1fr)_360px]"}`}>
+          <div className={`grid gap-6 ${mode === "trial" ? "2xl:grid-cols-2" : ""}`}>
             <ArchitectGroupCard
               title={mode === "trial" ? "Group A - Vanguard" : "Dungeon Party"}
               subtitle={mode === "trial" ? "Frontline pressure, carry setup, and main support coverage." : "Five-player shell with one tank, one healer, and three DPS."}
@@ -1174,30 +1186,7 @@ export function TeamBuilderPage() {
                 selectedMemberId={selectedMemberId}
                 onSelect={openMemberInspector}
               />
-            ) : (
-              <Card className="h-fit">
-                <CardHeader>
-                  <CardTitle>Party Role Split</CardTitle>
-                  <CardDescription>Current dungeon role coverage based on the selected slots.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-                    <span className="text-sm text-white">Tank</span>
-                    <span className="text-sm font-semibold text-white">{teamMembers.filter((member) => member.role === "tank").length}</span>
-                  </div>
-                  <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-                    <span className="text-sm text-white">Healer</span>
-                    <span className="text-sm font-semibold text-white">{teamMembers.filter((member) => member.role === "healer").length}</span>
-                  </div>
-                  <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-                    <span className="text-sm text-white">Damage / support</span>
-                    <span className="text-sm font-semibold text-white">
-                      {teamMembers.filter((member) => member.role !== "tank" && member.role !== "healer").length}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            ) : null}
           </div>
 
           <div className="hidden space-y-6">
@@ -1613,6 +1602,11 @@ export function TeamBuilderPage() {
 
         {selectedMember ? (
           <aside className="space-y-6 xl:sticky xl:top-[96px] xl:max-h-[calc(100vh-112px)] xl:overflow-y-auto xl:pr-1">
+          <PartyRoleSplitCard
+            mode={mode}
+            trialPreset={trialPreset}
+            roleSplit={partyRoleSplit}
+          />
           <SelectedSlotSidebarCard
             member={selectedMember}
             selectedClass={selectedClass}
@@ -2389,17 +2383,6 @@ function SelectionOverlay({
                     <Button variant="primary" onClick={() => onSelect(item.id)}>
                       Select
                     </Button>
-                    {item.sourceUrl ? (
-                      <a
-                        href={item.sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-2 text-xs uppercase tracking-[0.16em] text-white/80"
-                      >
-                        Source
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    ) : null}
                   </div>
                 </div>
               ))
@@ -2470,6 +2453,69 @@ function AutoSetupOverlay({
         </div>
       </div>
     </div>
+  );
+}
+
+function PartyRoleSplitCard({
+  mode,
+  trialPreset,
+  roleSplit,
+}: {
+  mode: TeamMode;
+  trialPreset: TrialCompositionPreset;
+  roleSplit: ReturnType<typeof getPartyRoleSplit>;
+}) {
+  const title =
+    mode === "dungeon"
+      ? "Dungeon role split"
+      : trialPreset === "msod"
+        ? "MSOD role split"
+        : "Trial role split";
+
+  const description =
+    mode === "dungeon"
+      ? "Current 5-player shell coverage."
+      : trialPreset === "msod"
+        ? "Current 10-player MSOD shell coverage with 3 healers."
+        : "Current standard 10-player trial shell coverage.";
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Party Role Split</CardTitle>
+        <CardDescription>
+          {title}. {description}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+          <span className="text-sm text-white">Tank</span>
+          <span className="text-sm font-semibold text-white">{roleSplit.tank}</span>
+        </div>
+        <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+          <span className="text-sm text-white">Healer</span>
+          <span className="text-sm font-semibold text-white">{roleSplit.healer}</span>
+        </div>
+        <div className="flex items-center justify-between border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+          <span className="text-sm text-white">DPS</span>
+          <span className="text-sm font-semibold text-white">{roleSplit.dps}</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 py-3 text-center">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/56">Support</p>
+            <p className="mt-2 text-base font-semibold text-white">{roleSplit.support}</p>
+          </div>
+          <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 py-3 text-center">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/56">Support DPS</p>
+            <p className="mt-2 text-base font-semibold text-white">{roleSplit.supportDps}</p>
+          </div>
+          <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 py-3 text-center">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/56">Boost</p>
+            <p className="mt-2 text-base font-semibold text-white">{roleSplit.boost}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

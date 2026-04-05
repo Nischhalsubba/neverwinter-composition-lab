@@ -16,7 +16,7 @@ export default function Page() {
         <Card>
           <CardHeader>
             <CardTitle>Visible module timeline</CardTitle>
-            <CardDescription>Seeded from the source docs for 2026-focused planning.</CardDescription>
+            <CardDescription>Current visible module line for 2026-focused planning.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {moduleTimeline.map((item) => (

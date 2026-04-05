@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRight, Clock3, ExternalLink, Gem, Shield, Swords, WandSparkles } from "lucide-react";
+import { ArrowRight, Clock3, Gem, Shield, Swords, WandSparkles } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -223,12 +223,9 @@ export default function Page() {
                 <p className="text-[10px] uppercase tracking-[0.22em] text-white/56">Intelligence feed</p>
               </div>
               {dashboardLiveFeed.slice(0, 3).map((item) => (
-                <a
+                <div
                   key={item.id}
-                  href={item.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4 transition hover:border-[var(--border-strong)]"
+                  className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -240,7 +237,7 @@ export default function Page() {
                     </Badge>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-white/72">{item.summary}</p>
-                </a>
+                </div>
               ))}
             </CardContent>
           </Card>
@@ -353,25 +350,13 @@ export default function Page() {
                 <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--baby-pink)]">Real-time data</p>
                 <h2 className="mt-2 text-2xl font-semibold uppercase tracking-[-0.05em] text-white">Live intelligence feed</h2>
               </div>
-              <a
-                href="https://steamcommunity.com/app/109600/allnews/"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[var(--sky-blue)]"
-              >
-                Open news source
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
               {dashboardLiveFeed.map((item) => (
-                <a
+                <div
                   key={item.id}
-                  href={item.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-5 transition hover:border-[var(--border-strong)]"
+                  className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-5"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -383,8 +368,7 @@ export default function Page() {
                     </Badge>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-white/72">{item.summary}</p>
-                  <p className="mt-4 text-xs uppercase tracking-[0.16em] text-white/48">{item.sourceLabel}</p>
-                </a>
+                </div>
               ))}
             </div>
           </CardContent>
@@ -397,12 +381,9 @@ export default function Page() {
               <p className="text-[10px] uppercase tracking-[0.22em] text-white/56">Module timeline</p>
             </div>
             {dashboardModuleTimeline.map((item) => (
-              <a
+              <div
                 key={item.id}
-                href={item.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4 transition hover:border-[var(--border-strong)]"
+                className="block border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-white">{item.label}</p>
@@ -412,7 +393,7 @@ export default function Page() {
                 {item.previewDate ? (
                   <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/48">Preview surfaced {item.previewDate}</p>
                 ) : null}
-              </a>
+              </div>
             ))}
           </CardContent>
         </Card>

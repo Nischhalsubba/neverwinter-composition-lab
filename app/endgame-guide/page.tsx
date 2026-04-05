@@ -7,7 +7,7 @@ export default function Page() {
     <ContentPage
       eyebrow="Endgame Guide"
       title="What endgame players should care about in 2026"
-      description="The guide page is seeded from the source docs with high-value recommendations, patch-aware notes, and support-package priorities."
+      description="The guide page is seeded with high-value recommendations, patch-aware notes, and support-package priorities."
     >
       <div className="grid gap-6">
         {knowledgeSections.map((section) => (
