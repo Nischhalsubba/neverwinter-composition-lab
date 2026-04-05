@@ -1609,9 +1609,43 @@ export function TeamBuilderPage() {
             </>
           ) : null}
         </div>
+        </div>
+
+        {selectedMember ? (
+          <aside className="space-y-6 xl:sticky xl:top-[96px] xl:max-h-[calc(100vh-112px)] xl:overflow-y-auto xl:pr-1">
+          <SelectedSlotSidebarCard
+            member={selectedMember}
+            selectedClass={selectedClass}
+            raceOptions={raceOptions}
+            roleOptions={roleOptions}
+            onOpenInspector={() => setInspectorOpen(true)}
+            onClassChange={handleClassChange}
+            onParagonChange={handleParagonChange}
+            onUpdateMember={updateMember}
+            onUpdateCarry={updateCarry}
+            onOpenPicker={openPicker}
+          />
+          <MemberEffectPanel
+            title="Boss debuffs from this slot"
+            effects={selectedMemberEffects.boss}
+            hiddenCount={selectedMemberEffects.hiddenCount}
+            emptyLabel="No resolved boss debuffs on this slot yet."
+          />
+          <PowerLoadoutSidebarCard
+            member={selectedMember}
+            selectedClass={selectedClass}
+            classEncounters={classEncounters}
+            classDailies={classDailies}
+            classFeatures={classFeatures}
+            recommendedDebuffEncounters={recommendedDebuffEncounters}
+            onUpdateMember={updateMember}
+            onAssignEncounter={assignEncounter}
+          />
+          </aside>
+        ) : null}
       </div>
 
-        <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
           <Card className="xl:col-span-2">
             <CardHeader>
               <CardTitle>Saved Builds</CardTitle>
@@ -1764,40 +1798,6 @@ export function TeamBuilderPage() {
             </CardContent>
           </Card>
         </div>
-
-        {selectedMember ? (
-          <aside className="space-y-6 xl:sticky xl:top-[96px] xl:max-h-[calc(100vh-112px)] xl:overflow-y-auto xl:pr-1">
-          <SelectedSlotSidebarCard
-            member={selectedMember}
-            selectedClass={selectedClass}
-            raceOptions={raceOptions}
-            roleOptions={roleOptions}
-            onOpenInspector={() => setInspectorOpen(true)}
-            onClassChange={handleClassChange}
-            onParagonChange={handleParagonChange}
-            onUpdateMember={updateMember}
-            onUpdateCarry={updateCarry}
-            onOpenPicker={openPicker}
-          />
-          <MemberEffectPanel
-            title="Boss debuffs from this slot"
-            effects={selectedMemberEffects.boss}
-            hiddenCount={selectedMemberEffects.hiddenCount}
-            emptyLabel="No resolved boss debuffs on this slot yet."
-          />
-          <PowerLoadoutSidebarCard
-            member={selectedMember}
-            selectedClass={selectedClass}
-            classEncounters={classEncounters}
-            classDailies={classDailies}
-            classFeatures={classFeatures}
-            recommendedDebuffEncounters={recommendedDebuffEncounters}
-            onUpdateMember={updateMember}
-            onAssignEncounter={assignEncounter}
-          />
-          </aside>
-        ) : null}
-      </div>
 
       {autoSetupOpen ? (
         <AutoSetupOverlay

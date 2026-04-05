@@ -1500,6 +1500,54 @@ Checks run:
 Result:
 
 - `npm run build` passed.
+
+## Pass 30 - Moved Saved Builds and summary cards below the 2-column Team Builder so the right sidebar is slot-tools only
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Closed the left Team Builder content column correctly so the page now renders as a true 2-column layout.
+- Kept the right sidebar dedicated to:
+  - Selected slot
+  - Boss debuffs from this slot
+  - Power loadout
+- Moved the lower `Saved Builds` block out of the two-column wrapper.
+- Moved the lower summary cards out of the right-side lane and into a separate section below the two-column layout:
+  - Boss Debuffs
+  - Team Buffs
+  - Carry Summary
+  - Mount Hit Calculator
+
+Why:
+
+- The user wanted the right sidebar to be reserved only for active slot tools.
+- The prior structure still placed `Saved Builds` and the summary cards inside the same grid context, which visually pushed them into the right-side lane and made the layout look broken.
+
+Notes:
+
+- This pass is a structural placement correction, not just spacing polish.
+- Trial and dungeon now share the same two-column behavior:
+  - left side for the builder content
+  - right side for selected-slot tools
+  - summaries below
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+
+Result:
+
+- `npm run build` passed.
 - `npm run lint` passed after removing the temporary unused-variable warning from the role-distribution refactor.
 
 ## Pass 19 - Fixed Team Builder summaries, roster icons, insignia data, and select contrast
