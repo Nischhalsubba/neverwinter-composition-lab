@@ -1946,6 +1946,49 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 29 - Corrected Team Builder summary compression so the right sidebar remains the real second column
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Changed the lower Team Builder summary section from a 4-column layout inside the left content column to a 2-column layout.
+- Updated the `Saved Builds` card to span both columns in that lower summary section.
+- Kept the right sidebar reserved for:
+  - Selected slot
+  - Boss debuffs from this slot
+  - Power loadout
+- Preserved the same right-sidebar pattern for both:
+  - Trial setup
+  - Dungeon setup
+
+Why:
+
+- The previous lower summary block was still squeezing four cards into the main content column, which visually created a broken third-column effect and made the selected-slot sidebar feel absent.
+- The user wanted the Team Builder to read as a true 2-column layout, with the right side clearly dedicated to slot tools.
+
+Notes:
+
+- This pass is a layout correction on top of the earlier right-sidebar refactor.
+- The summary cards now remain readable without stealing the visual role of the right tools column.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+
+Result:
+
+- `npm run build` passed.
+
 ## Pass 28 - Upgraded build export to formatted Excel and locked Team Builder into a true 2-column layout
 
 Date:

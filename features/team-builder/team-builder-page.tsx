@@ -1611,8 +1611,8 @@ export function TeamBuilderPage() {
         </div>
       </div>
 
-        <div className="grid gap-6 2xl:grid-cols-4">
-          <Card className="2xl:col-span-4">
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card className="xl:col-span-2">
             <CardHeader>
               <CardTitle>Saved Builds</CardTitle>
               <CardDescription>Builds are stored locally in this browser so you can save and reload working setups.</CardDescription>
