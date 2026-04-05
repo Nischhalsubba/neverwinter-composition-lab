@@ -25,13 +25,14 @@ function ShellLink({
   return (
     <Link
       href={href}
+      style={active ? { color: "#ffffff" } : undefined}
       className={`flex items-center gap-4 border-l-2 px-6 py-3 text-[11px] uppercase tracking-[0.18em] transition ${
         active
-          ? "border-[var(--foreground)] bg-[var(--foreground)] text-white shadow-[0_0_0_1px_var(--foreground)_inset]"
+          ? "border-[var(--foreground)] bg-[var(--foreground)] !text-white shadow-[0_0_0_1px_var(--foreground)_inset]"
           : "border-transparent text-[var(--foreground)]/72 hover:bg-[var(--panel)] hover:text-[var(--foreground)]"
       }`}
     >
-      <Icon className={`h-4 w-4 ${active ? "text-white" : "text-[var(--foreground)]/58"}`} />
+      <Icon className={`h-4 w-4 ${active ? "!text-white" : "text-[var(--foreground)]/58"}`} />
       <span>{label}</span>
     </Link>
   );
@@ -96,9 +97,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <nav className="hidden items-center gap-3 md:flex">
               <Link
                 href="/"
+                style={pathname === "/" ? { color: "#ffffff" } : undefined}
                 className={`border px-3 py-2 text-xs uppercase tracking-[0.14em] transition ${
                   pathname === "/"
-                    ? "border-[var(--foreground)] bg-[var(--foreground)] font-semibold text-white shadow-[0_0_0_1px_var(--foreground)_inset]"
+                    ? "border-[var(--foreground)] bg-[var(--foreground)] font-semibold !text-white shadow-[0_0_0_1px_var(--foreground)_inset]"
                     : "border-transparent text-[var(--foreground)]/66 hover:border-[var(--pastel-petal)] hover:bg-[var(--panel)] hover:text-[var(--foreground)]"
                 }`}
               >
@@ -106,9 +108,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
               <Link
                 href="/team-builder"
+                style={pathname === "/team-builder" ? { color: "#ffffff" } : undefined}
                 className={`border px-3 py-2 text-xs uppercase tracking-[0.14em] transition ${
                   pathname === "/team-builder"
-                    ? "border-[var(--foreground)] bg-[var(--foreground)] font-semibold text-white shadow-[0_0_0_1px_var(--foreground)_inset]"
+                    ? "border-[var(--foreground)] bg-[var(--foreground)] font-semibold !text-white shadow-[0_0_0_1px_var(--foreground)_inset]"
                     : "border-transparent text-[var(--foreground)]/66 hover:border-[var(--pastel-petal)] hover:bg-[var(--panel)] hover:text-[var(--foreground)]"
                 }`}
               >
