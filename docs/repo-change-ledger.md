@@ -1812,3 +1812,69 @@ Result:
 - `npm run build` passed.
 - `npm run lint` has no new app-code errors from this pass.
 - Remaining lint warnings still come from temporary scratch files under `tmp_*`.
+
+## Pass 23 - Replaced duplicate slot setup with a click-to-edit drawer and dynamic slot effects
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `features/team-builder/team-builder-page.tsx`
+- `app/reference/page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Added a left-side `MemberInspectorDrawer` that opens when the user clicks any roster card.
+- Changed roster-card selection behavior so clicking a slot now:
+  - selects the slot
+  - opens the editor drawer immediately
+- Removed the duplicate `Selected Slot Setup` card from the right rail to reduce repeated controls and visual noise.
+- Added a new per-slot dynamic effect summary using the real effect engine data:
+  - `Boss debuffs from this slot`
+  - `Team buffs from this slot`
+  - `Personal or carry effects`
+- Built the per-slot effect summary from `collectMemberEffects(...)` so the visible slot summary is driven by the same mapped encounters, artifacts, companions, enhancements, mounts, insignias, and bonuses already used by the calculator engine.
+- Hid unresolved per-slot effects from the visible list and replaced them with a concise unresolved count so the UI stays readable and does not surface placeholder-value noise.
+- Kept the detailed `Power Loadout` section lower on the page, but surfaced the key slot-edit controls in the drawer:
+  - player name
+  - class
+  - paragon
+  - role
+  - race
+  - artifact
+  - companion
+  - enhancement
+  - mount combat power
+  - carry toggle
+  - mapped debuff encounters
+- Rebuilt the `Reference Hub` page to use live data counts and previews from the current typed datasets instead of placeholder text-only cards.
+
+Why:
+
+- The user pointed out that slot setup and slot-provided effects were not obvious enough after clicking a card, which made the Team Builder feel harder to use than it should.
+- The old layout duplicated setup controls in multiple places and still forced too much scanning.
+- A click-to-edit drawer is easier to understand:
+  - click slot
+  - edit slot
+  - see the exact resolved buffs and debuffs from that slot
+- Replacing the placeholder reference hub makes the app feel less static and removes one of the clearer “empty link” / low-value surfaces in the current shell.
+
+Notes / limitations:
+
+- The per-slot effect drawer only shows resolved, mapped effects with numeric values. Unresolved effects are counted but hidden until they are proven.
+- The deeper lower `Power Loadout` area still exists for full slot editing because it includes additional selections such as dailies, features, companion bonus, mount equip power, insignias, and notes.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` still reports warnings from temporary scratch files such as `tmp_*`, not from the production app files updated in this pass.

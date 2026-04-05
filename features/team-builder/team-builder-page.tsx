@@ -33,9 +33,9 @@ import {
   trialMandatoryCompanionById,
 } from "@/data/game-data";
 import { sanitizeUiText } from "@/lib/display-text";
-import { calculateMountHit, summarizeTeam } from "@/lib/effect-engine";
+import { calculateMountHit, collectMemberEffects, summarizeTeam } from "@/lib/effect-engine";
 import { deleteSavedBuild, readSavedBuilds, type SavedTeamBuild, upsertSavedBuild } from "@/lib/team-build-storage";
-import type { TeamMember, TeamMode } from "@/lib/types";
+import type { EffectDefinition, TeamMember, TeamMode } from "@/lib/types";
 import { formatPercent, titleCase } from "@/lib/utils";
 
 const raceOptions = [
@@ -311,6 +311,33 @@ function getSummaryTotals(lines: { total: number; contributions: { id: string }[
   };
 }
 
+function formatEffectLabel(effect: EffectDefinition) {
+  const statLabel = titleCase(effect.stat);
+  const valueLabel = effect.value !== null ? formatPercent(effect.value) : "Pending";
+  return `${effect.name} • ${statLabel} ${valueLabel}`;
+}
+
+function getMemberEffectSummary(member: TeamMember | undefined, selectedCarryId?: string) {
+  if (!member) {
+    return {
+      boss: [] as EffectDefinition[],
+      team: [] as EffectDefinition[],
+      personal: [] as EffectDefinition[],
+      hiddenCount: 0,
+    };
+  }
+
+  const effects = collectMemberEffects(member, selectedCarryId);
+  const resolved = effects.filter((effect) => effect.value !== null);
+
+  return {
+    boss: resolved.filter((effect) => effect.scope === "boss"),
+    team: resolved.filter((effect) => effect.scope === "team"),
+    personal: resolved.filter((effect) => effect.scope !== "boss" && effect.scope !== "team"),
+    hiddenCount: effects.filter((effect) => effect.value === null).length,
+  };
+}
+
 function getPickerItems(kind: PickerKind): PickerItem[] {
   if (kind === "artifact") {
     return artifacts.map((item) => {
@@ -476,6 +503,7 @@ export function TeamBuilderPage() {
   const [bossId, setBossId] = useState(bossPresets[0]?.id ?? "");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState("");
+  const [inspectorOpen, setInspectorOpen] = useState(false);
   const [savedBuilds, setSavedBuilds] = useState<SavedTeamBuild[]>([]);
   const [activeSavedBuildId, setActiveSavedBuildId] = useState("");
   const [buildName, setBuildName] = useState("");
@@ -506,6 +534,10 @@ export function TeamBuilderPage() {
       effectivePower: teamState.carryState.effective_power,
     }),
     [bossTotals.activeSources, teamState.carryState, teamTotals.activeSources],
+  );
+  const selectedMemberEffects = useMemo(
+    () => getMemberEffectSummary(selectedMember, carry?.id),
+    [carry?.id, selectedMember],
   );
   const pickerMember = teamMembers.find((member) => member.id === pickerState?.memberId);
   const pickerItems = useMemo(() => {
@@ -580,6 +612,7 @@ export function TeamBuilderPage() {
     setSelectedMemberId(nextMembers[0]?.id ?? "");
     setActiveSavedBuildId("");
     setBuildName("");
+    setInspectorOpen(false);
     setPickerState(null);
     setPickerQuery("");
     setPickerFilter("all");
@@ -613,6 +646,7 @@ export function TeamBuilderPage() {
     setSelectedMemberId(build.teamMembers[0]?.id ?? "");
     setActiveSavedBuildId(build.id);
     setBuildName(build.name);
+    setInspectorOpen(false);
   }
 
   function removeSavedBuild(buildId: string) {
@@ -699,6 +733,11 @@ export function TeamBuilderPage() {
     setPickerState(null);
     setPickerQuery("");
     setPickerFilter("all");
+  }
+
+  function openMemberInspector(memberId: string) {
+    setSelectedMemberId(memberId);
+    setInspectorOpen(true);
   }
 
   function applyPickerSelection(itemId: string) {
@@ -1005,7 +1044,7 @@ export function TeamBuilderPage() {
               subtitle={mode === "trial" ? "Frontline pressure, carry setup, and main support coverage." : "Five-player shell with one tank, one healer, and three DPS."}
               members={teamMembers.filter((member) => member.group === "A")}
               selectedMemberId={selectedMemberId}
-              onSelect={setSelectedMemberId}
+              onSelect={openMemberInspector}
             />
             {mode === "trial" ? (
               <ArchitectGroupCard
@@ -1013,7 +1052,7 @@ export function TeamBuilderPage() {
                 subtitle="Backline pressure, support layering, and duplicate control."
                 members={teamMembers.filter((member) => member.group === "B")}
                 selectedMemberId={selectedMemberId}
-                onSelect={setSelectedMemberId}
+                onSelect={openMemberInspector}
               />
             ) : (
               <Card className="h-fit">
@@ -1217,6 +1256,25 @@ export function TeamBuilderPage() {
                     >
                       Clear slot loadout
                     </Button>
+                  </div>
+
+                  <div className="grid gap-4 xl:grid-cols-3">
+                    <MemberEffectPanel
+                      title="Boss debuffs from this slot"
+                      effects={selectedMemberEffects.boss}
+                      emptyLabel="No resolved boss debuffs on this slot yet."
+                    />
+                    <MemberEffectPanel
+                      title="Team buffs from this slot"
+                      effects={selectedMemberEffects.team}
+                      emptyLabel="No resolved team buffs on this slot yet."
+                    />
+                    <MemberEffectPanel
+                      title="Personal or carry effects"
+                      effects={selectedMemberEffects.personal}
+                      hiddenCount={selectedMemberEffects.hiddenCount}
+                      emptyLabel="No resolved personal or carry effects on this slot yet."
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -1434,124 +1492,6 @@ export function TeamBuilderPage() {
       </div>
 
         <div className="order-first space-y-6 2xl:order-none 2xl:sticky 2xl:top-24 2xl:self-start">
-          {selectedMember ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Selected Slot Setup</CardTitle>
-                <CardDescription>
-                  Change the core slot choices here without scrolling into the lower loadout section.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Field label="Player name">
-                  <Input
-                    value={selectedMember.label}
-                    onChange={(event) => updateMember(selectedMember.id, { label: event.target.value })}
-                    placeholder={`Player ${selectedMember.slot}`}
-                  />
-                </Field>
-                <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-1">
-                  <Field label="Role">
-                    <Select
-                      value={selectedMember.role}
-                      onChange={(event) => updateMember(selectedMember.id, { role: event.target.value as TeamMember["role"] })}
-                    >
-                      {roleOptions.map((role) => (
-                        <option key={role.value} value={role.value}>
-                          {role.label}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label="Race">
-                    <Select value={selectedMember.race} onChange={(event) => updateMember(selectedMember.id, { race: event.target.value })}>
-                      <option value="">Select race</option>
-                      {raceOptions.map((race) => (
-                        <option key={race} value={race}>
-                          {race}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                </div>
-                <Field label="Artifact">
-                  <PickerField
-                    title={artifacts.find((item) => item.id === selectedMember.artifact_id)?.name ?? "Select artifact"}
-                    subtitle="Ranked artifact list"
-                    imageUrl={artifacts.find((item) => item.id === selectedMember.artifact_id)?.image_url}
-                    onClick={() => openPicker(selectedMember.id, "artifact")}
-                  />
-                </Field>
-                <Field label="Companion">
-                  <PickerField
-                    title={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Select companion"}
-                    subtitle="Support and damage companions"
-                    imageLabel={companions.find((item) => item.id === selectedMember.companion_id)?.name ?? "Companion"}
-                    onClick={() => openPicker(selectedMember.id, "companion")}
-                  />
-                </Field>
-                <Field label="Enhancement">
-                  <PickerField
-                    title={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Select enhancement"}
-                    subtitle="Only proven values shown"
-                    imageLabel={companionEnhancements.find((item) => item.id === selectedMember.enhancement_id)?.name ?? "Enhancement"}
-                    onClick={() => openPicker(selectedMember.id, "enhancement")}
-                  />
-                </Field>
-                <Field label="Mount combat power">
-                  <PickerField
-                    title={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Select mount"}
-                    subtitle="Support or damage mount power"
-                    imageLabel={mountCombatPowers.find((item) => item.id === selectedMember.mount_combat_power_id)?.name ?? "Mount"}
-                    onClick={() => openPicker(selectedMember.id, "mount")}
-                  />
-                </Field>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant={selectedMember.is_carry ? "primary" : "secondary"} onClick={() => updateCarry(selectedMember.id)}>
-                    {selectedMember.is_carry ? "Selected carry" : "Mark as carry"}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      updateMember(selectedMember.id, {
-                        artifact_id: "",
-                        companion_id: "",
-                        enhancement_id: "",
-                        mount_combat_power_id: "",
-                      })
-                    }
-                  >
-                    Clear items
-                  </Button>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Mapped debuff encounters</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {recommendedDebuffEncounters.length > 0 ? (
-                      recommendedDebuffEncounters.map((power) => (
-                        <button
-                          key={power.id}
-                          type="button"
-                          onClick={() => assignEncounter(selectedMember.id, power.id)}
-                          className={`border px-3 py-2 text-xs uppercase tracking-[0.12em] transition ${
-                            selectedMember.encounter_ids.includes(power.id)
-                              ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
-                              : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-white/78 hover:border-[var(--sky-blue)]"
-                          }`}
-                        >
-                          {power.name}
-                        </button>
-                      ))
-                    ) : (
-                      <p className="text-sm text-white/68">
-                        {selectedMember.class_id ? "No mapped debuff encounters for this class and paragon." : "Select class and paragon first."}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : null}
           <Card>
             <CardHeader>
               <CardTitle>Saved Builds</CardTitle>
@@ -1710,6 +1650,25 @@ export function TeamBuilderPage() {
         <AutoSetupOverlay
           onClose={() => setAutoSetupOpen(false)}
           onSelect={applyAutoSetup}
+        />
+      ) : null}
+
+      {selectedMember && inspectorOpen ? (
+        <MemberInspectorDrawer
+          member={selectedMember}
+          classOptions={classes}
+          selectedClass={selectedClass}
+          raceOptions={raceOptions}
+          roleOptions={roleOptions}
+          recommendedDebuffEncounters={recommendedDebuffEncounters}
+          memberEffects={selectedMemberEffects}
+          onClose={() => setInspectorOpen(false)}
+          onClassChange={handleClassChange}
+          onParagonChange={handleParagonChange}
+          onUpdateMember={updateMember}
+          onUpdateCarry={updateCarry}
+          onOpenPicker={openPicker}
+          onAssignEncounter={assignEncounter}
         />
       ) : null}
 
@@ -1896,6 +1855,273 @@ function PickerField({
       </div>
       <Search className="h-4 w-4 text-white" />
     </button>
+  );
+}
+
+function MemberEffectPanel({
+  title,
+  effects,
+  emptyLabel,
+  hiddenCount = 0,
+}: {
+  title: string;
+  effects: EffectDefinition[];
+  emptyLabel: string;
+  hiddenCount?: number;
+}) {
+  return (
+    <div className="border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-white/58">{title}</p>
+      {effects.length > 0 ? (
+        <div className="mt-3 space-y-2">
+          {effects.map((effect) => (
+            <div key={effect.id} className="border border-[var(--border)] bg-[rgba(205,180,219,0.08)] px-3 py-2">
+              <p className="text-sm font-medium text-white">{formatEffectLabel(effect)}</p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                {titleCase(effect.effect_category)} • {titleCase(effect.stack_rule)}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-white/70">{emptyLabel}</p>
+      )}
+      {hiddenCount > 0 ? <p className="mt-3 text-xs text-white/58">{hiddenCount} unresolved entries are hidden until proven.</p> : null}
+    </div>
+  );
+}
+
+function MemberInspectorDrawer({
+  member,
+  classOptions,
+  selectedClass,
+  raceOptions,
+  roleOptions,
+  recommendedDebuffEncounters,
+  memberEffects,
+  onClose,
+  onClassChange,
+  onParagonChange,
+  onUpdateMember,
+  onUpdateCarry,
+  onOpenPicker,
+  onAssignEncounter,
+}: {
+  member: TeamMember;
+  classOptions: typeof classes;
+  selectedClass?: (typeof classes)[number];
+  raceOptions: readonly string[];
+  roleOptions: readonly { value: string; label: string }[];
+  recommendedDebuffEncounters: typeof powers;
+  memberEffects: ReturnType<typeof getMemberEffectSummary>;
+  onClose: () => void;
+  onClassChange: (memberId: string, classId: string) => void;
+  onParagonChange: (memberId: string, paragon: string) => void;
+  onUpdateMember: (memberId: string, patch: Partial<TeamMember>) => void;
+  onUpdateCarry: (memberId: string) => void;
+  onOpenPicker: (memberId: string, kind: PickerKind) => void;
+  onAssignEncounter: (memberId: string, powerId: string) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-[rgba(9,6,13,0.44)]">
+      <div className="absolute inset-y-0 left-0 w-full max-w-[440px] overflow-y-auto border-r border-[var(--border)] bg-[var(--background)] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+        <div className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--background)] px-5 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <SelectionThumb imageUrl={getClassImage(member.class_id)} label={getMemberDisplayName(member)} badgeText={getParagonBadge(member)} />
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-white/60">
+                  Slot {member.group}-{member.slot}
+                </p>
+                <p className="mt-1 text-lg font-semibold text-white">{getMemberDisplayName(member)}</p>
+                <p className="mt-1 text-sm text-white/74">{getMemberTitle(member)}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center border border-[var(--border)] bg-[rgba(205,180,219,0.12)] text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-5 p-5">
+          <Field label="Player name">
+            <Input
+              value={member.label}
+              onChange={(event) => onUpdateMember(member.id, { label: event.target.value })}
+              placeholder={`Player ${member.slot}`}
+            />
+          </Field>
+
+          <Field label="Class">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {classOptions.map((item) => {
+                const active = member.class_id === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onClassChange(member.id, item.id)}
+                    className={`flex items-center gap-3 border p-3 text-left ${
+                      active
+                        ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.16)]"
+                        : "border-[var(--border)] bg-[rgba(205,180,219,0.08)]"
+                    }`}
+                  >
+                    <SelectionThumb imageUrl={item.image_url} label={item.name} size="sm" />
+                    <div>
+                      <p className="text-sm font-medium text-white">{item.name}</p>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">
+                        {item.role_focus.map(formatRoleLabel).join(" / ")}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+
+          <Field label="Paragon">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(selectedClass?.paragon_options ?? []).map((paragon) => {
+                const active = member.paragon === paragon;
+                return (
+                  <button
+                    key={paragon}
+                    type="button"
+                    onClick={() => onParagonChange(member.id, paragon)}
+                    className={`flex items-center gap-3 border p-3 text-left ${
+                      active
+                        ? "border-[var(--baby-pink)] bg-[rgba(255,175,204,0.16)]"
+                        : "border-[var(--border)] bg-[rgba(255,200,221,0.08)]"
+                    }`}
+                  >
+                    <SelectionThumb imageUrl={selectedClass?.image_url} label={paragon} size="sm" />
+                    <div>
+                      <p className="text-sm font-medium text-white">{paragon}</p>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">
+                        {formatRoleLabel(getRoleForClassParagon(selectedClass?.id ?? "", paragon))}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Role">
+              <Select
+                value={member.role}
+                onChange={(event) => onUpdateMember(member.id, { role: event.target.value as TeamMember["role"] })}
+              >
+                {roleOptions.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Race">
+              <Select value={member.race} onChange={(event) => onUpdateMember(member.id, { race: event.target.value })}>
+                <option value="">Select race</option>
+                {raceOptions.map((race) => (
+                  <option key={race} value={race}>
+                    {race}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+
+          <Field label="Artifact">
+            <PickerField
+              title={artifacts.find((item) => item.id === member.artifact_id)?.name ?? "Select artifact"}
+              subtitle="Ranked artifact list"
+              imageUrl={artifacts.find((item) => item.id === member.artifact_id)?.image_url}
+              onClick={() => onOpenPicker(member.id, "artifact")}
+            />
+          </Field>
+          <Field label="Companion">
+            <PickerField
+              title={companions.find((item) => item.id === member.companion_id)?.name ?? "Select companion"}
+              subtitle="Support and damage companions"
+              imageLabel={companions.find((item) => item.id === member.companion_id)?.name ?? "Companion"}
+              onClick={() => onOpenPicker(member.id, "companion")}
+            />
+          </Field>
+          <Field label="Enhancement">
+            <PickerField
+              title={companionEnhancements.find((item) => item.id === member.enhancement_id)?.name ?? "Select enhancement"}
+              subtitle="Only proven values shown"
+              imageLabel={companionEnhancements.find((item) => item.id === member.enhancement_id)?.name ?? "Enhancement"}
+              onClick={() => onOpenPicker(member.id, "enhancement")}
+            />
+          </Field>
+          <Field label="Mount combat power">
+            <PickerField
+              title={mountCombatPowers.find((item) => item.id === member.mount_combat_power_id)?.name ?? "Select mount"}
+              subtitle="Support or damage mount power"
+              imageLabel={mountCombatPowers.find((item) => item.id === member.mount_combat_power_id)?.name ?? "Mount"}
+              onClick={() => onOpenPicker(member.id, "mount")}
+            />
+          </Field>
+
+          <div className="flex flex-wrap gap-2">
+            <Button variant={member.is_carry ? "primary" : "secondary"} onClick={() => onUpdateCarry(member.id)}>
+              {member.is_carry ? "Selected carry" : "Mark as carry"}
+            </Button>
+          </div>
+
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/58">Mapped debuff encounters</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {recommendedDebuffEncounters.length > 0 ? (
+                recommendedDebuffEncounters.map((power) => (
+                  <button
+                    key={power.id}
+                    type="button"
+                    onClick={() => onAssignEncounter(member.id, power.id)}
+                    className={`border px-3 py-2 text-xs uppercase tracking-[0.12em] ${
+                      member.encounter_ids.includes(power.id)
+                        ? "border-[var(--sky-blue)] bg-[rgba(162,210,255,0.14)] text-white"
+                        : "border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-white/78"
+                    }`}
+                  >
+                    {power.name}
+                  </button>
+                ))
+              ) : (
+                <p className="text-sm text-white/68">
+                  {member.class_id ? "No mapped debuff encounters for this class and paragon." : "Select class and paragon first."}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <MemberEffectPanel
+            title="Boss debuffs from this slot"
+            effects={memberEffects.boss}
+            emptyLabel="No resolved boss debuffs on this slot yet."
+          />
+          <MemberEffectPanel
+            title="Team buffs from this slot"
+            effects={memberEffects.team}
+            emptyLabel="No resolved team buffs on this slot yet."
+          />
+          <MemberEffectPanel
+            title="Personal or carry effects"
+            effects={memberEffects.personal}
+            hiddenCount={memberEffects.hiddenCount}
+            emptyLabel="No resolved personal or carry effects on this slot yet."
+          />
+        </div>
+      </div>
+      <button type="button" aria-label="Close inspector" onClick={onClose} className="absolute inset-0 left-[440px]" />
+    </div>
   );
 }
 
