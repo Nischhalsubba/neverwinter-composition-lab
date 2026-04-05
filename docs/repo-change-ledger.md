@@ -2163,6 +2163,57 @@ Result:
 - `npm run build` passed.
 - `npm run lint` still reports warnings only from temporary scratch files such as `tmp_*`.
 
+## Pass 29 - Unified shell background, redesigned header search, rebuilt class browser, and ran a QA sweep
+
+Date:
+
+- 2026-04-05
+
+Files:
+
+- `app/globals.css`
+- `components/layout/app-shell.tsx`
+- `app/classes/page.tsx`
+- `docs/repo-change-ledger.md`
+
+Changes:
+
+- Rebalanced the global theme hierarchy so the app now uses one consistent shell background color, while cards and panels sit on lighter blue surfaces instead of competing with the page background.
+- Redesigned the header search bar into a clearer builder-first search control with a stronger border, embedded action button, and better visual separation from the header chrome.
+- Strengthened the sidebar active state and inactive hover state so selection is clearly visible.
+- Rebuilt the `/classes` page into a functional class and paragon browser using the imported class and power images.
+- Added class-level browsing controls for:
+  - class selection
+  - paragon selection
+  - power sorting/filtering by debuff, buff, and support powers
+- Surfaced image-led power cards using the imported encounter / daily / feature art from the local NW Hub dataset.
+- Ran a dead-link scan against the routes previously removed from the app and confirmed there are no remaining frontend references to them.
+
+Why:
+
+- The shell colors were visually fighting each other, which made the body background irrelevant and weakened hierarchy.
+- The previous header search felt like a generic input instead of a primary navigation tool.
+- The user wanted the reference hub’s class area to be genuinely useful to builders, not just a list of class names.
+- The QA audit needed to cover both design and route integrity, not just compilation.
+
+Notes:
+
+- `npm run lint` remains warning-only because of existing `tmp_*` scratch files, but the app code changed in this pass is clean.
+
+### Verification
+
+Checks run:
+
+- `npm run build`
+- `npm run lint`
+- route grep for removed pages under `app`, `components`, `config`, and `features`
+
+Result:
+
+- `npm run build` passed.
+- `npm run lint` reported warnings only from temporary scratch files such as `tmp_*`.
+- The removed-page route grep returned no matches in production app files.
+
 ## Pass 28 - Strengthened active tab contrast and corrected role split rules
 
 Date:
