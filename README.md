@@ -1,12 +1,41 @@
 # Neverwinter Composition Lab
 
-> A premium, patch-aware **Neverwinter team builder, support planner, buff/debuff calculator, and reference hub** for endgame players.
+> A premium, patch-aware **Neverwinter team builder, support planner, buff/debuff calculator, export tool, and reference hub** for endgame players who want to plan dungeon and trial compositions with clarity instead of spreadsheet fatigue.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.2.2-03045E?style=for-the-badge)
 ![React](https://img.shields.io/badge/React-19.2.4-0077B6?style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-00B4D8?style=for-the-badge)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-90E0EF?style=for-the-badge&labelColor=03045E)
 ![Status](https://img.shields.io/badge/Status-Active%20Prototype-CAF0F8?style=for-the-badge&labelColor=03045E)
+
+---
+
+## Table of Contents
+
+- [What This Project Is](#what-this-project-is)
+- [Why This Exists](#why-this-exists)
+- [Designer’s Perspective](#designers-perspective)
+- [Core Product Goals](#core-product-goals)
+- [Main Features](#main-features)
+- [Design Direction](#design-direction)
+- [Frontend Tech Choices](#frontend-tech-choices)
+- [Data Philosophy](#data-philosophy)
+- [Current Data Sources And Inputs](#current-data-sources-and-inputs)
+- [Important Neverwinter Terms For Non-Players](#important-neverwinter-terms-for-non-players)
+- [Project Structure](#project-structure)
+- [Current Key Pages](#current-key-pages)
+- [How To Run The Project](#how-to-run-the-project)
+- [Available Scripts](#available-scripts)
+- [Team Builder Workflow](#team-builder-workflow)
+- [Builder Logic Rules](#builder-logic-rules)
+- [Accessibility And UX Principles](#accessibility-and-ux-principles)
+- [What Is Finished Vs In Progress](#what-is-finished-vs-in-progress)
+- [Quality Checklist](#quality-checklist)
+- [Contribution Notes](#contribution-notes)
+- [SEO Keywords](#seo-keywords)
+- [Final Notes](#final-notes)
+
+---
 
 ## What This Project Is
 
@@ -21,13 +50,16 @@ If you already play Neverwinter, this repo helps with:
 - tracking **team buffs**
 - comparing **artifacts, companions, companion enhancements, mount powers, and insignia bonuses**
 - planning around one boosted damage dealer or overall team damage
+- exporting and sharing structured builds
 
 If you do **not** play Neverwinter, the short version is:
 
 - Neverwinter is a cooperative online action RPG.
-- Endgame groups are heavily optimized around **damage buffs**, **enemy debuffs**, and **role coverage**.
-- Players often use spreadsheets, wikis, screenshots, and Discord notes to figure out which setup is strongest.
-- This app turns that fragmented information into a **clean, visual, typed planning tool**.
+- Endgame groups are heavily optimized around damage buffs, enemy debuffs, role coverage, and timing.
+- Players often use spreadsheets, wikis, screenshots, Discord notes, and patch memory to figure out which setup is strongest.
+- This app turns that fragmented information into a clean, visual, typed planning tool.
+
+---
 
 ## Why This Exists
 
@@ -37,7 +69,8 @@ Most fan tools for Neverwinter are one of these:
 - text-dense
 - patch-blind
 - unclear about what is verified vs inferred
-- hard to use while actively planning a party
+- difficult to use while actively planning a party
+- too focused on lists and not enough on actual composition decisions
 
 This repo takes a different approach:
 
@@ -51,6 +84,30 @@ This repo takes a different approach:
 The goal is not to be a generic database.  
 The goal is to be the **best planning surface for serious Neverwinter endgame group setup**.
 
+---
+
+## Designer’s Perspective
+
+This project is built from the perspective of a player who also thinks like a product designer.
+
+The problem is not only “show all the game data.” The real problem is helping a party leader make decisions quickly:
+
+- Which roles are missing?
+- Who is the carry target?
+- Which buffs are already covered?
+- Which debuffs overlap?
+- Which artifact or companion adds value?
+- What is verified, partial, or unresolved?
+- Can this setup be shared with the group?
+
+The interface is intentionally not styled like a fantasy wiki. It uses a clean, calm, technical planning surface because the main user need is decision-making, not decoration.
+
+The design goal is:
+
+> Make complex group optimization feel understandable, editable, and trustworthy.
+
+---
+
 ## Core Product Goals
 
 - Make party planning fast for real dungeon and trial leaders.
@@ -59,6 +116,10 @@ The goal is to be the **best planning surface for serious Neverwinter endgame gr
 - Support both **boost-one-DPS** and **overall-team-damage** planning.
 - Stay understandable for both hardcore players and curious newcomers.
 - Feel like a polished app, not a spreadsheet wrapped in a website.
+- Preserve provenance so users can trust the data model.
+- Support export and sharing workflows for group planning.
+
+---
 
 ## Main Features
 
@@ -118,7 +179,7 @@ The reference system supports the planner with:
 
 - local saved builds
 - JSON import/export for sharing setups with friends
-- formatted Excel workbook export
+- formatted Excel workbook export through ExcelJS
 
 ### UX Layer
 
@@ -128,6 +189,9 @@ The reference system supports the planner with:
 - subtle GSAP motion
 - slide-in drawers and modals
 - route transitions
+- clean active, hover, selected, and disabled states
+
+---
 
 ## Design Direction
 
@@ -135,11 +199,12 @@ This UI is intentionally **not** styled like a fantasy wiki.
 
 The design language is:
 
-- **clean**
-- **technical**
-- **calm**
-- **editorial**
-- **planning-first**
+- clean
+- technical
+- calm
+- editorial
+- planning-first
+- data-aware
 
 ### Why The Current Color System
 
@@ -156,13 +221,7 @@ was chosen because it gives the app:
 - high readability
 - a cool strategic feel
 - enough contrast to make active, hover, selected, and data states distinct
-- a more modern “control room” identity than a typical game-fan-site palette
-
-The app uses color carefully:
-
-- dark blue for strong active states and structural emphasis
-- teal and cyan for focus, live selection, and highlight states
-- lighter blues for surfaces and secondary layering
+- a modern control-room identity instead of a typical game-fan-site palette
 
 The rule is simple: **clarity first, decoration second**.
 
@@ -170,11 +229,13 @@ The rule is simple: **clarity first, decoration second**.
 
 The layout is built around how people actually use the product:
 
-- the left side gives you navigation and stable orientation
+- the left side gives navigation and stable orientation
 - the center is for the main planning workflow
 - the right side is for active context and deeper slot detail
 
-This makes the app feel more like a serious planning tool and less like a content site.
+This makes the app feel like a serious planning tool instead of a content site.
+
+---
 
 ## Frontend Tech Choices
 
@@ -185,8 +246,8 @@ Chosen for:
 - route-based architecture
 - nested layouts
 - route-level loading states
-- strong long-term scalability
-- clean separation between product pages and reference pages
+- long-term scalability
+- separation between product pages and reference pages
 
 ### React 19
 
@@ -226,14 +287,28 @@ Chosen for:
 
 - precise motion control
 - subtle route and panel transitions
-- animation that can stay polished without becoming flashy
+- polished animation without making the app flashy
 
 ### ExcelJS
 
 Chosen for:
 
 - structured spreadsheet export
-- richer workbook formatting than a plain CSV-only export
+- richer workbook formatting than plain CSV-only export
+- group-friendly build sharing
+
+### UI Utility Libraries
+
+The app also uses utilities such as:
+
+- `class-variance-authority`
+- `clsx`
+- `tailwind-merge`
+- `lucide-react`
+
+These support maintainable components, iconography, and conditional styling.
+
+---
 
 ## Data Philosophy
 
@@ -248,7 +323,7 @@ This repo is strict about provenance.
 
 ### Every Meaningful Entity Supports Source Metadata
 
-Key entities keep fields such as:
+Key entities should keep fields such as:
 
 - `id`
 - `name`
@@ -258,7 +333,9 @@ Key entities keep fields such as:
 - `verification_status`
 - `notes`
 
-This is important because Neverwinter data changes, and not every community value is equally trustworthy.
+This matters because Neverwinter changes over time, and not every community value is equally trustworthy.
+
+---
 
 ## Current Data Sources And Inputs
 
@@ -272,6 +349,8 @@ The current repo integrates structured data derived from:
 - locally recovered image and ranking data
 
 The frontend intentionally hides noisy source branding in many places, but the underlying model still preserves provenance.
+
+---
 
 ## Important Neverwinter Terms For Non-Players
 
@@ -320,6 +399,8 @@ A positive effect applied to your team or a player.
 
 A negative effect applied to an enemy, usually increasing party damage or reducing the enemy’s defenses.
 
+---
+
 ## Project Structure
 
 ```text
@@ -330,6 +411,8 @@ data/                   Typed local game data, rankings, and imported source sna
 lib/                    Core logic, effect math, utilities, export/storage helpers
 docs/                   Product context, source registry, design docs, and change ledger
 ```
+
+---
 
 ## Current Key Pages
 
@@ -349,6 +432,8 @@ docs/                   Product context, source registry, design docs, and chang
 - `/buffs-debuffs`
 - `/saved-builds`
 - `/settings`
+
+---
 
 ## How To Run The Project
 
@@ -388,31 +473,31 @@ npm run start
 npm run lint
 ```
 
-## What Makes The Repo Different
+---
 
-This is not a generic “game item list”.
+## Available Scripts
 
-This repo combines:
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Starts the Next.js development server |
+| `npm run build` | Builds the production app |
+| `npm run start` | Starts the production server |
+| `npm run lint` | Runs ESLint |
 
-- planner UX
-- typed game data
-- visible party math
-- source-aware modeling
-- exportable builds
-- reference browsing
-
-That combination is the point.
+---
 
 ## Team Builder Workflow
 
-1. Pick **Dungeon** or **Trial**
-2. Choose shell or preset
-3. Assign classes and paragons
-4. Fill artifacts, companions, enhancements, and mounts
-5. Review role split
-6. Review boss debuffs and team buffs
-7. Review carry summary or mount-hit output
-8. Save or export the build
+1. Pick **Dungeon** or **Trial**.
+2. Choose shell or preset.
+3. Assign classes and paragons.
+4. Fill artifacts, companions, enhancements, and mounts.
+5. Review role split.
+6. Review boss debuffs and team buffs.
+7. Review carry summary or mount-hit output.
+8. Save or export the build.
+
+---
 
 ## Builder Logic Rules
 
@@ -426,6 +511,8 @@ Important rules already modeled or actively enforced in the app include:
 - one member can be marked as the boost target / carry
 - effects are separated by type rather than flattened
 - unresolved values should not be faked as verified values
+
+---
 
 ## Accessibility And UX Principles
 
@@ -444,6 +531,19 @@ The UX system includes:
 - reduced-motion support
 - clear active / hover / selected states
 - drawer-based editing for heavy builder interactions
+
+### UX Quality Checklist
+
+- [ ] Builder is usable without reading documentation.
+- [ ] Role errors are visible and understandable.
+- [ ] Carry target is visually obvious.
+- [ ] Buff/debuff summaries do not hide unresolved values.
+- [ ] Saved builds are easy to find and restore.
+- [ ] Import/export flow has clear success and error states.
+- [ ] Mobile layout remains readable.
+- [ ] Motion never blocks the planning task.
+
+---
 
 ## What Is Finished Vs In Progress
 
@@ -465,15 +565,30 @@ The UX system includes:
 - broader verified value coverage across every community-sourced entry
 - future auth / cloud save if desired
 
-## Why This Repo Can Help Even If You Do Not Play Neverwinter
+---
 
-This project is also a useful example of how to build:
+## Quality Checklist
 
-- a serious game-planning web app
-- a source-aware data product
-- a modern React + Next.js reference system
-- a spreadsheet-to-application migration path
-- a UX-heavy builder workflow with typed logic
+### Technical QA
+
+- [ ] `npm install` works.
+- [ ] `npm run dev` works.
+- [ ] `npm run build` works.
+- [ ] `npm run start` works after build.
+- [ ] `npm run lint` passes or known lint issues are documented.
+- [ ] Exported Excel workbook opens correctly.
+- [ ] Saved builds persist locally.
+- [ ] JSON import/export works.
+
+### Data QA
+
+- [ ] New values include source metadata.
+- [ ] Unverified values are marked clearly.
+- [ ] Patch-sensitive notes are preserved.
+- [ ] Effects are classified into correct families.
+- [ ] No invented values are added as facts.
+
+---
 
 ## Contribution Notes
 
@@ -489,6 +604,8 @@ The most important internal doc for tracking implementation history is:
 
 - [docs/repo-change-ledger.md](docs/repo-change-ledger.md)
 
+---
+
 ## SEO Keywords
 
 This repository is intentionally optimized for discoverability around topics such as:
@@ -503,6 +620,8 @@ This repository is intentionally optimized for discoverability around topics suc
 - Neverwinter endgame planner
 - Neverwinter party optimizer
 - Neverwinter raid planning tool
+
+---
 
 ## Final Notes
 
