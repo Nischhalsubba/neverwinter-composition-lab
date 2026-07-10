@@ -1,149 +1,138 @@
+<div align="center">
+
+<img src="https://neverwinter-composition-lab.vercel.app/opengraph-image" width="100%" alt="Neverwinter Composition Lab team builder and support-planning dashboard" />
+
 # Neverwinter Composition Lab
 
-> A premium, patch-aware **Neverwinter team builder, support planner, buff/debuff calculator, export tool, and reference hub** for endgame players who want to plan dungeon and trial compositions with clarity instead of spreadsheet fatigue.
+### A patch-aware team builder, support planner, buff/debuff calculator, reference hub, and export tool for Neverwinter endgame groups.
 
-![Next.js](https://img.shields.io/badge/Next.js-16.2.2-03045E?style=for-the-badge)
-![React](https://img.shields.io/badge/React-19.2.4-0077B6?style=for-the-badge)
-![TypeScript](https://img.shields.io/badge/TypeScript-Strict-00B4D8?style=for-the-badge)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-90E0EF?style=for-the-badge&labelColor=03045E)
-![Status](https://img.shields.io/badge/Status-Active%20Prototype-CAF0F8?style=for-the-badge&labelColor=03045E)
+<p>
+  <img src="https://img.shields.io/badge/Next.js-16.2.2-03045E?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 16.2.2" />
+  <img src="https://img.shields.io/badge/React-19.2.4-0077B6?style=for-the-badge&logo=react&logoColor=white" alt="React 19.2.4" />
+  <img src="https://img.shields.io/badge/TypeScript-Strict-00B4D8?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind-v4-90E0EF?style=for-the-badge&logo=tailwindcss&logoColor=03045E" alt="Tailwind CSS 4" />
+  <img src="https://img.shields.io/badge/Status-Active%20Prototype-CAF0F8?style=for-the-badge&labelColor=03045E" alt="Active prototype" />
+</p>
 
----
+[Live app](https://neverwinter-composition-lab.vercel.app/) · [Overview](#overview) · [Features](#features) · [Builder logic](#builder-logic) · [Architecture](#architecture) · [Data model](#data-and-provenance) · [Setup](#getting-started) · [Roadmap](#roadmap)
 
-## Table of Contents
-
-- [What This Project Is](#what-this-project-is)
-- [Why This Exists](#why-this-exists)
-- [Designer’s Perspective](#designers-perspective)
-- [Core Product Goals](#core-product-goals)
-- [Main Features](#main-features)
-- [Design Direction](#design-direction)
-- [Frontend Tech Choices](#frontend-tech-choices)
-- [Data Philosophy](#data-philosophy)
-- [Current Data Sources And Inputs](#current-data-sources-and-inputs)
-- [Important Neverwinter Terms For Non-Players](#important-neverwinter-terms-for-non-players)
-- [Project Structure](#project-structure)
-- [Current Key Pages](#current-key-pages)
-- [How To Run The Project](#how-to-run-the-project)
-- [Available Scripts](#available-scripts)
-- [Team Builder Workflow](#team-builder-workflow)
-- [Builder Logic Rules](#builder-logic-rules)
-- [Accessibility And UX Principles](#accessibility-and-ux-principles)
-- [What Is Finished Vs In Progress](#what-is-finished-vs-in-progress)
-- [Quality Checklist](#quality-checklist)
-- [Contribution Notes](#contribution-notes)
-- [SEO Keywords](#seo-keywords)
-- [Final Notes](#final-notes)
+</div>
 
 ---
 
-## What This Project Is
+> [!NOTE]
+> This repository is an active planning prototype. It already contains a real Next.js application, typed local game data, route-based reference pages, team-building logic, saved builds, JSON import/export, Excel export, and dynamic social-preview generation. Neverwinter values still need patch-aware verification before competitive use.
 
-**Neverwinter Composition Lab** is a web application for planning dungeon and trial groups in the MMORPG **Neverwinter**.
+## Overview
 
-If you already play Neverwinter, this repo helps with:
+**Neverwinter Composition Lab** is a web application for planning optimized dungeon and trial groups in the MMORPG Neverwinter.
 
-- building a **5-player dungeon party**
-- building a **10-player trial team**
-- assigning **tank / healer / DPS / support responsibilities**
-- tracking **boss debuffs**
-- tracking **team buffs**
-- comparing **artifacts, companions, companion enhancements, mount powers, and insignia bonuses**
-- planning around one boosted damage dealer or overall team damage
-- exporting and sharing structured builds
+The product is built around a practical question: **what combination of roles, classes, paragons, artifacts, companions, enhancements, mount powers, buffs, and debuffs creates the strongest team for a specific activity?**
 
-If you do **not** play Neverwinter, the short version is:
+Instead of treating the answer as a static spreadsheet, the application provides an editable planning surface with visible role rules, source-aware game data, ranked recommendations, export tools, and reference pages that support the main builder workflow.
 
-- Neverwinter is a cooperative online action RPG.
-- Endgame groups are heavily optimized around damage buffs, enemy debuffs, role coverage, and timing.
-- Players often use spreadsheets, wikis, screenshots, Discord notes, and patch memory to figure out which setup is strongest.
-- This app turns that fragmented information into a clean, visual, typed planning tool.
+### What the product helps users do
 
----
+- Build five-player dungeon parties.
+- Build ten-player trial compositions.
+- Switch between standard trial and MSOD role shells.
+- Assign tank, healer, DPS, support, and carry responsibilities.
+- Select classes and paragon paths.
+- Plan artifacts, companions, companion enhancements, mount powers, and power loadouts.
+- Track team buffs and enemy debuffs without hiding effect categories inside one unexplained score.
+- Save builds locally.
+- Export and import builds as JSON.
+- Export structured workbooks with ExcelJS.
+- Use ranked reference data while planning.
+- Keep uncertain or incomplete values visibly marked rather than pretending they are verified.
 
-## Why This Exists
+## Why it exists
 
-Most fan tools for Neverwinter are one of these:
+Neverwinter group optimization is usually distributed across:
 
-- spreadsheet-first
-- text-dense
-- patch-blind
-- unclear about what is verified vs inferred
-- difficult to use while actively planning a party
-- too focused on lists and not enough on actual composition decisions
+- spreadsheets
+- screenshots
+- Discord messages
+- community rankings
+- patch notes
+- wikis
+- player memory
+- copied loadouts
 
-This repo takes a different approach:
+That creates several problems:
 
-- **Team Builder first**
-- **source-aware data**
-- **patch-aware structure**
-- **transparent buff/debuff math**
-- **visual loadout planning**
-- **reference pages that support the builder instead of competing with it**
+- duplicate buffs and debuffs are easy to miss
+- role coverage can be unclear
+- outdated values look authoritative
+- sources disappear from copied notes
+- planning a carry-focused team differs from maximizing total team damage
+- party leaders need quick decisions, not another giant table
 
-The goal is not to be a generic database.  
-The goal is to be the **best planning surface for serious Neverwinter endgame group setup**.
+Composition Lab turns that fragmented process into one typed, visual, patch-aware planning workflow.
 
----
+## Features
 
-## Designer’s Perspective
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Team Builder</h3>
+      <p>Build dungeon and trial groups, select roles, assign classes and paragons, configure loadouts, choose a carry target, validate the role split, and export the result.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Buff and debuff coverage</h3>
+      <p>Track incoming-damage effects, defense reduction, awareness reduction, vulnerabilities, offensive ratings, and other effect families without flattening them into one opaque score.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Reference Hub</h3>
+      <p>Browse classes, paragons, artifacts, companions, enhancements, mounts, buffs, debuffs, glossary terms, and supporting system details.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Build persistence and export</h3>
+      <p>Save builds locally, share them through JSON, and generate formatted Excel workbooks for group planning.</p>
+    </td>
+  </tr>
+</table>
 
-This project is built from the perspective of a player who also thinks like a product designer.
+### Builder modes
 
-The problem is not only “show all the game data.” The real problem is helping a party leader make decisions quickly:
+| Mode | Slots | Default shell |
+|---|---:|---|
+| Dungeon | 5 | 1 tank, 1 healer, 3 DPS |
+| Standard trial | 10 | 2 tanks, 2 healers, 6 DPS |
+| MSOD trial | 10 | 2 tanks, 3 healers, 5 DPS |
 
-- Which roles are missing?
-- Who is the carry target?
-- Which buffs are already covered?
-- Which debuffs overlap?
-- Which artifact or companion adds value?
-- What is verified, partial, or unresolved?
-- Can this setup be shared with the group?
+The dashboard can switch between dungeon and trial planning. Trial mode also supports a Standard/MSOD preset switch, and the interface changes its role summary, recommendation context, and slot count accordingly.
 
-The interface is intentionally not styled like a fantasy wiki. It uses a clean, calm, technical planning surface because the main user need is decision-making, not decoration.
+### Team Builder capabilities
 
-The design goal is:
+- Selected-slot editing
+- Class and paragon assignment
+- Artifact selection
+- Companion selection
+- Companion enhancement selection
+- Mount selection
+- Power-loadout editing
+- Carry or boost-target designation
+- Role-shell validation
+- Save, import, and export actions
+- Context panels and drawers for active slot details
 
-> Make complex group optimization feel understandable, editable, and trustworthy.
+### Recommendation surfaces
 
----
+The dashboard exposes ranked planning data such as:
 
-## Core Product Goals
+- top debuff artifacts for the selected mode
+- top support companions for trials
+- single-target companion recommendations for dungeons
+- mandatory trial coverage where configured
+- high-value companion enhancements
+- role-shell notes and warnings
 
-- Make party planning fast for real dungeon and trial leaders.
-- Show where buffs and debuffs actually come from.
-- Keep unresolved values visible without pretending they are proven.
-- Support both **boost-one-DPS** and **overall-team-damage** planning.
-- Stay understandable for both hardcore players and curious newcomers.
-- Feel like a polished app, not a spreadsheet wrapped in a website.
-- Preserve provenance so users can trust the data model.
-- Support export and sharing workflows for group planning.
+## Builder logic
 
----
-
-## Main Features
-
-### Team Builder
-
-The Team Builder is the core of the product.
-
-It currently supports:
-
-- **Dungeon mode**: 5 players
-- **Trial mode**: 10 players
-- **Standard trial shell**: 2 tanks / 2 healers / 6 DPS
-- **MSOD shell**: 2 tanks / 3 healers / 5 DPS
-- selected-slot editing
-- class + paragon assignment
-- artifact, companion, enhancement, and mount selection
-- carry / boost target setup
-- power loadout editing
-- role split validation
-- save, import, and export
-
-### Buff And Debuff Logic
-
-The app separates effects instead of flattening everything into one hidden number.
+The application keeps effect types distinct so that the UI can explain **where value comes from**.
 
 Tracked effect families include:
 
@@ -157,173 +146,107 @@ Tracked effect families include:
 - projectile vulnerability
 - damage bonus
 - power
-- crit strike
-- crit severity
+- critical strike
+- critical severity
 - combat advantage
 - accuracy
 - forte
 
-### Reference Hub
+### Planning models
 
-The reference system supports the planner with:
+The product supports two different optimization mindsets:
 
-- classes and paragon paths
-- artifacts
-- companions
-- companion enhancements
-- buffs and debuffs
-- mounts
-- glossary and system detail
+1. **Boost one DPS**
+   - Choose a carry target.
+   - Evaluate support primarily by how much it improves that player’s output.
 
-### Build Persistence
+2. **Maximize team damage**
+   - Evaluate coverage across the entire composition.
+   - Avoid duplicate or conflicting effects.
+   - Balance personal damage with team contribution.
 
-- local saved builds
-- JSON import/export for sharing setups with friends
-- formatted Excel workbook export through ExcelJS
+> [!IMPORTANT]
+> The tool should never convert incomplete or uncertain data into a confident recommendation without showing its verification state.
 
-### UX Layer
+## Key routes
 
-- responsive desktop / tablet / mobile layout
-- fixed shell navigation
-- shaped loading skeletons
-- subtle GSAP motion
-- slide-in drawers and modals
-- route transitions
-- clean active, hover, selected, and disabled states
+| Route | Purpose |
+|---|---|
+| `/` | Builder-focused command board with role shells and ranked planning data |
+| `/team-builder` | Main party and trial composition workflow |
+| `/reference` | Navigation surface for reference content |
+| `/classes` | Classes and paragon paths |
+| `/artifacts` | Artifact reference and recommendations |
+| `/companions` | Companion reference and rankings |
+| `/mounts` | Mount-related planning data |
+| `/buffs-debuffs` | Effect library and coverage reference |
+| `/saved-builds` | Locally saved team compositions |
+| `/settings` | Product settings and preferences |
 
----
+## Architecture
 
-## Design Direction
+```mermaid
+flowchart TD
+    APP[Next.js App Router] --> DASH[Dashboard]
+    APP --> BUILDER[Team Builder]
+    APP --> REF[Reference routes]
+    APP --> SAVED[Saved builds]
 
-This UI is intentionally **not** styled like a fantasy wiki.
+    BUILDER --> STATE[Builder state and validation]
+    BUILDER --> EFFECTS[Effect-resolution logic]
+    BUILDER --> STORAGE[Local storage helpers]
+    BUILDER --> EXPORT[JSON and Excel export]
 
-The design language is:
+    REF --> DATA[Typed local game data]
+    DASH --> DATA
+    EFFECTS --> DATA
 
-- clean
-- technical
-- calm
-- editorial
-- planning-first
-- data-aware
+    DATA --> SOURCES[Source metadata and verification state]
+```
 
-### Why The Current Color System
+### Frontend layers
 
-The current palette:
+```text
+app/                    Next.js App Router pages, layouts, metadata, and social images
+components/             Shared UI primitives, shell, loading states, and motion
+features/team-builder/  Core composition-builder workflow
+features/               Product-specific feature modules
+components/motion/      Reveal, stagger, and route transition utilities
+data/                   Typed game entities, rankings, and imported snapshots
+lib/                    Effect math, validation, storage, export, and utilities
+docs/                   Product context, source registry, design notes, and change history
+```
 
-- `#03045E`
-- `#0077B6`
-- `#00B4D8`
-- `#90E0EF`
-- `#CAF0F8`
+### Technology stack
 
-was chosen because it gives the app:
+| Layer | Technology | Role |
+|---|---|---|
+| Framework | Next.js `16.2.2` | App Router, layouts, metadata, routes, and production build |
+| UI runtime | React `19.2.4` | Interactive planning state and components |
+| Language | TypeScript | Typed game entities, builder state, and effect logic |
+| Styling | Tailwind CSS `4` | Layout, spacing, responsive states, and visual system |
+| Motion | GSAP | Controlled panel and route animation |
+| Export | ExcelJS | Formatted workbook generation |
+| Icons | Lucide React | Interface iconography |
+| Variants | class-variance-authority | Component variants |
+| Class utilities | clsx + tailwind-merge | Conditional styling and class conflict resolution |
 
-- high readability
-- a cool strategic feel
-- enough contrast to make active, hover, selected, and data states distinct
-- a modern control-room identity instead of a typical game-fan-site palette
+## Data and provenance
 
-The rule is simple: **clarity first, decoration second**.
+The application currently uses **typed local data**, not a live backend.
 
-### Why The Layout Looks Like This
+Data is derived from curated and imported sources such as:
 
-The layout is built around how people actually use the product:
+- NW-Hub content
+- community ranking sheets
+- Google Sheets exports
+- local source snapshots
+- internal documentation in `docs/`
+- recovered image and ranking data
 
-- the left side gives navigation and stable orientation
-- the center is for the main planning workflow
-- the right side is for active context and deeper slot detail
+### Provenance rules
 
-This makes the app feel like a serious planning tool instead of a content site.
-
----
-
-## Frontend Tech Choices
-
-### Next.js 16 App Router
-
-Chosen for:
-
-- route-based architecture
-- nested layouts
-- route-level loading states
-- long-term scalability
-- separation between product pages and reference pages
-
-### React 19
-
-Chosen for:
-
-- modern client/server composition
-- smooth interactive UI
-- better ergonomics for complex stateful planning tools
-
-### TypeScript
-
-Chosen because this app is heavily data-driven and must stay safe as more game systems are added.
-
-The project depends on strong typing for:
-
-- team members
-- powers
-- artifacts
-- companions
-- enhancements
-- mounts
-- source metadata
-- effect resolution
-
-### Tailwind CSS v4
-
-Chosen for:
-
-- fast UI iteration
-- consistent spacing and surface design
-- predictable component styling
-- low-friction theming
-
-### GSAP
-
-Chosen for:
-
-- precise motion control
-- subtle route and panel transitions
-- polished animation without making the app flashy
-
-### ExcelJS
-
-Chosen for:
-
-- structured spreadsheet export
-- richer workbook formatting than plain CSV-only export
-- group-friendly build sharing
-
-### UI Utility Libraries
-
-The app also uses utilities such as:
-
-- `class-variance-authority`
-- `clsx`
-- `tailwind-merge`
-- `lucide-react`
-
-These support maintainable components, iconography, and conditional styling.
-
----
-
-## Data Philosophy
-
-This repo is strict about provenance.
-
-### Rules
-
-- Do **not** invent Neverwinter values.
-- If something is unresolved, it stays unresolved in the model.
-- Verified and partial data should never be mixed without labels.
-- Frontend text can be simplified, but internal structure should preserve provenance.
-
-### Every Meaningful Entity Supports Source Metadata
-
-Key entities should keep fields such as:
+Meaningful entities should preserve fields such as:
 
 - `id`
 - `name`
@@ -333,122 +256,82 @@ Key entities should keep fields such as:
 - `verification_status`
 - `notes`
 
-This matters because Neverwinter changes over time, and not every community value is equally trustworthy.
+### Verification states
 
----
+The data model should distinguish at least:
 
-## Current Data Sources And Inputs
+- verified
+- partially verified
+- inferred
+- unresolved
+- deprecated or patch-stale
 
-The app is built from **local typed data files**, not a live backend.
+This is essential because game balance changes, community sources disagree, and copied values age faster than players admit.
 
-The current repo integrates structured data derived from:
+## Design system
 
-- NW Hub content
-- curated Google Sheets / ranking sheets
-- internal documentation in `docs/`
-- locally recovered image and ranking data
+The product deliberately avoids the visual language of a fantasy wiki.
 
-The frontend intentionally hides noisy source branding in many places, but the underlying model still preserves provenance.
+### Interface direction
 
----
+- planning-first
+- technical
+- calm
+- editorial
+- high contrast
+- low visual noise
+- obvious active, selected, hover, and disabled states
+- responsive across desktop, tablet, and mobile
 
-## Important Neverwinter Terms For Non-Players
+### Core palette
 
-### Dungeon
+| Token | Value |
+|---|---|
+| Deep navy | `#03045E` |
+| Strong blue | `#0077B6` |
+| Cyan | `#00B4D8` |
+| Light cyan | `#90E0EF` |
+| Pale surface | `#CAF0F8` |
 
-A standard 5-player group activity.
+### Product layout
 
-Typical shell:
+- Left: stable navigation and orientation
+- Center: primary planning workflow
+- Right: selected-slot detail and active context
 
-- 1 tank
-- 1 healer
-- 3 DPS
+The dashboard uses a command-board pattern with mode selection, role-shell summaries, builder actions, shortcuts, and ranked recommendations.
 
-### Trial
+## SEO and social preview
 
-A larger 10-player raid-style activity.
+The repository includes first-class metadata in `app/layout.tsx`:
 
-Typical shell:
+- canonical URL
+- application name
+- search keywords
+- Open Graph title and description
+- Twitter summary card
+- dynamic 1200×630 Open Graph image
+- application icons
 
-- 2 tanks
-- 2 healers
-- 6 DPS
+The README hero uses the application’s own `/opengraph-image` route. That image is generated by the codebase itself rather than being an unrelated mockup.
 
-### MSOD
-
-A specific trial setup variant used by endgame players.
-
-Typical shell in this app:
-
-- 2 tanks
-- 3 healers
-- 5 DPS
-- at least 1 healer should be **Bard / Minstrel**
-
-### Carry / Boost Target
-
-The selected damage dealer the team is being optimized around.
-
-If a build is set to **boost one DPS**, the rest of the team is evaluated mainly by how much they improve that player’s output.
-
-### Buff
-
-A positive effect applied to your team or a player.
-
-### Debuff
-
-A negative effect applied to an enemy, usually increasing party damage or reducing the enemy’s defenses.
-
----
-
-## Project Structure
-
-```text
-app/                    Next.js App Router pages and route structure
-components/             Shared UI, shell, motion, loading, and summary components
-features/team-builder/  Core Team Builder experience
-data/                   Typed local game data, rankings, and imported source snapshots
-lib/                    Core logic, effect math, utilities, export/storage helpers
-docs/                   Product context, source registry, design docs, and change ledger
-```
-
----
-
-## Current Key Pages
-
-- `/`  
-  Builder-first dashboard with useful ranked planning data
-
-- `/team-builder`  
-  Main party planning workflow
-
-- `/reference`  
-  Jump surface for reference pages used by the builder
-
-- `/classes`
-- `/artifacts`
-- `/companions`
-- `/mounts`
-- `/buffs-debuffs`
-- `/saved-builds`
-- `/settings`
-
----
-
-## How To Run The Project
+## Getting started
 
 ### Requirements
 
-- Node.js 20+
-- npm
+- Node.js `22+`
+- npm `10+`
+- repository declares npm `11.6.2`
 
 ### Install
 
 ```bash
+git clone https://github.com/Nischhalsubba/neverwinter-composition-lab.git
+cd neverwinter-composition-lab
 npm install
 ```
 
-### Start Development Server
+### Run locally
 
 ```bash
 npm run dev
@@ -460,178 +343,150 @@ Open:
 http://localhost:3000
 ```
 
-### Production Build
-
-```bash
-npm run build
-npm run start
-```
-
-### Lint
+### Validate the project
 
 ```bash
 npm run lint
+npm run typecheck
+npm run build
 ```
 
----
+Or run the combined check:
 
-## Available Scripts
+```bash
+npm run check
+```
+
+### Available scripts
 
 | Command | Purpose |
 |---|---|
-| `npm run dev` | Starts the Next.js development server |
-| `npm run build` | Builds the production app |
-| `npm run start` | Starts the production server |
-| `npm run lint` | Runs ESLint |
+| `npm run dev` | Start the Next.js development server |
+| `npm run build` | Create a production build |
+| `npm run start` | Run the production server |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript without emitting files |
+| `npm run check` | Lint, type-check, and build |
 
----
+## Deployment
 
-## Team Builder Workflow
+The production metadata points to:
 
-1. Pick **Dungeon** or **Trial**.
-2. Choose shell or preset.
-3. Assign classes and paragons.
-4. Fill artifacts, companions, enhancements, and mounts.
-5. Review role split.
-6. Review boss debuffs and team buffs.
-7. Review carry summary or mount-hit output.
-8. Save or export the build.
+```text
+https://neverwinter-composition-lab.vercel.app
+```
 
----
+A standard Vercel deployment should use:
 
-## Builder Logic Rules
+```text
+Framework preset: Next.js
+Build command: npm run build
+Output: managed by Next.js/Vercel
+```
 
-Important rules already modeled or actively enforced in the app include:
+> [!NOTE]
+> The deployment hostname is verified from repository metadata. This execution environment could not resolve the host during the audit, so the README does not claim a fresh runtime screenshot was captured here.
 
-- dungeon shell uses 5 slots
-- trial shell uses 10 slots
-- standard trial shell is 2 tanks / 2 healers / 6 DPS
-- MSOD shell is 2 tanks / 3 healers / 5 DPS
-- dungeon shell is 1 tank / 1 healer / 3 DPS
-- one member can be marked as the boost target / carry
-- effects are separated by type rather than flattened
-- unresolved values should not be faked as verified values
+## Testing and QA
 
----
+### Builder QA
 
-## Accessibility And UX Principles
+- [ ] Dungeon mode always creates five valid slots.
+- [ ] Standard trial mode creates the correct 2/2/6 shell.
+- [ ] MSOD mode creates the correct 2/3/5 shell.
+- [ ] Carry-target selection remains valid after slot edits.
+- [ ] Duplicate artifacts and companions are handled intentionally.
+- [ ] Buff and debuff coverage updates when loadouts change.
+- [ ] Missing source data remains visibly unresolved.
+- [ ] JSON export and import produce equivalent builds.
+- [ ] Excel export opens correctly and preserves labels.
+- [ ] Saved builds survive a browser refresh.
 
-The app aims to be:
+### UX QA
 
-- readable
-- responsive
-- keyboard-friendly
-- contrast-aware
-- motion-aware
-
-The UX system includes:
-
-- subtle route transitions
-- shaped loading skeletons
-- reduced-motion support
-- clear active / hover / selected states
-- drawer-based editing for heavy builder interactions
-
-### UX Quality Checklist
-
-- [ ] Builder is usable without reading documentation.
-- [ ] Role errors are visible and understandable.
-- [ ] Carry target is visually obvious.
-- [ ] Buff/debuff summaries do not hide unresolved values.
-- [ ] Saved builds are easy to find and restore.
-- [ ] Import/export flow has clear success and error states.
-- [ ] Mobile layout remains readable.
-- [ ] Motion never blocks the planning task.
-
----
-
-## What Is Finished Vs In Progress
-
-### Working Today
-
-- dashboard
-- team builder
-- saved builds
-- import/export
-- local settings
-- reference pages
-- route skeletons
-- GSAP motion layer
-
-### Still Evolving
-
-- deeper Neverwinter math fidelity for every special case
-- more exhaustive image coverage for all assets
-- broader verified value coverage across every community-sourced entry
-- future auth / cloud save if desired
-
----
-
-## Quality Checklist
-
-### Technical QA
-
-- [ ] `npm install` works.
-- [ ] `npm run dev` works.
-- [ ] `npm run build` works.
-- [ ] `npm run start` works after build.
-- [ ] `npm run lint` passes or known lint issues are documented.
-- [ ] Exported Excel workbook opens correctly.
-- [ ] Saved builds persist locally.
-- [ ] JSON import/export works.
+- [ ] Keyboard focus is visible.
+- [ ] Drawers and modals are escapable.
+- [ ] Mobile layouts preserve builder context.
+- [ ] Loading skeletons match final component shapes.
+- [ ] Motion respects reduced-motion preferences.
+- [ ] Empty reference categories explain what is missing.
+- [ ] Long item names do not break cards or tables.
 
 ### Data QA
 
-- [ ] New values include source metadata.
-- [ ] Unverified values are marked clearly.
-- [ ] Patch-sensitive notes are preserved.
-- [ ] Effects are classified into correct families.
-- [ ] No invented values are added as facts.
+- [ ] Every recommendation has source metadata.
+- [ ] Patch or source version is visible internally.
+- [ ] Deprecated values do not silently remain ranked.
+- [ ] Verified and inferred data are never merged without labels.
+- [ ] Ranking imports are reproducible.
+- [ ] Source URLs and notes are reviewed before release.
 
----
+## Known limitations
 
-## Contribution Notes
+- Data is local and curated rather than synchronized with a live game API.
+- Community rankings can become stale after balance changes.
+- Some effects may remain unresolved or only partially verified.
+- A planning score cannot fully model player skill, timing, mechanics, encounter design, or execution.
+- Local saves are browser-specific unless exported.
+- The builder should not be treated as an official Neverwinter source.
 
-If you contribute:
+## Roadmap
 
-- do not invent game values
-- preserve source metadata
-- keep UX focused on planning speed
-- avoid turning the app into a generic wiki
-- update the docs when adding or changing important behavior
+### Builder
 
-The most important internal doc for tracking implementation history is:
+- [ ] Improve effect conflict and overlap warnings.
+- [ ] Add more explicit carry-focused versus team-focused scoring.
+- [ ] Add clearer role and class constraints.
+- [ ] Add build comparison.
+- [ ] Add shareable URL-based builds.
 
-- [docs/repo-change-ledger.md](docs/repo-change-ledger.md)
+### Data
 
----
+- [ ] Add patch-aware data snapshots.
+- [ ] Expand source registry coverage.
+- [ ] Add visible verification badges throughout reference pages.
+- [ ] Add import validation for ranking sheets.
+- [ ] Add change logs for updated values.
 
-## SEO Keywords
+### Product
 
-This repository is intentionally optimized for discoverability around topics such as:
+- [ ] Improve mobile builder ergonomics.
+- [ ] Add collaborative planning workflows.
+- [ ] Add printable and Discord-friendly summaries.
+- [ ] Add stronger accessibility coverage.
+- [ ] Add automated tests for effect math and export logic.
 
-- Neverwinter team builder
-- Neverwinter trial setup
-- Neverwinter dungeon composition
-- Neverwinter buffs and debuffs
-- Neverwinter support companions
-- Neverwinter artifact rankings
-- Neverwinter mount powers
-- Neverwinter endgame planner
-- Neverwinter party optimizer
-- Neverwinter raid planning tool
+<details>
+<summary><strong>Release checklist</strong></summary>
 
----
+```bash
+npm ci
+npm run check
+```
 
-## Final Notes
+Then verify:
 
-Neverwinter Composition Lab is built to answer a simple question:
+1. Dashboard mode switching
+2. Standard and MSOD trial presets
+3. Dungeon composition
+4. Slot editing
+5. Carry-target behavior
+6. Buff/debuff coverage
+7. Saved builds
+8. JSON import/export
+9. Excel export
+10. Open Graph and Twitter images
+11. Mobile layout
+12. Reduced motion
 
-**“What is the cleanest, fastest, most trustworthy way to plan a strong Neverwinter group?”**
+</details>
 
-This repo is the first serious attempt at answering that with:
+## Maintainer
 
-- a real app
-- a real data model
-- real UX intent
-- and a clear respect for what is verified versus what is still being recovered
+**Nischhal Raj Subba**
+
+Product design, data modeling, frontend implementation, and repository direction.
+
+## Disclaimer
+
+Neverwinter Composition Lab is an independent community project. It is not affiliated with or endorsed by Cryptic Studios, Arc Games, Gearbox Publishing, or the Neverwinter rights holders. Game names, data, and related assets belong to their respective owners.
