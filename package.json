@@ -2,6 +2,9 @@
   "name": "neverwinter-composition-lab",
   "version": "0.1.0",
   "private": true,
+  "description": "A Next.js and TypeScript team-composition planner, reference hub, buff/debuff coverage tool, saved-build manager, JSON import/export workflow, and Excel workbook exporter for Neverwinter endgame group planning.",
+  "author": "Nischhal Raj Subba",
+  "license": "UNLICENSED",
   "packageManager": "npm@11.6.2",
   "engines": {
     "node": ">=22.0.0",
