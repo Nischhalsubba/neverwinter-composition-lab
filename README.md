@@ -4,6 +4,111 @@
 
 # Neverwinter Composition Lab
 
+<!-- interactive-readme-standard:start -->
+
+> [!NOTE]
+> **Branch-specific documentation:** this section is maintained for [`main`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main). It is generated from the files present on this branch and preserves the project-authored README below.
+
+<details open>
+<summary><strong>Interactive repository guide</strong></summary>
+
+## Branch overview
+
+| Item | Value |
+|---|---|
+| Repository | [`Nischhalsubba/neverwinter-composition-lab`](https://github.com/Nischhalsubba/neverwinter-composition-lab) |
+| Branch | [`main`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main) |
+| Detected stack | Next.js, React, Tailwind CSS, TypeScript, HTML, JavaScript, CSS |
+| Detected manifests | package.json |
+| Documentation policy | Every maintained branch must explain purpose, setup, structure, architecture, flows, testing, delivery, security, and ownership. |
+
+## Repository structure
+
+```mermaid
+flowchart TD
+    ROOT["neverwinter-composition-lab / main"]
+    ROOT --> P0[".github/"]
+    ROOT --> P1["app/"]
+    ROOT --> P2["components/"]
+    ROOT --> P3["config/"]
+    ROOT --> P4["data/"]
+    ROOT --> P5["docs/"]
+    ROOT --> P6["features/"]
+    ROOT --> P7["lib/"]
+    ROOT --> P8["public/"]
+    ROOT --> P9[".gitignore"]
+    ROOT --> P10["AGENTS.md"]
+    ROOT --> P11["CLAUDE.md"]
+    ROOT --> P12["eslint.config.mjs"]
+    ROOT --> P13["neverwinter_final_ai_master_context.md"]
+    ROOT --> P14["neverwinter_frontend_design_spec.md"]
+    ROOT --> P15["neverwinter_source_registry_and_proof.md"]
+    ROOT --> P16["next.config.ts"]
+    ROOT --> P17["package-lock.json"]
+    ROOT --> MORE["+ 18 more top-level entries"]
+```
+
+The diagram is generated from the branch's actual top-level files and directories. Use the branch link above for complete source navigation.
+
+## Website or application structure
+
+```mermaid
+flowchart TD
+    APP["neverwinter-composition-lab"]
+    APP --> R0["app"]
+    APP --> R1["public"]
+    R0 --> F0["app/about/loading.tsx"]
+    R0 --> F1["app/about/page.tsx"]
+    R0 --> F2["app/artifacts/loading.tsx"]
+    R0 --> F3["app/artifacts/page.tsx"]
+    R0 --> F4["app/buffs-debuffs/loading.tsx"]
+    R0 --> F5["app/buffs-debuffs/page.tsx"]
+    R0 --> F6["app/classes/loading.tsx"]
+    R0 --> F7["app/classes/page.tsx"]
+    R0 --> F8["app/companions/loading.tsx"]
+    R0 --> F9["app/companions/page.tsx"]
+    R0 --> F10["app/glossary/loading.tsx"]
+    R0 --> F11["app/glossary/page.tsx"]
+```
+
+## Application and responsibility flow
+
+```mermaid
+flowchart LR
+    ACTOR["User / contributor"]
+    ACTOR --> A0["Interface: app, public, components"]
+    A0 --> A1["Application logic: lib"]
+    A1 --> A2["Data: data"]
+    A2 --> A3["Documentation: docs"]
+    A3 --> A4["Delivery: .github"]
+    A4 --> DELIVERY["Delivery: GitHub Actions"]
+```
+
+## Change-to-delivery flow
+
+```mermaid
+flowchart LR
+    CHANGE["Change on main"]
+    CHECK["Validate: npm run dev, npm run start, npm run build, npm run lint, npm run typecheck"]
+    REVIEW["Review documentation and architecture impact"]
+    RELEASE["Merge, release, or deploy according to this branch"]
+    CHANGE --> CHECK --> REVIEW --> RELEASE
+```
+
+## README requirements for this branch
+
+- Explain what this branch contains and how it differs from the default branch.
+- Keep installation, configuration, usage, testing, deployment, security, support, and license information accurate.
+- Document repository, website or application, API, data, authentication, background-job, and deployment flows when they exist.
+- Prefer Mermaid diagrams and expandable `<details>` sections for visual navigation.
+- Link diagrams and modules to real source paths; never invent missing components.
+- Preserve project-specific documentation and update diagrams whenever architecture or major paths change.
+- Treat secrets, private infrastructure, customer data, and credentials as prohibited README content.
+
+</details>
+
+<!-- interactive-readme-standard:end -->
+
 ### A patch-aware team builder, support planner, buff/debuff calculator, reference hub, and export tool for Neverwinter endgame groups.
 
 <p>
