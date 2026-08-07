@@ -4,27 +4,27 @@
 
 # neverwinter-composition-lab
 
-**Branch-aware technical guide for [`main`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main)**
+**Branch-aware technical guide for [`agent/security-next-lock`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock)**
 
-<p><img alt="branch: main" src="https://img.shields.io/static/v1?label=&message=branch%3A%20main&color=5965F2&style=flat-square"> <img alt="Next.js" src="https://img.shields.io/static/v1?label=&message=Next.js&color=24292F&style=flat-square"> <img alt="React" src="https://img.shields.io/static/v1?label=&message=React&color=24292F&style=flat-square"> <img alt="Tailwind CSS" src="https://img.shields.io/static/v1?label=&message=Tailwind%20CSS&color=24292F&style=flat-square"> <img alt="TypeScript" src="https://img.shields.io/static/v1?label=&message=TypeScript&color=24292F&style=flat-square"> <img alt="HTML" src="https://img.shields.io/static/v1?label=&message=HTML&color=24292F&style=flat-square"> <img alt="JavaScript" src="https://img.shields.io/static/v1?label=&message=JavaScript&color=24292F&style=flat-square"> <img alt="docs: branch-aware" src="https://img.shields.io/static/v1?label=&message=docs%3A%20branch-aware&color=8250DF&style=flat-square"></p>
+<p><img alt="branch: agent/security-next-lock" src="https://img.shields.io/static/v1?label=&message=branch%3A%20agent%2Fsecurity-next-lock&color=5965F2&style=flat-square"> <img alt="Next.js" src="https://img.shields.io/static/v1?label=&message=Next.js&color=24292F&style=flat-square"> <img alt="React" src="https://img.shields.io/static/v1?label=&message=React&color=24292F&style=flat-square"> <img alt="Tailwind CSS" src="https://img.shields.io/static/v1?label=&message=Tailwind%20CSS&color=24292F&style=flat-square"> <img alt="TypeScript" src="https://img.shields.io/static/v1?label=&message=TypeScript&color=24292F&style=flat-square"> <img alt="HTML" src="https://img.shields.io/static/v1?label=&message=HTML&color=24292F&style=flat-square"> <img alt="JavaScript" src="https://img.shields.io/static/v1?label=&message=JavaScript&color=24292F&style=flat-square"> <img alt="docs: branch-aware" src="https://img.shields.io/static/v1?label=&message=docs%3A%20branch-aware&color=8250DF&style=flat-square"></p>
 
 <p>
-  <a href="https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main"><strong>Browse source</strong></a> ·
+  <a href="https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock"><strong>Browse source</strong></a> ·
   <a href="https://github.com/Nischhalsubba/neverwinter-composition-lab/issues"><strong>Issues</strong></a> ·
-  <a href="https://github.com/Nischhalsubba/neverwinter-composition-lab/codespaces/new?ref=main"><strong>Open in Codespaces</strong></a>
+  <a href="https://github.com/Nischhalsubba/neverwinter-composition-lab/codespaces/new?ref=agent%2Fsecurity-next-lock"><strong>Open in Codespaces</strong></a>
 </p>
 
 </div>
 
 > [!IMPORTANT]
-> This guide is generated from the files actually present on `main`. It links to detected source paths, preserves project-authored notes, and avoids claiming components that were not found.
+> This guide is generated from the files actually present on `agent/security-next-lock`. It links to detected source paths, preserves project-authored notes, and avoids claiming components that were not found.
 
 ## At a glance
 
 | Item | Detected value |
 |---|---|
 | Purpose | A Next.js and TypeScript team-composition planner, reference hub, buff/debuff coverage tool, saved-build manager, JSON import/export workflow, and Excel workbook exporter for Neverwinter endgame group planning. |
-| Branch role | Default branch |
+| Branch role | Compared with `main` |
 | Stack | Next.js, React, Tailwind CSS, TypeScript, HTML, JavaScript, CSS |
 | Manifests | package.json |
 | Prerequisites | Node.js |
@@ -33,7 +33,7 @@
 
 ## Branch scope
 
-This is the repository's default branch.
+No branch-specific file differences were detected against the default branch at generation time.
 
 
 
@@ -57,7 +57,7 @@ npm run lint
 
 ```mermaid
 flowchart TD
-    ROOT["neverwinter-composition-lab / main"]
+    ROOT["neverwinter-composition-lab / agent/security-next-lock"]
     ROOT --> P0[".github/"]
     ROOT --> P1["app/"]
     ROOT --> P2["components/"]
@@ -81,11 +81,11 @@ flowchart TD
 
 | Responsibility | Detected source paths |
 |---|---|
-| Interface | [`app`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main/app), [`public`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main/public), [`components`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main/components) |
-| Application logic | [`lib`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main/lib) |
-| Data | [`data`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main/data) |
-| Documentation | [`docs`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main/docs) |
-| Delivery | [`.github`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main/.github) |
+| Interface | [`app`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock/app), [`public`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock/public), [`components`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock/components) |
+| Application logic | [`lib`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock/lib) |
+| Data | [`data`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock/data) |
+| Documentation | [`docs`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock/docs) |
+| Delivery | [`.github`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock/.github) |
 
 ## Website or application map
 
@@ -133,7 +133,7 @@ flowchart LR
     READ --> OUTPUT["UI, API, report, or export"]
 ```
 
-Detected data areas: [`data`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main/data).
+Detected data areas: [`data`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock/data).
 
 </details>
 
@@ -180,7 +180,7 @@ Define useful logs, metrics, traces, alerts, and rollback signals for production
 
 ```mermaid
 flowchart LR
-    CHANGE["Change on main"] --> CHECK["Tests and quality checks"]
+    CHANGE["Change on agent/security-next-lock"] --> CHECK["Tests and quality checks"]
     CHECK --> REVIEW["Review architecture and documentation impact"]
     REVIEW --> BUILD["Build or package"]
     BUILD --> DEPLOY["Deploy or release"]
@@ -189,7 +189,7 @@ flowchart LR
 
 ### Automation detected
 
-- [`.github/workflows/apply-interactive-readme.yml`](https://github.com/Nischhalsubba/neverwinter-composition-lab/blob/main/.github/workflows/apply-interactive-readme.yml)
+- [`.github/workflows/apply-interactive-readme.yml`](https://github.com/Nischhalsubba/neverwinter-composition-lab/blob/agent/security-next-lock/.github/workflows/apply-interactive-readme.yml)
 
 ## Contribution flow
 
@@ -214,7 +214,7 @@ flowchart LR
 | Topic | Source |
 |---|---|
 | Repository | [`Nischhalsubba/neverwinter-composition-lab`](https://github.com/Nischhalsubba/neverwinter-composition-lab) |
-| Branch | [`main`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/main) |
+| Branch | [`agent/security-next-lock`](https://github.com/Nischhalsubba/neverwinter-composition-lab/tree/agent/security-next-lock) |
 | Ownership | No CODEOWNERS file detected |
 | Contributing | Use the contribution flow above |
 | Support | [Open or review issues](https://github.com/Nischhalsubba/neverwinter-composition-lab/issues) |
