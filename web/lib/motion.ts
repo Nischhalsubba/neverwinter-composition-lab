@@ -13,7 +13,7 @@ function readReducedMotionFlag() {
     return true;
   }
 
-  if (typeof window !== "undefined" && "matchMedia" in window) {
+  if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
