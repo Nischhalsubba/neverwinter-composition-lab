@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { subscribeMediaQueryChanges } from "@/lib/media-query-subscription";
 
 function readReducedMotionFlag() {
   if (typeof document === "undefined") {
@@ -29,14 +30,15 @@ export function useReducedMotionSetting() {
     window.addEventListener("storage", apply);
     window.addEventListener("focus", apply);
 
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handleMediaChange = () => apply();
-    mediaQuery.addEventListener("change", handleMediaChange);
+    const mediaQuery = typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : null;
+    const unsubscribe = mediaQuery ? subscribeMediaQueryChanges(mediaQuery, apply) : () => {};
 
     return () => {
       window.removeEventListener("storage", apply);
       window.removeEventListener("focus", apply);
-      mediaQuery.removeEventListener("change", handleMediaChange);
+      unsubscribe();
     };
   }, []);
 
