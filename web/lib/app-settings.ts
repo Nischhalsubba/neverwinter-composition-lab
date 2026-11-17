@@ -83,12 +83,15 @@ export function readAppSettings(): AppSettings {
   }
 }
 
-export function writeAppSettings(settings: AppSettings) {
-  if (!isBrowser()) {
-    return;
-  }
+export function writeAppSettings(settings: AppSettings): boolean {
+  if (!isBrowser()) return false;
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function resetAppSettings() {

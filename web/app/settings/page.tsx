@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, RotateCcw, Trash2, Upload } from "lucide-react";
 
 import { ContentPage } from "@/components/content-page";
@@ -12,9 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  DEFAULT_APP_SETTINGS,
   parseAppSettingsPayload,
   readAppSettings,
-  resetAppSettings,
   writeAppSettings,
   type AppSettings,
 } from "@/lib/app-settings";
@@ -61,15 +61,15 @@ export default function Page() {
   const [status, setStatus] = useState("Settings are stored locally in this browser.");
   const [savedBuildCount, setSavedBuildCount] = useState(() => readSavedBuilds().length);
 
-  useEffect(() => {
-    writeAppSettings(settings);
-  }, [settings]);
-
   const settingsJson = useMemo(() => JSON.stringify(settings, null, 2), [settings]);
 
   function updateSettings<K extends keyof AppSettings>(key: K, value: AppSettings[K]) {
-    setSettings((current) => ({ ...current, [key]: value }));
-    setStatus("Settings saved locally.");
+    const next = { ...settings, [key]: value };
+    setSettings(next);
+    const saved = writeAppSettings(next);
+    setStatus(saved
+      ? "Settings saved locally."
+      : "Browser storage is unavailable. These settings will only last for this session.");
   }
 
   async function copySettings() {
@@ -85,13 +85,19 @@ export default function Page() {
     }
 
     setSettings(parsed);
-    setStatus("Settings imported successfully.");
+    const saved = writeAppSettings(parsed);
+    setStatus(saved
+      ? "Settings imported successfully."
+      : "Settings imported for this session only. Browser storage is unavailable.");
   }
 
   function handleReset() {
-    const next = resetAppSettings();
+    const next = { ...DEFAULT_APP_SETTINGS };
     setSettings(next);
-    setStatus("Settings reset to defaults.");
+    const saved = writeAppSettings(next);
+    setStatus(saved
+      ? "Settings reset to defaults."
+      : "Defaults restored for this session only. Browser storage is unavailable.");
   }
 
   function clearSavedBuilds() {
