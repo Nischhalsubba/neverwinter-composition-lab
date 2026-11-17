@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readSavedBuilds } from '../lib/team-build-storage.ts';
+import { readSavedBuilds, parseSharedBuildPayload } from '../lib/team-build-storage.ts';
 
 function withStoredValue(value, callback) {
   const previous = globalThis.window;
@@ -45,5 +45,22 @@ test('malformed storage and unavailable storage return empty results', () => {
   try { assert.deepEqual(readSavedBuilds(), []); } finally {
     if (previous === undefined) delete globalThis.window;
     else globalThis.window = previous;
+  }
+});
+
+test('shared-build import rejects duplicate member IDs and roster positions', () => {
+  const payload = {
+    schema: 'neverwinter-composition-lab-build', version: 1,
+    exportedAt: '2026-11-17T00:00:00Z',
+    build: { name: 'Trial', mode: 'trial', trialPreset: 'standard', bossId: '', teamMembers: [member] },
+  };
+  assert.ok(parseSharedBuildPayload(JSON.stringify(payload)));
+  for (const duplicate of [
+    { ...member, group: 'B', slot: 1 },
+    { ...member, id: 'member-2', group: 'A', slot: 1 },
+  ]) {
+    assert.equal(parseSharedBuildPayload(JSON.stringify({
+      ...payload, build: { ...payload.build, teamMembers: [member, duplicate] },
+    })), null);
   }
 });
