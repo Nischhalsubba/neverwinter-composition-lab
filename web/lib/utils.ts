@@ -10,7 +10,7 @@ export function formatPercent(value: number | null | undefined) {
     return "Pending";
   }
 
-  const normalized = value > 1 ? value : value * 100;
+  const normalized = Math.abs(value) > 1 ? value : value * 100;
   return `${normalized.toFixed(normalized % 1 === 0 ? 0 : 1)}%`;
 }
 
