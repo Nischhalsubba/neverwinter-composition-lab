@@ -64,3 +64,11 @@ test('shared-build import rejects duplicate member IDs and roster positions', ()
     })), null);
   }
 });
+
+test('saved-build loading ignores duplicate IDs without overwriting stored JSON', () => {
+  const duplicate = { ...valid, name: 'Stale duplicate', updatedAt: '2026-01-02' };
+  const raw = JSON.stringify([valid, duplicate]);
+  withStoredValue(raw, () => {
+    assert.deepEqual(readSavedBuilds(), [valid]);
+  });
+});
