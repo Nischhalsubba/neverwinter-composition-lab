@@ -41,8 +41,8 @@ export function readSavedBuilds(): SavedTeamBuild[] {
       return [];
     }
 
-    const parsed = JSON.parse(raw) as SavedTeamBuild[];
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter(isSavedTeamBuild) : [];
   } catch {
     return [];
   }
@@ -98,6 +98,21 @@ export function createSharedBuildPayload(
       teamMembers: build.teamMembers,
     },
   };
+}
+
+function isSavedTeamBuild(value: unknown): value is SavedTeamBuild {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    typeof value.name === "string" &&
+    typeof value.bossId === "string" &&
+    typeof value.createdAt === "string" &&
+    typeof value.updatedAt === "string" &&
+    (value.mode === "trial" || value.mode === "dungeon") &&
+    (value.trialPreset === "standard" || value.trialPreset === "msod") &&
+    Array.isArray(value.teamMembers) &&
+    value.teamMembers.every(isValidTeamMember)
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
