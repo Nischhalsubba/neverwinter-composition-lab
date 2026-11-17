@@ -13,3 +13,11 @@ test('non-Latin or punctuation-only names use a meaningful fallback', () => {
     assert.equal(buildWorkbookFilename(name), 'team-build.xlsx');
   }
 });
+
+test('very long build names stay within portable filename limits', () => {
+  const name = 'Dragon-'.repeat(100);
+  const filename = buildWorkbookFilename(name);
+  assert.ok(filename.length <= 85, filename);
+  assert.ok(filename.endsWith('.xlsx'));
+  assert.ok(!/-\.xlsx$/.test(filename));
+});
