@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPercent(value: number | null | undefined) {
-  if (value === null || value === undefined) {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
     return "Pending";
   }
 
