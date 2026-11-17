@@ -100,19 +100,62 @@ export function createSharedBuildPayload(
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function isValidTeamMember(value: unknown): value is TeamMember {
+  if (!isRecord(value)) return false;
+
+  const requiredStrings = [
+    "id", "label", "class_id", "paragon", "race", "artifact_id",
+    "companion_id", "enhancement_id", "companion_bonus_id", "mount_id",
+    "mount_combat_power_id", "mount_equip_power_id", "notes",
+  ];
+  const listFields = ["encounter_ids", "daily_ids", "feature_ids", "insignia_bonus_ids"];
+  const validRoles = ["dps", "healer", "tank", "support", "boost", "support_dps"];
+
+  return (
+    requiredStrings.every((key) => typeof value[key] === "string") &&
+    listFields.every((key) => isStringArray(value[key])) &&
+    (value.group === "A" || value.group === "B") &&
+    typeof value.slot === "number" && Number.isInteger(value.slot) && value.slot > 0 &&
+    typeof value.role === "string" && validRoles.includes(value.role) &&
+    typeof value.is_carry === "boolean" &&
+    isRecord(value.personal_overrides) &&
+    Object.values(value.personal_overrides).every(
+      (amount) => typeof amount === "number" && Number.isFinite(amount),
+    )
+  );
+}
+
 export function parseSharedBuildPayload(raw: string): SharedTeamBuildPayload | null {
   try {
-    const parsed = JSON.parse(raw) as SharedTeamBuildPayload;
+    if (raw.length > 1_000_000) return null;
+
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed) || !isRecord(parsed.build)) return null;
+
+    const build = parsed.build;
     if (
-      parsed?.schema !== "neverwinter-composition-lab-build" ||
-      parsed?.version !== 1 ||
-      !parsed.build ||
-      !Array.isArray(parsed.build.teamMembers)
+      parsed.schema !== "neverwinter-composition-lab-build" ||
+      parsed.version !== 1 ||
+      typeof parsed.exportedAt !== "string" ||
+      typeof build.name !== "string" ||
+      (build.mode !== "dungeon" && build.mode !== "trial") ||
+      (build.trialPreset !== "standard" && build.trialPreset !== "msod") ||
+      typeof build.bossId !== "string" ||
+      !Array.isArray(build.teamMembers) ||
+      !build.teamMembers.every(isValidTeamMember)
     ) {
       return null;
     }
 
-    return parsed;
+    return parsed as unknown as SharedTeamBuildPayload;
   } catch {
     return null;
   }
