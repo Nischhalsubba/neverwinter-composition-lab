@@ -62,7 +62,9 @@ export default function Page() {
   const [savedBuildCount, setSavedBuildCount] = useState(() => readSavedBuilds().length);
 
   useEffect(() => {
-    writeAppSettings(settings);
+    if (!writeAppSettings(settings)) {
+      setStatus("Browser storage is unavailable. These settings will only last for this session.");
+    }
   }, [settings]);
 
   const settingsJson = useMemo(() => JSON.stringify(settings, null, 2), [settings]);
