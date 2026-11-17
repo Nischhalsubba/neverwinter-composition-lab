@@ -42,7 +42,14 @@ export function readSavedBuilds(): SavedTeamBuild[] {
     }
 
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter(isSavedTeamBuild) : [];
+    if (!Array.isArray(parsed)) return [];
+
+    const seenIds = new Set<string>();
+    return parsed.filter((item): item is SavedTeamBuild => {
+      if (!isSavedTeamBuild(item) || seenIds.has(item.id)) return false;
+      seenIds.add(item.id);
+      return true;
+    });
   } catch {
     return [];
   }
