@@ -36,6 +36,32 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
 
 const STORAGE_KEY = "nw-composition-lab:app-settings";
 
+const booleanKeys = [
+  "rememberLastBuild", "rememberLastBoss", "openInspectorOnCardClick",
+  "showPendingEffects", "reducedMotion", "highContrastMode", "exportIncludeImages",
+] as const;
+
+function normalizeAppSettings(value: unknown): AppSettings | null {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+
+  const input = value as Record<string, unknown>;
+  const settings: AppSettings = { ...DEFAULT_APP_SETTINGS };
+  if (input.interfaceDensity === "comfortable" || input.interfaceDensity === "compact") settings.interfaceDensity = input.interfaceDensity;
+  if (input.defaultTeamMode === "trial" || input.defaultTeamMode === "dungeon") settings.defaultTeamMode = input.defaultTeamMode;
+  if (input.defaultTrialPreset === "standard" || input.defaultTrialPreset === "msod") settings.defaultTrialPreset = input.defaultTrialPreset;
+  if (input.defaultAutoSetupGoal === "boost_one_dps" || input.defaultAutoSetupGoal === "overall_team_damage") settings.defaultAutoSetupGoal = input.defaultAutoSetupGoal;
+  for (const key of booleanKeys) {
+    if (typeof input[key] === "boolean") settings[key] = input[key] as boolean;
+  }
+  if (typeof input.defaultCritAssumption === "number" && Number.isFinite(input.defaultCritAssumption) && input.defaultCritAssumption >= 0) {
+    settings.defaultCritAssumption = input.defaultCritAssumption;
+  }
+  if (typeof input.defaultCaAssumption === "number" && Number.isFinite(input.defaultCaAssumption) && input.defaultCaAssumption >= 0) {
+    settings.defaultCaAssumption = input.defaultCaAssumption;
+  }
+  return settings;
+}
+
 function isBrowser() {
   return typeof window !== "undefined";
 }
@@ -51,8 +77,7 @@ export function readAppSettings(): AppSettings {
       return DEFAULT_APP_SETTINGS;
     }
 
-    const parsed = JSON.parse(raw) as Partial<AppSettings>;
-    return { ...DEFAULT_APP_SETTINGS, ...parsed };
+    return normalizeAppSettings(JSON.parse(raw)) ?? DEFAULT_APP_SETTINGS;
   } catch {
     return DEFAULT_APP_SETTINGS;
   }
@@ -73,8 +98,7 @@ export function resetAppSettings() {
 
 export function parseAppSettingsPayload(raw: string): AppSettings | null {
   try {
-    const parsed = JSON.parse(raw) as Partial<AppSettings>;
-    return { ...DEFAULT_APP_SETTINGS, ...parsed };
+    return normalizeAppSettings(JSON.parse(raw));
   } catch {
     return null;
   }
