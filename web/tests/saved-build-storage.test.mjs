@@ -32,6 +32,16 @@ test('saved builds ignore null and malformed entries instead of crashing consume
   });
 });
 
+test('saved builds reject repeated team member IDs and occupied roster slots', () => {
+  const duplicateId = { ...member, group: 'B', slot: 1 };
+  const duplicateSlot = { ...member, id: 'member-2' };
+  for (const roster of [[member, duplicateId], [member, duplicateSlot]]) {
+    withStoredValue(JSON.stringify([{ ...valid, teamMembers: roster }]), () => {
+      assert.deepEqual(readSavedBuilds(), []);
+    });
+  }
+});
+
 test('saved builds with invalid nested members are ignored', () => {
   withStoredValue(JSON.stringify([{ ...valid, teamMembers: [null] }]), () => {
     assert.deepEqual(readSavedBuilds(), []);
