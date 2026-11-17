@@ -50,12 +50,16 @@ flowchart TD
 
 ## Getting started
 
+The maintained Next.js app is in `web/`, not the repository root. Use Node.js 22+ and npm 10+ (see `web/package.json`).
+
 ```bash
 git clone https://github.com/Nischhalsubba/neverwinter-composition-lab.git
-cd neverwinter-composition-lab
+cd neverwinter-composition-lab/web
+npm ci
+npm run dev
 ```
 
-Use the manifests and lockfiles in the repository to determine current development commands.
+Run `npm run check` from `web/` to validate the app before submitting changes.
 
 ## Design & data principles
 
