@@ -170,6 +170,13 @@ export function parseSharedBuildPayload(raw: string): SharedTeamBuildPayload | n
       return null;
     }
 
+    const members = build.teamMembers as TeamMember[];
+    const ids = new Set(members.map((member) => member.id));
+    const positions = new Set(members.map((member) => `${member.group}:${member.slot}`));
+    if (ids.size !== members.length || positions.size !== members.length) {
+      return null;
+    }
+
     return parsed as unknown as SharedTeamBuildPayload;
   } catch {
     return null;
