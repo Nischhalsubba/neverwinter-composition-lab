@@ -1,4 +1,5 @@
 import { artifacts, classes, mountCombatPowers, powers } from "@/data/game-data";
+import { cacheSuccessfulAsyncValue } from "@/lib/successful-async-cache";
 import type { SavedTeamBuild } from "@/lib/team-build-storage";
 import { buildWorkbookFilename } from "@/lib/workbook-filename";
 
@@ -66,11 +67,7 @@ function parseCellReference(reference: string) {
 }
 
 async function fetchImageAsDataUrl(url: string) {
-  if (imageCache.has(url)) {
-    return imageCache.get(url)!;
-  }
-
-  const promise = (async () => {
+  return cacheSuccessfulAsyncValue(imageCache, url, async () => {
     try {
       const response = await fetch(url);
       if (!response.ok) {
@@ -92,10 +89,7 @@ async function fetchImageAsDataUrl(url: string) {
     } catch {
       return null;
     }
-  })();
-
-  imageCache.set(url, promise);
-  return promise;
+  });
 }
 
 function countRoles(build: ExportableBuild) {
