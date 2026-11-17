@@ -60,6 +60,23 @@ export function writeSavedBuilds(builds: SavedTeamBuild[]) {
     return;
   }
 
+  // A filtered read is not a safe replacement for damaged stored history.
+  const existingRaw = window.localStorage.getItem(STORAGE_KEY);
+  if (existingRaw !== null) {
+    let existing: unknown;
+    try {
+      existing = JSON.parse(existingRaw);
+    } catch {
+      throw new Error("Saved team builds are unreadable; existing data was preserved.");
+    }
+    if (!Array.isArray(existing) || !existing.every(isSavedTeamBuild)) {
+      throw new Error("Saved team builds contain invalid entries; existing data was preserved.");
+    }
+    const ids = new Set(existing.map((item: SavedTeamBuild) => item.id));
+    if (ids.size !== existing.length) {
+      throw new Error("Saved team builds contain duplicate IDs; existing data was preserved.");
+    }
+  }
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(builds));
 }
 
