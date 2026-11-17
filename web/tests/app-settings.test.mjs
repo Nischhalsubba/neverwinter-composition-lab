@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { DEFAULT_APP_SETTINGS, parseAppSettingsPayload, readAppSettings } from '../lib/app-settings.ts';
+import { DEFAULT_APP_SETTINGS, parseAppSettingsPayload, readAppSettings, writeAppSettings } from '../lib/app-settings.ts';
 
 test('settings import keeps only allowed field types and values', () => {
   const parsed = parseAppSettingsPayload(JSON.stringify({
@@ -58,6 +58,23 @@ test('stored preferences fall back safely when malformed', () => {
     });
     globalThis.window = { localStorage: { getItem: () => '[]' } };
     assert.deepEqual(readAppSettings(), DEFAULT_APP_SETTINGS);
+  } finally {
+    if (previous === undefined) delete globalThis.window;
+    else globalThis.window = previous;
+  }
+});
+
+test('settings writes do not crash when browser storage is blocked', () => {
+  const previous = globalThis.window;
+  try {
+    globalThis.window = { localStorage: { setItem: () => { throw new Error('SecurityError'); } } };
+    assert.equal(writeAppSettings(DEFAULT_APP_SETTINGS), false);
+    let storedKey = null;
+    let storedValue = null;
+    globalThis.window = { localStorage: { setItem(key, value) { storedKey = key; storedValue = value; } } };
+    assert.equal(writeAppSettings(DEFAULT_APP_SETTINGS), true);
+    assert.equal(storedKey, 'nw-composition-lab:app-settings');
+    assert.deepEqual(JSON.parse(storedValue), DEFAULT_APP_SETTINGS);
   } finally {
     if (previous === undefined) delete globalThis.window;
     else globalThis.window = previous;
