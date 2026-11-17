@@ -135,7 +135,9 @@ function isSavedTeamBuild(value: unknown): value is SavedTeamBuild {
     (value.mode === "trial" || value.mode === "dungeon") &&
     (value.trialPreset === "standard" || value.trialPreset === "msod") &&
     Array.isArray(value.teamMembers) &&
-    value.teamMembers.every(isValidTeamMember)
+    value.teamMembers.every(isValidTeamMember) &&
+    new Set(value.teamMembers.map((member: TeamMember) => member.id)).size === value.teamMembers.length &&
+    new Set(value.teamMembers.map((member: TeamMember) => `${member.group}:${member.slot}`)).size === value.teamMembers.length
   );
 }
 
