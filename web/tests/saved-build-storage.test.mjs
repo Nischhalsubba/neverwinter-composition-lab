@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readSavedBuilds, parseSharedBuildPayload } from '../lib/team-build-storage.ts';
+import { readSavedBuilds, upsertSavedBuild, parseSharedBuildPayload } from '../lib/team-build-storage.ts';
 
 function withStoredValue(value, callback) {
   const previous = globalThis.window;
@@ -72,3 +72,28 @@ test('saved-build loading ignores duplicate IDs without overwriting stored JSON'
     assert.deepEqual(readSavedBuilds(), [valid]);
   });
 });
+
+test('saving does not overwrite malformed or partly invalid existing builds', () => {
+  const previous = globalThis.window;
+  let writes = 0;
+  try {
+    for (const raw of ['not json', JSON.stringify({ invalid: true }), JSON.stringify([valid, null]), JSON.stringify([valid, valid])]) {
+      globalThis.window = { localStorage: {
+        getItem: () => raw,
+        setItem: () => { writes += 1; },
+      } };
+      assert.throws(() => upsertSavedBuild({ name: valid.name, mode: valid.mode, trialPreset: valid.trialPreset, bossId: valid.bossId, teamMembers: valid.teamMembers }));
+      assert.equal(writes, 0);
+    }
+    globalThis.window = { localStorage: {
+      getItem: () => JSON.stringify([valid]),
+      setItem: () => { writes += 1; },
+    } };
+    assert.doesNotThrow(() => upsertSavedBuild({ ...valid, id: valid.id }));
+    assert.equal(writes, 1);
+  } finally {
+    if (previous === undefined) delete globalThis.window;
+    else globalThis.window = previous;
+  }
+});
+
