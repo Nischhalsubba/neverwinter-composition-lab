@@ -76,16 +76,22 @@ async function fetchImageAsDataUrl(url: string) {
 
       const blob = await response.blob();
       const bitmap = await createImageBitmap(blob);
-      const canvas = document.createElement("canvas");
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      const context = canvas.getContext("2d");
-      if (!context) {
-        return null;
-      }
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext("2d");
+        if (!context) {
+          return null;
+        }
 
-      context.drawImage(bitmap, 0, 0);
-      return canvas.toDataURL("image/png");
+        context.drawImage(bitmap, 0, 0);
+        return canvas.toDataURL("image/png");
+      } finally {
+        // ImageBitmap owns GPU-backed resources that are not released by
+        // dropping the JavaScript reference to the converted canvas.
+        bitmap.close();
+      }
     } catch {
       return null;
     }
