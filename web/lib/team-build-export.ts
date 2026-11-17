@@ -274,6 +274,14 @@ export async function exportBuildWorkbook(build: ExportableBuild) {
   const link = document.createElement("a");
   link.href = url;
   link.download = `${build.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "team-build"}.xlsx`;
-  link.click();
-  URL.revokeObjectURL(url);
+  // Some browsers require the anchor to be attached, and may read the blob
+  // asynchronously after the click. Revoking it immediately can interrupt saving.
+  link.hidden = true;
+  document.body.appendChild(link);
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  }
 }
