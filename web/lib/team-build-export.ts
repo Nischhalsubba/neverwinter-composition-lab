@@ -1,5 +1,6 @@
 import { artifacts, classes, mountCombatPowers, powers } from "@/data/game-data";
 import type { SavedTeamBuild } from "@/lib/team-build-storage";
+import { buildWorkbookFilename } from "@/lib/workbook-filename";
 
 type ExportableBuild = Pick<
   SavedTeamBuild,
@@ -273,7 +274,7 @@ export async function exportBuildWorkbook(build: ExportableBuild) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${build.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "team-build"}.xlsx`;
+  link.download = buildWorkbookFilename(build.name);
   // Some browsers require the anchor to be attached, and may read the blob
   // asynchronously after the click. Revoking it immediately can interrupt saving.
   link.hidden = true;
